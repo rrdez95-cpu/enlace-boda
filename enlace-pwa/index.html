@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enlace · Organizador de Boda</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1c1c1e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Enlace">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144.png">
+<link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128.png">
+<meta name="msapplication-TileImage" content="/icons/icon-144.png">
+<meta name="msapplication-TileColor" content="#1c1c1e">
+<meta name="description" content="Organizador completo de boda: mesas, plano del salón, cronograma y checklist profesional."
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ivory:#f8f4ed;--ivory2:#f0e9db;--ivory3:#e5d9c5;--charcoal:#1c1c1e;--charcoal2:#2d2d30;--charcoal3:#3d3d42;--gold:#b8965a;--gold2:#d4b07a;--gold3:#e8cfa0;--muted:#8a7d6e;--muted2:#b5a898;--border:#d8cfc2;--white:#ffffff;--paid:#4a7c59;--unpaid:#8b3a3a;--warn:#7a6020}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoal);height:100vh;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+/* HEADER */
+.app-header{background:var(--charcoal);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:54px;flex-shrink:0;border-bottom:1px solid var(--gold)}
+.app-logo{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;letter-spacing:3px;color:var(--gold3);text-transform:uppercase}
+.app-logo span{color:var(--gold);font-style:italic}
+.header-stats{display:flex;gap:20px}
+.hstat{text-align:center}
+.hstat-val{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--gold2);line-height:1}
+.hstat-key{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2);margin-top:2px}
+.header-date{font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1.5px;color:var(--gold2);text-transform:uppercase}
+/* TABS */
+.tab-bar{background:var(--charcoal2);display:flex;flex-shrink:0;border-bottom:1px solid rgba(184,150,90,.2)}
+.tab-btn{padding:0 22px;height:44px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px}
+.tab-btn:hover{color:var(--gold2)}
+.tab-btn.active{color:var(--gold2);border-bottom-color:var(--gold)}
+/* SCREENS */
+.screen{display:none;flex:1;overflow:hidden;min-height:0}
+.screen.active{display:flex}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(28,28,30,.65);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--white);border:1px solid var(--border);border-radius:8px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:mIn .25s ease}
+@keyframes mIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-header{background:var(--charcoal);padding:16px 22px;display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--gold3);font-style:italic}
+.modal-close{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:19px;line-height:1;transition:color .2s}
+.modal-close:hover{color:var(--ivory)}
+.modal-body{padding:22px}
+.modal-field{margin-bottom:13px}
+.modal-label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:5px}
+.modal-input,.modal-select{width:100%;background:var(--ivory);border:1px solid var(--border);border-radius:4px;padding:10px 13px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--charcoal);outline:none;transition:border-color .2s}
+.modal-input:focus,.modal-select:focus{border-color:var(--gold)}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+.btn-cancel{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:9px 18px;font-family:'Barlow',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+.btn-cancel:hover{color:var(--charcoal)}
+.btn-save{background:var(--charcoal);color:var(--gold2);border:none;border-radius:4px;padding:9px 22px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-save:hover{background:var(--charcoal2)}
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--charcoal);color:var(--gold3);border:1px solid var(--gold);border-radius:4px;padding:10px 22px;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;z-index:300;transition:transform .3s;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+/* ── MESAS ── */
+#s-mesas{flex-direction:row}
+.mesas-sidebar{width:280px;flex-shrink:0;background:var(--charcoal2);border-right:1px solid rgba(184,150,90,.2);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-head{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sidebar-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--gold3);margin-bottom:12px}
+.add-guest-form{display:flex;flex-direction:column;gap:7px}
+.fi{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--ivory);outline:none;width:100%;transition:border-color .2s}
+.fi::placeholder{color:var(--muted2)}
+.fi:focus{border-color:var(--gold)}
+.fi option{background:var(--charcoal2);color:var(--ivory)}
+.btn-add-guest{background:var(--gold);color:var(--charcoal);border:none;border-radius:4px;padding:9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;width:100%}
+.btn-add-guest:hover{background:var(--gold2)}
+.guest-pool-label{padding:12px 18px 7px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.guest-pool{flex:1;overflow-y:auto;padding:4px 10px 10px;scrollbar-width:thin;scrollbar-color:var(--charcoal3) transparent}
+.pool-guest{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:9px 11px;margin-bottom:5px;cursor:grab;transition:all .2s;display:flex;align-items:center;gap:7px;user-select:none}
+.pool-guest:hover{background:rgba(184,150,90,.12);border-color:rgba(184,150,90,.3)}
+.pool-guest.dragging{opacity:.4;cursor:grabbing}
+.pool-guest .pg-name{font-size:13px;font-weight:500;color:var(--ivory);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pool-guest .pg-rel{font-size:10px;color:var(--gold2);letter-spacing:.5px;flex-shrink:0}
+.drag-handle{color:var(--muted2);font-size:13px;cursor:grab;flex-shrink:0}
+.mesas-main{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.mesas-topbar{display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.mesas-topbar-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;font-style:italic;color:var(--charcoal)}
+.btn-new-mesa{background:var(--charcoal);color:var(--gold2);border:1px solid var(--gold);border-radius:4px;padding:8px 18px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px}
+.btn-new-mesa:hover{background:var(--charcoal2)}
+.mesas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.mesa-card{background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);transition:box-shadow .2s}
+.mesa-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.mesa-header{background:var(--charcoal);padding:11px 14px;display:flex;align-items:center;gap:9px}
+.mesa-num{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--gold2);line-height:1;min-width:26px}
+.mesa-name-input{flex:1;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.15);color:var(--ivory);font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;outline:none;padding:2px 0}
+.mesa-name-input::placeholder{color:var(--muted2)}
+.mesa-capacity{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.mesa-capacity label{font-size:10px;color:var(--muted2);letter-spacing:1px}
+.mesa-cap-input{width:34px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:3px;color:var(--ivory);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-align:center;outline:none;padding:2px 3px}
+.mesa-status-bar{height:3px;background:var(--ivory3)}
+.mesa-status-fill{height:100%;background:var(--gold);transition:width .4s ease}
+.mesa-status-fill.full{background:var(--paid)}
+.mesa-status-fill.over{background:var(--unpaid)}
+.mesa-guests{min-height:56px;padding:9px 11px;display:flex;flex-direction:column;gap:4px;position:relative}
+.mesa-drop-zone{position:absolute;inset:0;border:2px dashed transparent;border-radius:4px;transition:all .2s;pointer-events:none}
+.mesa-guests.drag-over .mesa-drop-zone{border-color:var(--gold);background:rgba(184,150,90,.05)}
+.guest-row{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--ivory);border:1px solid var(--border);border-radius:5px;cursor:grab;transition:all .2s;position:relative;user-select:none}
+.guest-row:hover{border-color:var(--gold);background:#fdfaf5}
+.guest-row.dragging{opacity:.3}
+.gr-handle{color:var(--muted2);font-size:11px;flex-shrink:0}
+.gr-name{font-size:13px;font-weight:500;flex:1;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gr-rel{font-size:10px;color:var(--muted);letter-spacing:.3px}
+.gr-paid{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.gr-paid.yes{background:var(--paid)}
+.gr-paid.no{background:var(--unpaid)}
+.gr-paid.pending{background:var(--warn)}
+.gr-expand{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:11px;padding:2px;flex-shrink:0;transition:transform .2s}
+.gr-expand.open{transform:rotate(180deg);color:var(--gold)}
+.guest-detail{background:var(--ivory2);border:1px solid var(--border);border-top:none;border-radius:0 0 5px 5px;padding:11px 13px;display:none;animation:slideDown .2s ease}
+.guest-detail.open{display:block}
+@keyframes slideDown{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.detail-field{display:flex;flex-direction:column;gap:4px}
+.detail-field.full{grid-column:1/-1}
+.detail-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.detail-select,.detail-input{background:var(--white);border:1px solid var(--border);border-radius:3px;padding:7px 9px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--charcoal);outline:none;transition:border-color .2s;width:100%}
+.detail-select:focus,.detail-input:focus{border-color:var(--gold)}
+.detail-select option{background:var(--white)}
+.detail-delete{background:none;border:1px solid rgba(139,58,58,.3);border-radius:3px;color:var(--unpaid);font-size:11px;font-family:'Barlow',sans-serif;padding:5px 9px;cursor:pointer;transition:all .2s;margin-top:4px;display:block;width:100%;text-align:center}
+.detail-delete:hover{background:rgba(139,58,58,.08)}
+.mesa-footer{padding:9px 11px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.mesa-count{font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;color:var(--muted)}
+.mesa-count strong{color:var(--charcoal);font-size:13px}
+.mesa-paid-summary{display:flex;gap:9px;font-size:11px}
+.ps-paid{color:var(--paid);font-weight:600}
+.ps-unpaid{color:var(--unpaid);font-weight:600}
+.mesa-delete{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:13px;padding:3px;transition:color .2s}
+.mesa-delete:hover{color:var(--unpaid)}
+.empty-pool{text-align:center;padding:28px 14px;color:var(--muted2);font-size:13px;line-height:1.6}
+.empty-mesa{text-align:center;padding:14px;color:var(--muted2);font-size:12px;font-style:italic}
+/* ── PLANO ── */
+#s-plano{flex-direction:column}
+.plano-toolbar{background:var(--white);border-bottom:1px solid var(--border);padding:9px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.plano-toolbar-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.toolbar-sep{width:1px;height:22px;background:var(--border)}
+.tool-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:4px;border:1px solid var(--border);background:var(--ivory);font-family:'Barlow',sans-serif;font-size:11px;font-weight:500;color:var(--charcoal);cursor:pointer;transition:all .2s}
+.tool-btn:hover{border-color:var(--gold);color:var(--gold)}
+.tool-btn.active{background:var(--charcoal);color:var(--gold2);border-color:var(--charcoal)}
+.plano-viewport{flex:1;overflow:hidden;position:relative;background:var(--ivory2);cursor:default}
+.plano-canvas{position:absolute;width:2400px;height:1600px;background:#f5f0e8;background-image:linear-gradient(rgba(184,150,90,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(184,150,90,.08) 1px,transparent 1px),linear-gradient(rgba(184,150,90,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(184,150,90,.04) 1px,transparent 1px);background-size:100px 100px,100px 100px,20px 20px,20px 20px;cursor:grab;user-select:none}
+.plano-canvas.panning{cursor:grabbing}
+.room-outline{position:absolute;left:120px;top:80px;width:2160px;height:1440px;border:2px solid var(--charcoal);pointer-events:none}
+.room-label{position:absolute;top:-24px;left:0;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.dim-h,.dim-v{position:absolute;border-color:var(--muted2);border-style:solid;pointer-events:none}
+.dim-h{border-width:0 0 1px 0;bottom:-40px;left:0;right:0}
+.dim-h::before,.dim-h::after{content:'';position:absolute;bottom:-4px;width:1px;height:8px;background:var(--muted2)}
+.dim-h::before{left:0}
+.dim-h::after{right:0}
+.dim-h-label{position:absolute;bottom:-52px;left:50%;transform:translateX(-50%);font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--muted);letter-spacing:1px;white-space:nowrap}
+.dim-v{border-width:0 0 0 1px;left:-40px;top:0;bottom:0}
+.dim-v-label{position:absolute;left:-70px;top:50%;transform:translateY(-50%) rotate(-90deg);font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--muted);letter-spacing:1px;white-space:nowrap}
+.canvas-mesa{position:absolute;cursor:move;user-select:none;transition:box-shadow .15s}
+.canvas-mesa:hover .cm-body{box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.canvas-mesa.selected .cm-body{outline:2px solid var(--gold);outline-offset:2px}
+.cm-body{background:var(--white);border:1.5px solid var(--charcoal);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;box-shadow:2px 2px 0 rgba(0,0,0,.08)}
+.cm-body.shape-round{border-radius:50%}
+.cm-body.shape-rect{border-radius:3px}
+.cm-number{font-size:12px;font-weight:700;color:var(--charcoal);letter-spacing:.5px}
+.cm-name{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:1px;max-width:90%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm-count{font-size:10px;color:var(--gold);font-weight:700;margin-top:2px}
+.cm-seats{position:absolute;inset:-16px;pointer-events:none}
+.cm-seats{display:none} /* legacy — seats now positioned directly on wrapper */
+.cm-seat{position:absolute;border-radius:50%;border:1.5px solid var(--charcoal3);background:var(--ivory2);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.cm-seat.occupied{background:var(--charcoal3);border-color:var(--charcoal)}
+.plano-legend{position:absolute;bottom:20px;right:20px;background:var(--white);border:1px solid var(--border);border-radius:4px;padding:12px 16px;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.legend-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--charcoal);font-weight:700;margin-bottom:9px;border-bottom:1px solid var(--border);padding-bottom:5px}
+.legend-item{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.legend-swatch{width:18px;height:13px;border:1.5px solid var(--charcoal);background:var(--white);flex-shrink:0}
+.legend-swatch.round{border-radius:50%;width:13px;height:13px}
+.plano-compass{position:absolute;top:20px;right:20px;width:44px;height:44px;border:1px solid var(--border);border-radius:50%;background:var(--white);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:17px;color:var(--charcoal);font-weight:700;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.plano-controls{position:absolute;top:14px;left:14px;display:flex;flex-direction:column;gap:7px;z-index:10}
+.plano-ctrl-group{background:var(--white);border:1px solid var(--border);border-radius:4px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.pc-btn{display:flex;width:34px;height:34px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-size:15px;transition:background .15s;align-items:center;justify-content:center}
+.pc-btn:last-child{border-bottom:none}
+.pc-btn:hover{background:var(--ivory)}
+/* ── CRONOGRAMA ── */
+#s-crono{flex-direction:row}
+.crono-main{flex:1;overflow-y:auto;padding:24px 28px}
+.crono-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px}
+.crono-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:600;font-style:italic}
+.crono-date-sub{font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+.btn-add-evento{background:var(--charcoal);color:var(--gold2);border:1px solid var(--gold);border-radius:4px;padding:9px 18px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px}
+.btn-add-evento:hover{background:var(--charcoal2)}
+.timeline{position:relative;padding-left:76px}
+.timeline::before{content:'';position:absolute;left:50px;top:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,var(--border) 5%,var(--border) 95%,transparent)}
+.evento-item{position:relative;margin-bottom:7px;animation:evIn .3s ease both}
+@keyframes evIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.evento-time{position:absolute;left:-76px;top:14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-align:right;width:54px;line-height:1}
+.evento-dot{position:absolute;left:-20px;top:17px;width:11px;height:11px;border-radius:50%;border:2px solid var(--white);box-shadow:0 0 0 1px var(--charcoal3);z-index:1}
+.evento-card{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:12px 16px;display:flex;align-items:flex-start;gap:12px;transition:all .2s;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.evento-card:hover{border-color:var(--gold);box-shadow:0 3px 12px rgba(0,0,0,.08)}
+.evento-emoji{font-size:20px;flex-shrink:0;margin-top:1px}
+.evento-info{flex:1}
+.evento-nombre{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--charcoal);margin-bottom:2px}
+.evento-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:5px}
+.evento-meta{display:flex;gap:10px;flex-wrap:wrap}
+.evento-chip{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:3px}
+.evento-actions{display:flex;gap:5px;flex-shrink:0;margin-top:1px}
+.evt-btn{background:none;border:1px solid var(--border);border-radius:3px;padding:3px 7px;font-size:11px;cursor:pointer;transition:all .2s;color:var(--muted)}
+.evt-btn:hover{border-color:var(--gold);color:var(--gold)}
+.evt-del:hover{border-color:var(--unpaid);color:var(--unpaid)}
+.crono-sidebar{width:260px;flex-shrink:0;background:var(--white);border-left:1px solid var(--border);padding:22px 18px;overflow-y:auto}
+.crono-sidebar-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;font-style:italic;color:var(--charcoal);margin-bottom:14px}
+.crono-summary-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border)}
+.crono-summary-item:last-child{border-bottom:none}
+.cs-emoji{font-size:16px}
+.cs-info{flex:1}
+.cs-name{font-size:13px;font-weight:500}
+.cs-time{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--muted);letter-spacing:.5px}
+.cat-ceremonia{background:rgba(184,150,90,.12);color:var(--gold)}
+.cat-coctel{background:rgba(78,150,100,.12);color:var(--paid)}
+.cat-banquete{background:rgba(28,28,30,.08);color:var(--charcoal2)}
+.cat-musica{background:rgba(100,80,160,.12);color:#7060a0}
+.cat-foto{background:rgba(60,100,160,.12);color:#3a64a0}
+.cat-otro{background:rgba(139,100,58,.12);color:var(--muted)}
+.dot-ceremonia{background:var(--gold)}
+.dot-coctel{background:var(--paid)}
+.dot-banquete{background:var(--charcoal3)}
+.dot-musica{background:#7060a0}
+.dot-foto{background:#3a64a0}
+.dot-otro{background:var(--muted)}
+/* ── RESUMEN ── */
+/* ── PAYWALL ── */
+.paywall-overlay{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(13,13,15,.92);backdrop-filter:blur(6px)}
+.paywall-box{background:var(--charcoal2);border:1px solid var(--gold);border-radius:16px;width:100%;max-width:400px;overflow:hidden;animation:mIn .3s ease;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.paywall-top{background:linear-gradient(135deg,#2a2420 0%,var(--charcoal2) 100%);padding:36px 32px 28px;text-align:center;border-bottom:1px solid rgba(184,150,90,.2)}
+.paywall-rings{font-size:42px;margin-bottom:16px;display:block}
+.paywall-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--gold3);line-height:1.1;margin-bottom:8px}
+.paywall-title em{font-style:italic;color:var(--gold)}
+.paywall-sub{font-size:13px;color:var(--muted2);line-height:1.6}
+.paywall-price{display:flex;align-items:baseline;justify-content:center;gap:4px;padding:20px 32px 4px}
+.paywall-currency{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);font-weight:600}
+.paywall-amount{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;color:var(--gold);line-height:1;letter-spacing:-2px}
+.paywall-once{text-align:center;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
+.paywall-features{padding:0 32px;display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
+.pf-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ivory2)}
+.pf-check{color:var(--gold);font-size:14px;flex-shrink:0;font-weight:700}
+.paywall-cta{margin:0 32px 10px;background:var(--gold);color:var(--charcoal);border:none;border-radius:8px;padding:16px;width:calc(100% - 64px);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:block}
+.paywall-cta:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(184,150,90,.35)}
+.paywall-skip{display:block;text-align:center;padding:0 32px 20px;font-size:12px;color:var(--muted);cursor:pointer}
+.paywall-skip:hover{color:var(--muted2)}
+.paywall-guarantee{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted);padding:0 32px 24px}
+.limit-banner{background:rgba(184,150,90,.08);border:1px solid rgba(184,150,90,.25);border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .2s}
+.limit-banner:hover{background:rgba(184,150,90,.14)}
+.lb-icon{font-size:18px;flex-shrink:0}
+.lb-text{flex:1;font-size:12px;color:var(--gold2);line-height:1.4}
+.lb-cta{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gold);text-transform:uppercase;flex-shrink:0}
+.tab-lock{font-size:9px;background:rgba(184,150,90,.15);color:var(--gold2);border:1px solid rgba(184,150,90,.3);border-radius:3px;padding:1px 5px;letter-spacing:.5px;margin-left:2px}
+.plan-pill{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;cursor:pointer;transition:all .2s}
+.plan-pill.free{background:rgba(184,150,90,.1);color:var(--gold2);border:1px solid rgba(184,150,90,.3)}
+.plan-pill.pro{background:rgba(74,124,89,.15);color:#6fcf8a;border:1px solid rgba(74,124,89,.3)}
+#s-resumen{flex-direction:row;overflow:hidden;height:100%}
+.res-sidenav{width:200px;flex-shrink:0;background:var(--charcoal2);border-right:1px solid rgba(184,150,90,.15);padding:16px 0;overflow-y:auto;height:100%;scrollbar-width:thin;scrollbar-color:var(--charcoal3) transparent}
+.rnav-section{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);padding:14px 16px 5px;font-weight:600}
+.rnav-section:first-child{padding-top:8px}
+.rnav-link{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:12px;font-weight:500;color:var(--muted2);cursor:pointer;transition:all .15s;border-left:2px solid transparent;user-select:none}
+.rnav-link:hover{color:var(--gold2);background:rgba(255,255,255,.03)}
+.rnav-link.active{color:var(--gold2);border-left-color:var(--gold);background:rgba(184,150,90,.06)}
+.rnav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.res-main{flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:24px;height:100%;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+/* Section blocks */
+.sec-block{background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:visible;box-shadow:0 1px 4px rgba(0,0,0,.05);scroll-margin-top:16px;flex-shrink:0}
+.sec-head{background:var(--charcoal);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-radius:8px 8px 0 0}
+.sec-head-left{display:flex;align-items:center;gap:12px}
+.sec-icon{font-size:18px}
+.sec-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--gold3);font-style:italic}
+.sec-subtitle{font-size:11px;color:var(--muted2);margin-top:2px;letter-spacing:.5px}
+.cost-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(184,150,90,.1);border:1px solid rgba(184,150,90,.25);border-radius:4px;padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--gold);flex-shrink:0}
+.sec-body{padding:20px}
+.sec-body-split{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.sec-body-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;padding:20px}
+/* Field components */
+.fg{margin-bottom:13px}
+.fg:last-child{margin-bottom:0}
+.fl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px;display:block}
+.fi2,.fs2,.ft2{width:100%;background:var(--ivory);border:1px solid var(--border);border-radius:4px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--charcoal);outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.fi2:focus,.fs2:focus,.ft2:focus{border-color:var(--gold);background:var(--white)}
+.ft2{resize:vertical;min-height:72px;line-height:1.5}
+.fs2{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7d6e' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.fs2 option{background:var(--white);color:var(--charcoal)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+/* Items list */
+.items-list{display:flex;flex-direction:column;gap:7px}
+.item-row{display:flex;align-items:center;gap:9px;background:var(--ivory);border:1px solid var(--border);border-radius:5px;padding:9px 11px;transition:border-color .15s}
+.item-row:hover{border-color:var(--gold2)}
+.item-emoji{font-size:15px;flex-shrink:0}
+.item-input{flex:1;background:transparent;border:none;font-family:'Barlow',sans-serif;font-size:13px;color:var(--charcoal);outline:none}
+.item-del{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:13px;padding:2px 3px;transition:color .15s;flex-shrink:0}
+.item-del:hover{color:var(--unpaid)}
+.btn-add-item{display:flex;align-items:center;gap:7px;background:none;border:1px dashed var(--border);border-radius:5px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;width:100%;margin-top:7px}
+.btn-add-item:hover{border-color:var(--gold);color:var(--gold)}
+/* Subsection */
+.subsec{border:1px solid var(--border);border-radius:6px;overflow:visible;margin-bottom:14px}
+.subsec:last-child{margin-bottom:0}
+.subsec-head{background:var(--ivory2);border-bottom:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-radius:6px 6px 0 0}
+.subsec-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--charcoal2);display:flex;align-items:center;gap:7px}
+.subsec-body{padding:14px;background:var(--white);border-radius:0 0 6px 6px}
+/* Speaker card */
+.speaker-card{background:var(--ivory);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:9px;position:relative}
+.speaker-card:last-child{margin-bottom:0}
+.speaker-num{position:absolute;top:-8px;left:12px;background:var(--charcoal);color:var(--gold2);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:3px}
+.speaker-del{position:absolute;top:9px;right:11px;background:none;border:none;color:var(--muted2);cursor:pointer;font-size:12px;transition:color .15s}
+.speaker-del:hover{color:var(--unpaid)}
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:13px;font-weight:500}
+.toggle-sublabel{font-size:11px;color:var(--muted);margin-top:1px}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:white;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle input:checked+.toggle-slider{background:var(--gold)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+/* Checklist */
+.check-progress{background:var(--ivory2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:18px}
+.check-pct{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--gold);flex-shrink:0;line-height:1}
+.check-bar-bg{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.check-bar-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .5s ease}
+.check-label{font-size:11px;color:var(--muted);margin-top:2px}
+.check-filters{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.filter-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--ivory);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all .2s}
+.filter-chip:hover{border-color:var(--gold);color:var(--gold)}
+.filter-chip.active{background:var(--charcoal);color:var(--gold2);border-color:var(--charcoal)}
+.check-month{margin-bottom:18px}
+.month-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:7px 0;border-bottom:1px solid var(--border);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;background:var(--white);border:1px solid var(--border);border-radius:5px;margin-bottom:5px;transition:all .2s;cursor:pointer}
+.check-item:hover{border-color:var(--gold2)}
+.check-item.done{background:#f8fff8;border-color:rgba(74,124,89,.2)}
+.check-item.done .check-name{text-decoration:line-through;color:var(--muted2)}
+.check-item.urgente:not(.done){border-left:3px solid var(--unpaid)}
+.check-item.pronto:not(.done){border-left:3px solid var(--warn)}
+.check-box{width:17px;height:17px;border-radius:3px;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s}
+.check-item.done .check-box{background:var(--paid);border-color:var(--paid);color:white;font-size:10px}
+.check-info{flex:1}
+.check-name{font-size:13px;font-weight:500;margin-bottom:3px}
+.check-meta{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.check-when{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--muted);letter-spacing:.5px}
+.check-tag{font-size:10px;font-weight:600;letter-spacing:.5px;padding:1px 6px;border-radius:3px}
+.tag-urgente{background:rgba(139,58,58,.1);color:var(--unpaid)}
+.tag-pronto{background:rgba(122,96,32,.1);color:var(--warn)}
+.tag-normal{background:rgba(184,150,90,.1);color:var(--gold)}
+.check-notas{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+/* Budget overview */
+.bov{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:18px}
+.bov-item{background:var(--white);padding:14px 16px;text-align:center}
+.bov-val{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:3px}
+.bov-key{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600}
+/* Proveedores */
+.prov-card{background:var(--ivory);border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:7px;transition:border-color .2s}
+.prov-card:hover{border-color:var(--gold2)}
+.prov-icon{font-size:22px;flex-shrink:0;width:40px;height:40px;background:var(--white);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.prov-info{flex:1;min-width:0}
+.prov-tipo{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
+.prov-nombre{font-size:13px;font-weight:600}
+.prov-contacto{font-size:11px;color:var(--muted);margin-top:1px}
+.prov-status{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:3px;flex-shrink:0}
+.ps-confirmado{background:rgba(74,124,89,.1);color:var(--paid);border:1px solid rgba(74,124,89,.2)}
+.ps-pendiente{background:rgba(122,96,32,.1);color:var(--warn);border:1px solid rgba(122,96,32,.2)}
+.ps-buscando{background:rgba(139,58,58,.1);color:var(--unpaid);border:1px solid rgba(139,58,58,.2)}
+.btn-ghost{background:none;border:1px solid var(--border);border-radius:4px;padding:6px 12px;font-family:'Barlow',sans-serif;font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-primary-sm{background:var(--charcoal);color:var(--gold2);border:1px solid var(--gold);border-radius:4px;padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px}
+.btn-primary-sm:hover{background:var(--charcoal2)}
+.divider{height:1px;background:var(--border);margin:14px 0}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="app-logo">En<span>lace</span></div>
+  <div class="header-stats">
+    <div class="hstat"><div class="hstat-val" id="stat-invitados">0</div><div class="hstat-key">Invitados</div></div>
+    <div class="hstat"><div class="hstat-val" id="stat-mesas">0</div><div class="hstat-key">Mesas</div></div>
+    <div class="hstat"><div class="hstat-val" id="stat-pagados">0</div><div class="hstat-key">Han pagado</div></div>
+    <div class="hstat"><div class="hstat-val" id="stat-total">0 €</div><div class="hstat-key">Recaudado</div></div>
+    <div class="hstat"><div class="hstat-val" id="stat-check">0%</div><div class="hstat-key">Checklist</div></div>
+  </div>
+  <div class="header-date" id="header-date">— días para la boda</div>
+  <div class="plan-pill free" id="planPill" onclick="showPaywall('header')">✦ Plan gratuito</div>
+</header>
+
+<!-- PAYWALL MODAL -->
+<div class="paywall-overlay" id="paywallOverlay" style="display:none">
+  <div class="paywall-box">
+    <div class="paywall-top">
+      <span class="paywall-rings">💍</span>
+      <div class="paywall-title">Desbloquea <em>Enlace</em><br>al completo</div>
+      <div class="paywall-sub">Mesas ilimitadas, plano del salón,<br>cronograma completo y resumen general</div>
+    </div>
+    <div class="paywall-price">
+      <span class="paywall-currency">€</span>
+      <span class="paywall-amount">3<span style="font-size:32px">,99</span></span>
+    </div>
+    <div class="paywall-once">Pago único · Para siempre · Sin suscripción</div>
+    <div class="paywall-features">
+      <div class="pf-item"><span class="pf-check">✓</span>Invitados y mesas ilimitadas</div>
+      <div class="pf-item"><span class="pf-check">✓</span>Plano del salón con editor visual</div>
+      <div class="pf-item"><span class="pf-check">✓</span>Cronograma completo sin límite de momentos</div>
+      <div class="pf-item"><span class="pf-check">✓</span>Resumen general de wedding planner</div>
+      <div class="pf-item"><span class="pf-check">✓</span>Checklist de 52 tareas profesionales</div>
+      <div class="pf-item"><span class="pf-check">✓</span>Funciona sin internet en tu móvil</div>
+      <div class="pf-item"><span class="pf-check">✓</span>Tus datos guardados para siempre</div>
+    </div>
+    <button class="paywall-cta" onclick="processPayment()">Desbloquear por 3,99 € →</button>
+    <div class="paywall-guarantee">🔒 Pago seguro · Satisfacción garantizada</div>
+    <div class="paywall-skip" onclick="closePaywall()">Continuar con el plan gratuito</div>
+  </div>
+</div>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('mesas',this)">⬡ Mesas e invitados</button>
+  <button class="tab-btn" id="tab-plano" onclick="switchTab('plano',this)">□ Plano del salón <span class="tab-lock" id="lock-plano">🔒</span></button>
+  <button class="tab-btn" onclick="switchTab('crono',this)">◷ Cronograma</button>
+  <button class="tab-btn" id="tab-resumen" onclick="switchTab('resumen',this)">✦ Resumen general <span class="tab-lock" id="lock-resumen">🔒</span></button>
+</div>
+<!-- ══ MESAS ══ -->
+<div class="screen active" id="s-mesas">
+  <div class="mesas-sidebar">
+    <div class="sidebar-head">
+      <div class="sidebar-title">Añadir invitado</div>
+      <div class="add-guest-form">
+        <input class="fi" type="text" id="g-nombre" placeholder="Nombre">
+        <input class="fi" type="text" id="g-apellido" placeholder="Apellido">
+        <input class="fi" type="text" id="g-relacion" placeholder="Relación (primo, amigo…)">
+        <button class="btn-add-guest" onclick="addGuest()">+ Añadir a la lista</button>
+      </div>
+    </div>
+    <div class="guest-pool-label"><span>Sin asignar</span><span id="pool-count" style="color:var(--gold2);font-weight:700">0</span></div>
+    <div class="guest-pool" id="guestPool"><div class="empty-pool">Añade invitados<br>y arrástralos a las mesas</div></div>
+  </div>
+  <div class="mesas-main">
+    <div class="mesas-topbar">
+      <div class="mesas-topbar-title">Distribución de mesas</div>
+      <button class="btn-new-mesa" onclick="openModal('mesaModal')">+ Nueva mesa</button>
+    </div>
+    <div class="mesas-grid" id="mesasGrid"><div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);font-style:italic">Crea tu primera mesa para empezar</div></div>
+  </div>
+</div>
+<!-- ══ PLANO ══ -->
+<div class="screen" id="s-plano">
+  <div class="plano-toolbar">
+    <span class="plano-toolbar-title">Plano del salón</span>
+    <div class="toolbar-sep"></div>
+    <button class="tool-btn" onclick="autoLayout()">⟳ Distribución automática</button>
+    <button class="tool-btn" onclick="zoomIn()">＋ Acercar</button>
+    <button class="tool-btn" onclick="zoomOut()">－ Alejar</button>
+    <button class="tool-btn" onclick="resetZoom()">⊡ Encuadrar</button>
+    <div class="toolbar-sep"></div>
+    <button class="tool-btn" onclick="toggleShape()">⬤ Cambiar forma</button>
+  </div>
+  <div class="plano-viewport" id="planoViewport">
+    <div class="plano-canvas" id="planoCanvas">
+      <div class="room-outline">
+        <div class="room-label">SALÓN DE CELEBRACIONES</div>
+        <div class="dim-h"><div class="dim-h-label">ANCHO DEL SALÓN</div></div>
+        <div class="dim-v"><div class="dim-v-label">LARGO DEL SALÓN</div></div>
+      </div>
+    </div>
+    <div class="plano-controls">
+      <div class="plano-ctrl-group">
+        <button class="pc-btn" onclick="zoomIn()">+</button>
+        <button class="pc-btn" onclick="zoomOut()">−</button>
+      </div>
+      <div class="plano-ctrl-group"><button class="pc-btn" onclick="resetZoom()">⊡</button></div>
+    </div>
+    <div class="plano-legend">
+      <div class="legend-title">LEYENDA</div>
+      <div class="legend-item"><div class="legend-swatch round"></div>Mesa redonda</div>
+      <div class="legend-item"><div class="legend-swatch"></div>Mesa rectangular</div>
+      <div class="legend-item" style="margin-top:7px;border-top:1px solid var(--border);padding-top:7px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--charcoal3);flex-shrink:0"></div>Asiento ocupado
+      </div>
+      <div class="legend-item"><div style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--charcoal3);background:var(--ivory2);flex-shrink:0"></div>Asiento libre</div>
+    </div>
+    <div class="plano-compass">N</div>
+  </div>
+</div>
+<!-- ══ CRONOGRAMA ══ -->
+<div class="screen" id="s-crono">
+  <div class="crono-main">
+    <div class="crono-header">
+      <div><div class="crono-title">Orden del día</div><div class="crono-date-sub" id="crono-date-sub">Fecha de la boda</div></div>
+      <button class="btn-add-evento" onclick="openModal('eventoModal')">+ Añadir momento</button>
+    </div>
+    <div class="timeline" id="timeline"><div style="text-align:center;padding:48px 0;color:var(--muted);font-style:italic">Añade los momentos de tu boda para construir el cronograma</div></div>
+  </div>
+  <div class="crono-sidebar">
+    <div class="crono-sidebar-title">Resumen del día</div>
+    <div id="cronoSummary"><div style="font-size:13px;color:var(--muted);font-style:italic;padding-top:8px">Sin eventos aún</div></div>
+  </div>
+</div>
+<!-- ══ RESUMEN ══ -->
+<div class="screen" id="s-resumen">
+<nav class="res-sidenav">
+  <div class="rnav-section">Celebración</div>
+  <div class="rnav-link active" onclick="rScrollTo('sec-fecha',this)"><span class="rnav-icon">📅</span>Fecha y datos</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-ceremonia',this)"><span class="rnav-icon">⛪</span>Ceremonia</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-coctel',this)"><span class="rnav-icon">🥂</span>Cóctel</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-banquete',this)"><span class="rnav-icon">🍽️</span>Banquete</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-barra',this)"><span class="rnav-icon">🍸</span>Barra libre</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-musica',this)"><span class="rnav-icon">🎶</span>Música</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-foto',this)"><span class="rnav-icon">📷</span>Foto y vídeo</div>
+  <div class="rnav-section">Logística</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-transporte',this)"><span class="rnav-icon">🚌</span>Transporte</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-alojamiento',this)"><span class="rnav-icon">🏨</span>Alojamiento</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-proveedores',this)"><span class="rnav-icon">📋</span>Proveedores</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-presupuesto',this)"><span class="rnav-icon">💰</span>Presupuesto</div>
+  <div class="rnav-section">Planificación</div>
+  <div class="rnav-link" onclick="rScrollTo('sec-checklist',this)"><span class="rnav-icon">✓</span>Checklist</div>
+</nav>
+<div class="res-main" id="resMain">
+<!-- FECHA -->
+<div class="sec-block" id="sec-fecha">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">📅</span><div><div class="sec-title">Fecha y datos de la boda</div><div class="sec-subtitle">Información general del gran día</div></div></div></div>
+  <div class="sec-body-3">
+    <div>
+      <div class="fg"><label class="fl">Fecha de la boda</label><input class="fi2" type="date" id="r-fecha" onchange="updateHeaderDate()"></div>
+      <div class="fg"><label class="fl">Hora de inicio</label><input class="fi2" type="time" value="12:00"></div>
+    </div>
+    <div>
+      <div class="fg"><label class="fl">Nombre de los novios</label><input class="fi2" placeholder="Laura y Alejandro" id="r-novios"></div>
+      <div class="fg"><label class="fl">Finca / espacio</label><input class="fi2" placeholder="Finca La Heredad, Madrid" id="r-finca"></div>
+    </div>
+    <div>
+      <div class="fg"><label class="fl">Nº total de invitados</label><input class="fi2" type="number" placeholder="150"></div>
+      <div class="fg"><label class="fl">Coordinador/a</label><input class="fi2" placeholder="Nombre + teléfono"></div>
+    </div>
+  </div>
+</div>
+<!-- CEREMONIA -->
+<div class="sec-block" id="sec-ceremonia">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">⛪</span><div><div class="sec-title">Ceremonia</div><div class="sec-subtitle">Estructura y orden completo del acto</div></div></div><div class="cost-badge" id="cost-ceremonia">— €</div></div>
+  <div class="sec-body">
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">⚙ Datos generales</div></div>
+      <div class="subsec-body">
+        <div class="fr"><div class="fg"><label class="fl">Tipo de ceremonia</label><select class="fs2"><option>Civil</option><option>Religiosa (católica)</option><option>Simbólica / Laica</option><option>Mixta</option></select></div><div class="fg"><label class="fl">Lugar de la ceremonia</label><input class="fi2" placeholder="Jardín de la finca, Iglesia de…"></div></div>
+        <div class="fr"><div class="fg"><label class="fl">Hora de inicio</label><input class="fi2" type="time" value="12:00"></div><div class="fg"><label class="fl">Duración estimada</label><input class="fi2" placeholder="45 minutos"></div></div>
+        <div class="fg"><label class="fl">Coste ceremonia (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('ceremonia',this.value)"></div>
+      </div>
+    </div>
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">👤 Oficiante</div></div>
+      <div class="subsec-body">
+        <div class="fr"><div class="fg"><label class="fl">Nombre del oficiante</label><input class="fi2" placeholder="Nombre completo"></div><div class="fg"><label class="fl">Contacto</label><input class="fi2" placeholder="Teléfono / email"></div></div>
+        <div class="fg"><label class="fl">Notas sobre el oficiante</label><textarea class="ft2" placeholder="Temas pactados, estilo de la ceremonia, guión entregado el…"></textarea></div>
+      </div>
+    </div>
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">🎤 Estructura y participantes</div><button class="btn-ghost" onclick="addSpeaker()">+ Añadir participante</button></div>
+      <div class="subsec-body" id="speakersContainer"></div>
+    </div>
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">🎵 Música en la ceremonia</div></div>
+      <div class="subsec-body">
+        <div class="fr"><div class="fg"><label class="fl">Entrada de los novios</label><input class="fi2" placeholder="Canción / intérprete"></div><div class="fg"><label class="fl">Salida de los novios</label><input class="fi2" placeholder="Canción / intérprete"></div></div>
+        <div class="fr"><div class="fg"><label class="fl">Música de fondo</label><input class="fi2" placeholder="Cuarteto de cuerda, piano…"></div><div class="fg"><label class="fl">Coste música ceremonia (€)</label><input class="fi2" type="number" placeholder="0"></div></div>
+      </div>
+    </div>
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">📋 Elementos simbólicos</div></div>
+      <div class="subsec-body">
+        <div class="toggle-row"><div><div class="toggle-label">Anillos de boda</div><div class="toggle-sublabel">Portador/a confirmado</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Arras</div><div class="toggle-sublabel">13 monedas / ramo</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Vela de la unidad</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Lazo de los novios</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Ramo de novia</div><div class="toggle-sublabel">Florista confirmada</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Ceremonia de la arena</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+        <div class="fg" style="margin-top:12px"><label class="fl">Lectura / texto o poema elegido</label><textarea class="ft2" placeholder="Copia el texto aquí o anota título y autor…"></textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- COCTEL -->
+<div class="sec-block" id="sec-coctel">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">🥂</span><div><div class="sec-title">Cóctel de bienvenida</div><div class="sec-subtitle">Aperitivos, bebidas y entretenimiento</div></div></div><div class="cost-badge" id="cost-coctel">— €</div></div>
+  <div class="sec-body">
+    <div class="fr" style="margin-bottom:14px"><div class="fg"><label class="fl">Hora de inicio</label><input class="fi2" type="time" value="13:30"></div><div class="fg"><label class="fl">Duración</label><input class="fi2" placeholder="90 minutos"></div><div class="fg"><label class="fl">Ubicación</label><input class="fi2" placeholder="Terraza, jardín…"></div><div class="fg"><label class="fl">Coste total (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('coctel',this.value)"></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🍢 Canapés fríos</div><button class="btn-ghost" onclick="addRItem('cn-frios','🍢')">+ Añadir</button></div><div class="subsec-body"><div class="items-list" id="cn-frios"></div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🔥 Canapés calientes</div><button class="btn-ghost" onclick="addRItem('cn-calientes','🔥')">+ Añadir</button></div><div class="subsec-body"><div class="items-list" id="cn-calientes"></div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🧀 Estaciones y bufés</div><button class="btn-ghost" onclick="addRItem('estaciones','🧀')">+ Añadir</button></div><div class="subsec-body"><div class="items-list" id="estaciones"></div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🍹 Bebidas del cóctel</div><button class="btn-ghost" onclick="addRItem('beb-coctel','🍹')">+ Añadir</button></div><div class="subsec-body"><div class="items-list" id="beb-coctel"></div></div></div>
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">🎵 Música / entretenimiento cóctel</div></div>
+      <div class="subsec-body">
+        <div class="fr"><div class="fg"><label class="fl">Tipo de música</label><select class="fs2"><option>Grupo en directo</option><option>Cuarteto de jazz</option><option>Piano</option><option>Violinista</option><option>Hilo musical</option><option>Sin música</option></select></div><div class="fg"><label class="fl">Nombre del grupo/artista</label><input class="fi2" placeholder="Nombre + contacto"></div></div>
+        <div class="fr"><div class="fg"><label class="fl">Horas contratadas</label><input class="fi2" placeholder="1.5 h"></div><div class="fg"><label class="fl">Coste (€)</label><input class="fi2" type="number" placeholder="0"></div></div>
+        <div class="fg"><label class="fl">Repertorio acordado</label><textarea class="ft2" placeholder="Lista de canciones o estilo musical pactado…"></textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- BANQUETE -->
+<div class="sec-block" id="sec-banquete">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">🍽️</span><div><div class="sec-title">Banquete</div><div class="sec-subtitle">Menú completo, vinos y servicio</div></div></div><div class="cost-badge" id="cost-banquete">— €</div></div>
+  <div class="sec-body">
+    <div class="fr" style="margin-bottom:14px"><div class="fg"><label class="fl">Catering / empresa</label><input class="fi2" placeholder="Nombre de la empresa"></div><div class="fg"><label class="fl">€/persona</label><input class="fi2" type="number" placeholder="95" id="r-preciopax" oninput="calcBanquete()"></div><div class="fg"><label class="fl">Nº comensales</label><input class="fi2" type="number" placeholder="150" id="r-numpax" oninput="calcBanquete()"></div><div class="fg"><label class="fl">Total banquete</label><input class="fi2" id="r-totalbq" readonly style="font-weight:700;color:var(--gold)"></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🥗 Entrantes</div><button class="btn-ghost" onclick="addRItem('entrantes','🥗')">+ Añadir</button></div><div class="subsec-body"><div class="items-list" id="entrantes"></div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🥩 Platos principales</div><button class="btn-ghost" onclick="addRItem('principales','🥩')">+ Añadir</button></div><div class="subsec-body"><div class="items-list" id="principales"></div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🍮 Postres</div><button class="btn-ghost" onclick="addRItem('postres','🍮')">+ Añadir</button></div><div class="subsec-body"><div class="items-list" id="postres"></div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🎂 Tarta nupcial</div></div><div class="subsec-body"><div class="fr"><div class="fg"><label class="fl">Pastelería</label><input class="fi2" placeholder="Nombre + contacto"></div><div class="fg"><label class="fl">Descripción / sabores</label><input class="fi2" placeholder="Tres pisos, vainilla y frutos rojos"></div></div><div class="fg"><label class="fl">Coste tarta (€)</label><input class="fi2" type="number" placeholder="0"></div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🍷 Vinos y maridaje</div><button class="btn-ghost" onclick="addRItem('vinos','🍷')">+ Añadir</button></div><div class="subsec-body"><div class="items-list" id="vinos"></div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">⚠ Intolerancias y menús especiales</div></div><div class="subsec-body"><div class="fg"><label class="fl">Resumen de intolerancias confirmadas</label><textarea class="ft2" placeholder="3 celíacos (mesa 4,7,12) · 2 veganos (mesa 2) · 1 alérgico frutos secos (mesa 9)…"></textarea></div></div></div>
+  </div>
+</div>
+<!-- BARRA LIBRE -->
+<div class="sec-block" id="sec-barra">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">🍸</span><div><div class="sec-title">Barra libre</div><div class="sec-subtitle">Bebidas, horas y opciones especiales</div></div></div><div class="cost-badge" id="cost-barra">— €</div></div>
+  <div class="sec-body">
+    <div class="fr" style="margin-bottom:14px"><div class="fg"><label class="fl">Hora inicio</label><input class="fi2" type="time" value="19:00"></div><div class="fg"><label class="fl">Horas contratadas</label><input class="fi2" placeholder="5 horas"></div><div class="fg"><label class="fl">Hora cierre</label><input class="fi2" type="time" value="00:00"></div><div class="fg"><label class="fl">Coste total (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('barra',this.value)"></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🍹 Bebidas incluidas</div><button class="btn-ghost" onclick="addRItem('beb-barra','🍹')">+ Añadir</button></div><div class="subsec-body"><div class="items-list" id="beb-barra"></div></div></div>
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">✨ Extras especiales</div></div>
+      <div class="subsec-body">
+        <div class="toggle-row"><div class="toggle-label">Barra de gin-tonics</div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div class="toggle-label">Barra de cócteles clásicos</div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div class="toggle-label">Barra de chupitos</div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div class="toggle-label">Mesa de dulces / candy bar</div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div class="toggle-label">Cervezas artesanas</div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div class="toggle-label">Carta de vinos especiales</div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+        <div class="fg" style="margin-top:12px"><label class="fl">Notas adicionales</label><textarea class="ft2" placeholder="Bebidas sin alcohol para conductores, restricciones…"></textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- MUSICA -->
+<div class="sec-block" id="sec-musica">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">🎶</span><div><div class="sec-title">Música y entretenimiento</div><div class="sec-subtitle">DJ, banda, primer baile y momentos musicales</div></div></div><div class="cost-badge" id="cost-musica">— €</div></div>
+  <div class="sec-body">
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">🎧 DJ</div></div>
+      <div class="subsec-body">
+        <div class="fr"><div class="fg"><label class="fl">Nombre del DJ</label><input class="fi2" placeholder="Nombre + contacto"></div><div class="fg"><label class="fl">Agencia / representante</label><input class="fi2" placeholder="Opcional"></div></div>
+        <div class="fr"><div class="fg"><label class="fl">Hora inicio</label><input class="fi2" type="time" value="19:00"></div><div class="fg"><label class="fl">Horas contratadas</label><input class="fi2" placeholder="5 h"></div><div class="fg"><label class="fl">Coste DJ (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('musica',this.value)"></div></div>
+        <div class="fg"><label class="fl">Canciones vetadas / preferencias</label><textarea class="ft2" placeholder="Canciones que NO quieren, peticiones especiales, géneros preferidos…"></textarea></div>
+      </div>
+    </div>
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">🎸 Banda / grupo en directo</div></div>
+      <div class="subsec-body">
+        <div class="fr"><div class="fg"><label class="fl">Nombre del grupo</label><input class="fi2" placeholder="Nombre + contacto"></div><div class="fg"><label class="fl">Nº de músicos</label><input class="fi2" placeholder="6 integrantes"></div></div>
+        <div class="fr"><div class="fg"><label class="fl">Horas contratadas</label><input class="fi2" placeholder="3 h"></div><div class="fg"><label class="fl">Coste banda (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('musica',this.value)"></div></div>
+        <div class="fg"><label class="fl">Repertorio / setlist acordado</label><textarea class="ft2" placeholder="Pega aquí el setlist o describe el estilo pactado…"></textarea></div>
+      </div>
+    </div>
+    <div class="subsec">
+      <div class="subsec-head"><div class="subsec-title">💃 Momentos especiales</div></div>
+      <div class="subsec-body">
+        <div class="fr"><div class="fg"><label class="fl">Canción primer baile</label><input class="fi2" placeholder="Título — Artista"></div><div class="fg"><label class="fl">Baile padre/madre — novia/novio</label><input class="fi2" placeholder="Título — Artista"></div></div>
+        <div class="fr"><div class="fg"><label class="fl">Entrada al banquete</label><input class="fi2" placeholder="Título — Artista"></div><div class="fg"><label class="fl">Lanzamiento del ramo</label><input class="fi2" placeholder="Título — Artista"></div></div>
+        <div class="fg"><label class="fl">Sorpresas musicales / coreografías</label><textarea class="ft2" placeholder="Flash mob, sorpresa del novio, actuación especial de invitados…"></textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- FOTO -->
+<div class="sec-block" id="sec-foto">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">📷</span><div><div class="sec-title">Fotografía y vídeo</div><div class="sec-subtitle">Equipos, sesiones y entregas</div></div></div><div class="cost-badge" id="cost-foto">— €</div></div>
+  <div class="sec-body-split">
+    <div style="padding:18px;border-right:1px solid var(--border)">
+      <div class="subsec-title" style="margin-bottom:12px">📸 Fotógrafo/a</div>
+      <div class="fg"><label class="fl">Nombre</label><input class="fi2" placeholder="Nombre + contacto"></div>
+      <div class="fr"><div class="fg"><label class="fl">Hora inicio</label><input class="fi2" type="time" value="11:00"></div><div class="fg"><label class="fl">Horas contratadas</label><input class="fi2" placeholder="10 h"></div></div>
+      <div class="fg"><label class="fl">Coste (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('foto',this.value)"></div>
+      <div class="fg"><label class="fl">Entregables / plazo</label><textarea class="ft2" placeholder="600 fotos editadas en 6 semanas, álbum físico…"></textarea></div>
+    </div>
+    <div style="padding:18px">
+      <div class="subsec-title" style="margin-bottom:12px">🎬 Videógrafo/a</div>
+      <div class="fg"><label class="fl">Nombre</label><input class="fi2" placeholder="Nombre + contacto"></div>
+      <div class="fr"><div class="fg"><label class="fl">Hora inicio</label><input class="fi2" type="time" value="11:00"></div><div class="fg"><label class="fl">Horas contratadas</label><input class="fi2" placeholder="10 h"></div></div>
+      <div class="fg"><label class="fl">Coste (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('foto',this.value)"></div>
+      <div class="fg"><label class="fl">Entregables / plazo</label><textarea class="ft2" placeholder="Vídeo highlight 5 min + vídeo completo + drone…"></textarea></div>
+    </div>
+  </div>
+  <div class="sec-body">
+    <div class="fr"><div class="fg"><label class="fl">Fotos obligatorias</label><textarea class="ft2" placeholder="Foto con abuelos, foto con compañeros de trabajo…"></textarea></div><div class="fg"><label class="fl">Personas que NO fotografiar</label><textarea class="ft2" placeholder="Invitados que no quieren salir, momentos privados…"></textarea></div></div>
+  </div>
+</div>
+<!-- TRANSPORTE -->
+<div class="sec-block" id="sec-transporte">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">🚌</span><div><div class="sec-title">Transporte</div><div class="sec-subtitle">Autobuses, coches y traslados</div></div></div><div class="cost-badge" id="cost-transporte">— €</div></div>
+  <div class="sec-body">
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🚌 Rutas de autobús</div><button class="btn-ghost" onclick="addBus()">+ Añadir ruta</button></div><div class="subsec-body" id="busesContainer"><div style="font-size:13px;color:var(--muted);font-style:italic">Añade las rutas de autobús para tus invitados</div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">💒 Coche nupcial</div></div><div class="subsec-body"><div class="fr"><div class="fg"><label class="fl">Empresa / modelo</label><input class="fi2" placeholder="Rolls Royce · Empresa X"></div><div class="fg"><label class="fl">Trayecto</label><input class="fi2" placeholder="Casa → Ceremonia → Finca"></div><div class="fg"><label class="fl">Coste (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('transporte',this.value)"></div></div></div></div>
+    <div class="subsec"><div class="subsec-head"><div class="subsec-title">🏨 Traslado post-boda</div></div><div class="subsec-body"><div class="fr"><div class="fg"><label class="fl">Empresa</label><input class="fi2" placeholder="Taxi, VTC…"></div><div class="fg"><label class="fl">Hora estimada</label><input class="fi2" type="time" value="01:00"></div><div class="fg"><label class="fl">Destino</label><input class="fi2" placeholder="Hotel de los novios"></div></div></div></div>
+  </div>
+</div>
+<!-- ALOJAMIENTO -->
+<div class="sec-block" id="sec-alojamiento">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">🏨</span><div><div class="sec-title">Alojamiento</div><div class="sec-subtitle">Noche de bodas y alojamiento de invitados</div></div></div><div class="cost-badge" id="cost-alojamiento">— €</div></div>
+  <div class="sec-body-split">
+    <div style="padding:18px;border-right:1px solid var(--border)">
+      <div class="subsec-title" style="margin-bottom:12px">💍 Noche de bodas</div>
+      <div class="fg"><label class="fl">Hotel</label><input class="fi2" placeholder="Nombre del hotel"></div>
+      <div class="fg"><label class="fl">Tipo de habitación</label><input class="fi2" placeholder="Suite nupcial, Junior Suite…"></div>
+      <div class="fr"><div class="fg"><label class="fl">Check-in</label><input class="fi2" type="date"></div><div class="fg"><label class="fl">Check-out</label><input class="fi2" type="date"></div></div>
+      <div class="fg"><label class="fl">Coste (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('alojamiento',this.value)"></div>
+      <div class="fg"><label class="fl">Extras contratados</label><input class="fi2" placeholder="Pétalos, champán, jacuzzi…"></div>
+    </div>
+    <div style="padding:18px">
+      <div class="subsec-title" style="margin-bottom:12px">👨‍👩‍👧 Alojamiento invitados</div>
+      <div class="fg"><label class="fl">Hotel recomendado</label><input class="fi2" placeholder="Nombre + dirección"></div>
+      <div class="fg"><label class="fl">Habitaciones reservadas</label><input class="fi2" placeholder="20 habitaciones bloqueadas"></div>
+      <div class="fg"><label class="fl">Precio negociado / noche</label><input class="fi2" placeholder="Precio especial para invitados"></div>
+      <div class="fg"><label class="fl">Código de reserva grupal</label><input class="fi2" placeholder="Código o enlace para los invitados"></div>
+      <div class="fg"><label class="fl">Fecha límite reserva</label><input class="fi2" type="date"></div>
+    </div>
+  </div>
+</div>
+<!-- PROVEEDORES -->
+<div class="sec-block" id="sec-proveedores">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">📋</span><div><div class="sec-title">Directorio de proveedores</div><div class="sec-subtitle">Todos los contactos en un solo lugar</div></div></div><button class="btn-primary-sm" onclick="openModal('proveedorModal')">+ Añadir proveedor</button></div>
+  <div class="sec-body" id="proveedoresContainer"><div style="font-size:13px;color:var(--muted);font-style:italic;text-align:center;padding:24px">Añade tus proveedores para tenerlos todos centralizados</div></div>
+</div>
+<!-- PRESUPUESTO -->
+<div class="sec-block" id="sec-presupuesto">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">💰</span><div><div class="sec-title">Presupuesto total</div><div class="sec-subtitle">Resumen económico de la boda</div></div></div></div>
+  <div class="sec-body">
+    <div class="bov">
+      <div class="bov-item"><div class="bov-val" id="bov-previsto">0 €</div><div class="bov-key">Presupuesto previsto</div></div>
+      <div class="bov-item"><div class="bov-val" id="bov-confirmado">0 €</div><div class="bov-key">Confirmado</div></div>
+      <div class="bov-item"><div class="bov-val" id="bov-pendiente">0 €</div><div class="bov-key">Pendiente</div></div>
+      <div class="bov-item"><div class="bov-val" id="bov-sobre">0 €</div><div class="bov-key">En sobres</div></div>
+    </div>
+    <div class="fg"><label class="fl">Presupuesto total estimado (€)</label><input class="fi2" type="number" placeholder="30000" oninput="updateBudget(this.value)"></div>
+    <div class="fg"><label class="fl">Notas económicas</label><textarea class="ft2" placeholder="Señales pagadas, condiciones de pago, IVA incluido/excluido…"></textarea></div>
+  </div>
+</div>
+<!-- CHECKLIST -->
+<div class="sec-block" id="sec-checklist">
+  <div class="sec-head"><div class="sec-head-left"><span class="sec-icon">✓</span><div><div class="sec-title">Checklist de la boda perfecta</div><div class="sec-subtitle">Todas las tareas ordenadas cronológicamente</div></div></div><button class="btn-ghost" style="color:var(--gold2);border-color:rgba(184,150,90,.3)" onclick="openModal('checkModal')">+ Añadir tarea</button></div>
+  <div class="sec-body">
+    <div class="check-progress"><div><div class="check-pct" id="checkPct">0%</div><div class="check-label" id="checkLabel">0 de 0 completadas</div></div><div class="check-bar-bg"><div class="check-bar-fill" id="checkBar" style="width:0%"></div></div></div>
+    <div class="check-filters">
+      <div class="filter-chip active" onclick="filterCheck('all',this)">Todas</div>
+      <div class="filter-chip" onclick="filterCheck('pendiente',this)">Pendientes</div>
+      <div class="filter-chip" onclick="filterCheck('hecho',this)">Completadas</div>
+      <div class="filter-chip" onclick="filterCheck('urgente',this)">⚠ Urgentes</div>
+    </div>
+    <div id="checklistContainer"></div>
+  </div>
+</div>
+</div><!-- /res-main -->
+</div><!-- /s-resumen -->
+<!-- MODALS -->
+<div class="modal-overlay" id="mesaModal">
+  <div class="modal-box">
+    <div class="modal-header"><div class="modal-title">Nueva mesa</div><button class="modal-close" onclick="closeModal('mesaModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Nombre</label><input class="modal-input" id="m-nombre" placeholder="Ej: Mesa de honor"></div>
+        <div class="modal-field"><label class="modal-label">Capacidad</label><input class="modal-input" id="m-cap" type="number" min="2" max="40" value="10"></div>
+      </div>
+      <div class="modal-field"><label class="modal-label">Forma</label><select class="modal-select" id="m-shape"><option value="round">Redonda</option><option value="rect">Rectangular</option></select></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('mesaModal')">Cancelar</button><button class="btn-save" onclick="createMesa()">Crear mesa</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="eventoModal">
+  <div class="modal-box">
+    <div class="modal-header"><div class="modal-title">Añadir momento</div><button class="modal-close" onclick="closeModal('eventoModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-field"><label class="modal-label">Nombre del momento</label><input class="modal-input" id="ev-nombre" placeholder="Ej: Ceremonia civil"></div>
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Hora</label><input class="modal-input" id="ev-hora" type="time" value="12:00"></div>
+        <div class="modal-field"><label class="modal-label">Duración</label><input class="modal-input" id="ev-dur" placeholder="45 min"></div>
+      </div>
+      <div class="modal-field"><label class="modal-label">Categoría</label><select class="modal-select" id="ev-cat"><option value="ceremonia">⛪ Ceremonia</option><option value="coctel">🥂 Cóctel</option><option value="banquete">🍽️ Banquete</option><option value="musica">🎶 Música / Baile</option><option value="foto">📷 Foto / Vídeo</option><option value="otro">✦ Otro</option></select></div>
+      <div class="modal-field"><label class="modal-label">Notas</label><input class="modal-input" id="ev-desc" placeholder="Detalles, encargados, ubicación…"></div>
+      <div class="modal-field"><label class="modal-label">Emoji</label><input class="modal-input" id="ev-emoji" placeholder="⛪" maxlength="4" style="font-size:18px;text-align:center"></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('eventoModal')">Cancelar</button><button class="btn-save" onclick="createEvento()">Guardar</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="proveedorModal">
+  <div class="modal-box">
+    <div class="modal-header"><div class="modal-title">Nuevo proveedor</div><button class="modal-close" onclick="closeModal('proveedorModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-field"><label class="modal-label">Tipo</label><select class="modal-input" id="pv-tipo"><option>🌿 Finca / Espacio</option><option>🍽️ Catering</option><option>🎂 Pastelería</option><option>📷 Fotógrafo/a</option><option>🎬 Videógrafo/a</option><option>🎶 DJ</option><option>🎸 Banda / grupo</option><option>💐 Florista</option><option>💄 Maquilladora</option><option>💇 Peluquería</option><option>👗 Vestido de novia</option><option>🤵 Traje de novio</option><option>🚌 Transporte</option><option>🏨 Hotel</option><option>💌 Papelería / Imprenta</option><option>✦ Oficiante / Celebrante</option><option>🎁 Regalos / Recuerdos</option><option>Otro</option></select></div>
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Nombre / Empresa</label><input class="modal-input" id="pv-nombre" placeholder="Nombre completo"></div>
+        <div class="modal-field"><label class="modal-label">Contacto</label><input class="modal-input" id="pv-contacto" placeholder="Tel / email"></div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Presupuesto (€)</label><input class="modal-input" type="number" id="pv-precio" placeholder="0"></div>
+        <div class="modal-field"><label class="modal-label">Estado</label><select class="modal-input" id="pv-status"><option value="confirmado">✓ Confirmado</option><option value="pendiente">⏳ En negociación</option><option value="buscando">🔍 Buscando</option></select></div>
+      </div>
+      <div class="modal-field"><label class="modal-label">Notas</label><input class="modal-input" id="pv-notas" placeholder="Condiciones, señal, observaciones…"></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('proveedorModal')">Cancelar</button><button class="btn-save" onclick="saveProveedor()">Guardar</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="checkModal">
+  <div class="modal-box">
+    <div class="modal-header"><div class="modal-title">Nueva tarea</div><button class="modal-close" onclick="closeModal('checkModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-field"><label class="modal-label">Tarea</label><input class="modal-input" id="ck-name" placeholder="Ej: Confirmar menú con el catering"></div>
+      <div class="modal-row">
+        <div class="modal-field"><label class="modal-label">Cuándo hacerlo</label><input class="modal-input" id="ck-when" placeholder="6 meses antes"></div>
+        <div class="modal-field"><label class="modal-label">Prioridad</label><select class="modal-input" id="ck-prio"><option value="urgente">⚠ Urgente</option><option value="pronto">⏱ Pronto</option><option value="normal" selected>· Normal</option></select></div>
+      </div>
+      <div class="modal-field"><label class="modal-label">Notas</label><input class="modal-input" id="ck-nota" placeholder="Opcional"></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('checkModal')">Cancelar</button><button class="btn-save" onclick="saveCheckItem()">Añadir</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ════════════════════════════════════════
+//  PAYWALL CONFIG
+//  Para activar Stripe real: cambia STRIPE_KEY y PRICE_ID
+// ════════════════════════════════════════
+const STRIPE_KEY   = 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX'; // ← tu clave pública de Stripe
+const PRICE_ID     = 'price_XXXXXXXXXXXXXXXXXXXXXXXX';   // ← tu Price ID de Stripe
+const FREE_GUESTS  = 30;   // máx. invitados en gratis
+const FREE_MOMENTS = 5;    // máx. momentos en cronograma
+
+// ── Estado del plan ──
+// isPro() devuelve true si el usuario ha pagado
+// Para simulación: cambia localStorage manualmente con isPro_enlace=1
+function isPro() {
+  return localStorage.getItem('isPro_enlace') === '1';
+}
+function activatePro() {
+  localStorage.setItem('isPro_enlace', '1');
+  updatePlanUI();
+}
+function updatePlanUI() {
+  const pro = isPro();
+  const pill = document.getElementById('planPill');
+  if (pill) {
+    pill.textContent = pro ? '✦ Plan completo' : '✦ Plan gratuito';
+    pill.className = 'plan-pill ' + (pro ? 'pro' : 'free');
+    if (pro) pill.onclick = null;
+  }
+  // Ocultar candados de las pestañas
+  document.getElementById('lock-plano')  && (document.getElementById('lock-plano').style.display  = pro ? 'none' : '');
+  document.getElementById('lock-resumen')&& (document.getElementById('lock-resumen').style.display = pro ? 'none' : '');
+}
+
+// ── Mostrar/cerrar paywall ──
+function showPaywall(origin) {
+  document.getElementById('paywallOverlay').style.display = 'flex';
+  // Guardar de dónde vino para redirigir después del pago
+  sessionStorage.setItem('paywall_origin', origin || '');
+}
+function closePaywall() {
+  document.getElementById('paywallOverlay').style.display = 'none';
+}
+
+// ── Procesar pago ──
+// Simulado: activa PRO directo. Con Stripe real: redirige a Checkout.
+async function processPayment() {
+  const btn = document.querySelector('.paywall-cta');
+  btn.textContent = 'Procesando...';
+  btn.disabled = true;
+
+  // ── MODO SIMULADO ──
+  // Elimina este bloque y descomenta el de Stripe cuando estés listo
+  await new Promise(r => setTimeout(r, 1800)); // simula latencia de red
+  activatePro();
+  closePaywall();
+  showToast('🎉 ¡Enlace desbloqueado! Gracias por tu compra');
+  btn.textContent = 'Desbloquear por 3,99 € →';
+  btn.disabled = false;
+  // Redirigir a la pestaña que intentaba abrir
+  const origin = sessionStorage.getItem('paywall_origin');
+  if (origin === 'plano') {
+    const tab = document.querySelectorAll('.tab-btn')[1];
+    switchTab('plano', tab);
+  } else if (origin === 'resumen') {
+    const tab = document.querySelectorAll('.tab-btn')[3];
+    switchTab('resumen', tab);
+  }
+
+  // ── MODO STRIPE REAL (descomentar cuando tengas cuenta) ──
+  // const stripe = Stripe(STRIPE_KEY);
+  // const { error } = await stripe.redirectToCheckout({ lineItems:[{price:PRICE_ID,quantity:1}], mode:'payment', successUrl: window.location.origin + '?paid=1', cancelUrl: window.location.href });
+  // if (error) { showToast('Error: ' + error.message); btn.textContent='Desbloquear por 3,99 € →'; btn.disabled=false; }
+}
+
+// ── Detectar retorno de Stripe con ?paid=1 ──
+if (new URLSearchParams(location.search).get('paid') === '1') {
+  activatePro();
+  history.replaceState({}, '', location.pathname);
+  setTimeout(() => showToast('🎉 ¡Pago confirmado! Enlace desbloqueado'), 500);
+}
+
+// ════════════════════════════════════════
+//  UNIFIED STATE
+// ════════════════════════════════════════
+let ST = JSON.parse(localStorage.getItem('enlace_unified') || 'null') || {
+  guests:[],mesas:[],eventos:[],proveedores:[],checklist:[],rItems:{},
+  costs:{ceremonia:0,coctel:0,banquete:0,barra:0,musica:0,foto:0,transporte:0,alojamiento:0},
+  budget:0, speakerCount:0, busCount:0,
+  gid:1,mid:1,eid:1,pvid:1,ckid:1,riid:1
+};
+function save(){localStorage.setItem('enlace_unified',JSON.stringify(ST))}
+function uid(k){const v=ST[k];ST[k]++;return v}
+
+// ════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════
+function switchTab(name,btn){
+  // Bloquear pestañas premium si no es PRO
+  if(!isPro() && (name==='plano' || name==='resumen')){
+    showPaywall(name);
+    return;
+  }
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='plano')renderPlano();
+  if(name==='crono')renderCrono();
+  if(name==='resumen'){renderProveedores();renderChecklist();}
+}
+
+// ════════════════════════════════════════
+//  HEADER STATS
+// ════════════════════════════════════════
+function updateStats(){
+  const paid=ST.guests.filter(g=>g.paid==='si');
+  const total=paid.reduce((s,g)=>s+(parseFloat(g.importe)||0),0);
+  document.getElementById('stat-invitados').textContent=ST.guests.length;
+  document.getElementById('stat-mesas').textContent=ST.mesas.length;
+  document.getElementById('stat-pagados').textContent=paid.length;
+  document.getElementById('stat-total').textContent=total.toLocaleString('es-ES')+' €';
+  const done=ST.checklist.filter(c=>c.done).length;
+  const total2=ST.checklist.length;
+  document.getElementById('stat-check').textContent=total2>0?Math.round(done/total2*100)+'%':'—';
+  // sync sobres to bov
+  document.getElementById('bov-sobre').textContent=total.toLocaleString('es-ES')+' €';
+}
+function updateHeaderDate(){
+  const v=document.getElementById('r-fecha')?.value;
+  if(!v)return;
+  const d=new Date(v);const now=new Date();
+  const diff=Math.ceil((d-now)/(1000*60*60*24));
+  document.getElementById('header-date').textContent=diff>0?diff+' días para la boda':diff===0?'¡HOY ES EL DÍA!':'Boda celebrada';
+  document.getElementById('crono-date-sub').textContent=d.toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+  save();
+}
+
+// ════════════════════════════════════════
+//  GUESTS
+// ════════════════════════════════════════
+function addGuest(){
+  const n=document.getElementById('g-nombre').value.trim();
+  const a=document.getElementById('g-apellido').value.trim();
+  const r=document.getElementById('g-relacion').value.trim();
+  if(!n){showToast('Escribe el nombre del invitado');return;}
+  // Límite plan gratuito
+  if(!isPro() && ST.guests.length >= FREE_GUESTS){
+    showPaywall('mesas');
+    showToast('Límite de '+FREE_GUESTS+' invitados en el plan gratuito');
+    return;
+  }
+  ST.guests.push({id:uid('gid'),nombre:n,apellido:a,relacion:r,mesaId:null,paid:'pendiente',importe:'',intolerancia:''});
+  save();['g-nombre','g-apellido','g-relacion'].forEach(i=>document.getElementById(i).value='');
+  renderPool();updateStats();showToast('✓ Invitado añadido');
+}
+function renderPool(){
+  const pool=ST.guests.filter(g=>!g.mesaId);
+  const el=document.getElementById('guestPool');
+  document.getElementById('pool-count').textContent=pool.length;
+  let html='';
+  // Banner de límite gratuito
+  if(!isPro()){
+    const remaining=FREE_GUESTS-ST.guests.length;
+    if(remaining<=10 && remaining>0){
+      html+=`<div class="limit-banner" onclick="showPaywall('mesas')"><span class="lb-icon">⚠</span><span class="lb-text">Te quedan <strong>${remaining}</strong> invitados en el plan gratuito</span><span class="lb-cta">Desbloquear →</span></div>`;
+    } else if(remaining<=0){
+      html+=`<div class="limit-banner" onclick="showPaywall('mesas')"><span class="lb-icon">🔒</span><span class="lb-text">Límite de ${FREE_GUESTS} invitados alcanzado</span><span class="lb-cta">Desbloquear →</span></div>`;
+    }
+  }
+  if(!pool.length){el.innerHTML=html+'<div class="empty-pool">Todos los invitados<br>están asignados ✓</div>';return;}
+  el.innerHTML=html+pool.map(g=>`<div class="pool-guest" draggable="true" data-gid="${g.id}" id="pg-${g.id}"><span class="drag-handle">⠿</span><span class="pg-name">${g.nombre} ${g.apellido}</span><span class="pg-rel">${g.relacion||''}</span></div>`).join('');
+  attachPoolDrag();
+}
+function guestRowHTML(g){
+  const pc=g.paid==='si'?'yes':g.paid==='no'?'no':'pending';
+  return `<div class="guest-row" draggable="true" data-gid="${g.id}" id="gr-${g.id}"><span class="gr-handle">⠿</span><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px"><div class="gr-name">${g.nombre} ${g.apellido}</div><div class="gr-rel">${g.relacion||''}</div><div class="gr-paid ${pc}"></div></div></div><button class="gr-expand" onclick="toggleDetail(${g.id},this)">▾</button></div>
+  <div class="guest-detail" id="gd-${g.id}"><div class="detail-grid"><div class="detail-field"><label class="detail-label">¿Ha pagado?</label><select class="detail-select" onchange="updateGuest(${g.id},'paid',this.value)"><option value="pendiente" ${g.paid==='pendiente'?'selected':''}>⏳ Pendiente</option><option value="si" ${g.paid==='si'?'selected':''}>✓ Sí</option><option value="no" ${g.paid==='no'?'selected':''}>✕ No</option></select></div><div class="detail-field"><label class="detail-label">Importe sobre (€)</label><input class="detail-input" type="number" value="${g.importe||''}" onchange="updateGuest(${g.id},'importe',this.value)"></div><div class="detail-field full"><label class="detail-label">Intolerancia / Alergia</label><input class="detail-input" type="text" value="${g.intolerancia||''}" placeholder="Gluten, lactosa, marisco…" onchange="updateGuest(${g.id},'intolerancia',this.value)"></div></div><button class="detail-delete" onclick="deleteGuest(${g.id})">✕ Eliminar invitado</button></div>`;
+}
+function toggleDetail(gid,btn){document.getElementById('gd-'+gid).classList.toggle('open');btn.classList.toggle('open');}
+function updateGuest(gid,field,value){
+  const g=ST.guests.find(g=>g.id===gid);if(!g)return;
+  g[field]=value;save();updateStats();
+  const row=document.getElementById('gr-'+gid);
+  if(row&&field==='paid'){const dot=row.querySelector('.gr-paid');dot.className='gr-paid '+(value==='si'?'yes':value==='no'?'no':'pending');}
+  renderMesaFooter(g.mesaId);
+}
+function deleteGuest(gid){
+  const g=ST.guests.find(g=>g.id===gid);const mid=g?.mesaId;
+  ST.guests=ST.guests.filter(g=>g.id!==gid);save();
+  if(mid)renderMesaCard(mid);renderPool();updateStats();showToast('Invitado eliminado');
+}
+
+// ════════════════════════════════════════
+//  MESAS
+// ════════════════════════════════════════
+function createMesa(){
+  const nombre=document.getElementById('m-nombre').value.trim()||'Mesa '+(ST.mesas.length+1);
+  const cap=parseInt(document.getElementById('m-cap').value)||10;
+  const shape=document.getElementById('m-shape').value;
+  const id=uid('mid');
+  ST.mesas.push({id,nombre,cap,shape,x:200+(ST.mesas.length%4)*220,y:120+Math.floor(ST.mesas.length/4)*220});
+  save();closeModal('mesaModal');renderAllMesas();updateStats();showToast('✓ '+nombre+' creada');
+}
+function deleteMesa(id){
+  ST.guests.filter(g=>g.mesaId===id).forEach(g=>g.mesaId=null);
+  ST.mesas=ST.mesas.filter(m=>m.id!==id);save();renderAllMesas();renderPool();updateStats();
+}
+function renderAllMesas(){
+  const grid=document.getElementById('mesasGrid');
+  if(!ST.mesas.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);font-style:italic">Crea tu primera mesa para empezar</div>';return;}
+  grid.innerHTML=ST.mesas.map(m=>mesaCardHTML(m)).join('');
+  ST.mesas.forEach(m=>attachMesaDrop(m.id));attachMesaGuestDrag();
+}
+function mesaCardHTML(m){
+  const guests=ST.guests.filter(g=>g.mesaId===m.id);
+  const pct=Math.min(guests.length/m.cap,1)*100;
+  const fc=guests.length>m.cap?'over':guests.length===m.cap?'full':'';
+  const paid=guests.filter(g=>g.paid==='si').length;
+  const unpaid=guests.filter(g=>g.paid==='no').length;
+  return `<div class="mesa-card" id="mc-${m.id}"><div class="mesa-header"><div class="mesa-num">${ST.mesas.findIndex(x=>x.id===m.id)+1}</div><input class="mesa-name-input" value="${m.nombre}" onchange="updateMesaNombre(${m.id},this.value)"><div class="mesa-capacity"><label>cap.</label><input class="mesa-cap-input" type="number" value="${m.cap}" min="2" max="40" onchange="updateMesaCap(${m.id},this.value)"></div><button class="mesa-delete" onclick="deleteMesa(${m.id})">✕</button></div><div class="mesa-status-bar"><div class="mesa-status-fill ${fc}" style="width:${pct}%"></div></div><div class="mesa-guests" id="mg-${m.id}"><div class="mesa-drop-zone"></div>${guests.length===0?'<div class="empty-mesa">Arrastra invitados aquí</div>':guests.map(g=>guestRowHTML(g)).join('')}</div><div class="mesa-footer" id="mf-${m.id}"><div class="mesa-count"><strong>${guests.length}</strong> / ${m.cap} personas</div><div class="mesa-paid-summary">${paid>0?`<span class="ps-paid">✓ ${paid} pagado${paid>1?'s':''}</span>`:''} ${unpaid>0?`<span class="ps-unpaid">✕ ${unpaid} pendiente${unpaid>1?'s':''}</span>`:''}</div></div></div>`;
+}
+function renderMesaCard(mid){if(!mid)return;const m=ST.mesas.find(x=>x.id===mid);if(!m)return;const c=document.getElementById('mc-'+mid);if(!c)return;c.outerHTML=mesaCardHTML(m);attachMesaDrop(mid);attachMesaGuestDrag();}
+function renderMesaFooter(mid){if(!mid)return;const m=ST.mesas.find(x=>x.id===mid);if(!m)return;const gs=ST.guests.filter(g=>g.mesaId===mid);const paid=gs.filter(g=>g.paid==='si').length;const unpaid=gs.filter(g=>g.paid==='no').length;const f=document.getElementById('mf-'+mid);if(f)f.innerHTML=`<div class="mesa-count"><strong>${gs.length}</strong> / ${m.cap} personas</div><div class="mesa-paid-summary">${paid>0?`<span class="ps-paid">✓ ${paid}</span>`:''} ${unpaid>0?`<span class="ps-unpaid">✕ ${unpaid}</span>`:''}</div>`;}
+function updateMesaNombre(id,val){const m=ST.mesas.find(m=>m.id===id);if(m){m.nombre=val;save();}}
+function updateMesaCap(id,val){const m=ST.mesas.find(m=>m.id===id);if(!m)return;m.cap=parseInt(val)||10;save();const gs=ST.guests.filter(g=>g.mesaId===id);const pct=Math.min(gs.length/m.cap,1)*100;const fc=gs.length>m.cap?'over':gs.length===m.cap?'full':'';const fill=document.querySelector(`#mc-${id} .mesa-status-fill`);if(fill){fill.style.width=pct+'%';fill.className='mesa-status-fill '+fc;}renderMesaFooter(id);}
+// DRAG & DROP
+let dragGid=null;
+function attachPoolDrag(){document.querySelectorAll('.pool-guest').forEach(el=>{el.addEventListener('dragstart',e=>{dragGid=parseInt(el.dataset.gid);setTimeout(()=>el.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});el.addEventListener('dragend',()=>el.classList.remove('dragging'));});}
+function attachMesaGuestDrag(){document.querySelectorAll('.guest-row').forEach(el=>{el.addEventListener('dragstart',e=>{dragGid=parseInt(el.dataset.gid);setTimeout(()=>el.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});el.addEventListener('dragend',()=>el.classList.remove('dragging'));});}
+function attachMesaDrop(mid){const z=document.getElementById('mg-'+mid);if(!z)return;z.addEventListener('dragover',e=>onDragOver(e,mid));z.addEventListener('drop',e=>onDrop(e,mid));z.addEventListener('dragleave',e=>onDragLeave(e,mid));}
+function onDragOver(e,mid){e.preventDefault();e.dataTransfer.dropEffect='move';document.getElementById('mg-'+mid)?.classList.add('drag-over');}
+function onDragLeave(e,mid){document.getElementById('mg-'+mid)?.classList.remove('drag-over');}
+function onDrop(e,mid){
+  e.preventDefault();document.getElementById('mg-'+mid)?.classList.remove('drag-over');
+  if(dragGid===null)return;
+  const m=ST.mesas.find(m=>m.id===mid);
+  if(ST.guests.filter(g=>g.mesaId===mid).length>=m.cap){showToast('Mesa completa — aumenta la capacidad');return;}
+  const g=ST.guests.find(g=>g.id===dragGid);if(!g)return;
+  const prev=g.mesaId;g.mesaId=mid;save();
+  if(prev)renderMesaCard(prev);renderMesaCard(mid);renderPool();updateStats();dragGid=null;
+}
+document.getElementById('guestPool').addEventListener('dragover',e=>e.preventDefault());
+document.getElementById('guestPool').addEventListener('drop',e=>{
+  e.preventDefault();if(dragGid===null)return;
+  const g=ST.guests.find(g=>g.id===dragGid);if(!g)return;
+  const prev=g.mesaId;g.mesaId=null;save();if(prev)renderMesaCard(prev);renderPool();updateStats();dragGid=null;
+});
+
+// ════════════════════════════════════════
+//  PLANO
+// ════════════════════════════════════════
+let zoom=0.45,panX=0,panY=0,isPanning=false,isDraggingMesa=false,dragMid=null,dragOffX,dragOffY,tableShape='round';
+function renderPlano(){
+  const canvas=document.getElementById('planoCanvas');
+  canvas.querySelectorAll('.canvas-mesa').forEach(el=>el.remove());
+  ST.mesas.forEach((m,i)=>canvas.appendChild(createCanvasMesa(m,i+1)));
+  applyTransform();
+}
+function createCanvasMesa(m,num){
+  const guests=ST.guests.filter(g=>g.mesaId===m.id);
+
+  if(m.shape==='round'){
+    const tableR=54; // radius of the table circle
+    const seatR=7;   // radius of each seat dot
+    const orbitR=tableR+14; // distance from centre to seat centre
+    const totalW=2*(orbitR+seatR+2);
+    const cx=totalW/2, cy=totalW/2;
+
+    const div=document.createElement('div');div.className='canvas-mesa';div.id='cm-'+m.id;
+    div.style.cssText=`left:${m.x}px;top:${m.y}px;width:${totalW}px;height:${totalW}px;position:absolute`;
+
+    // Table circle (centred inside div)
+    const body=document.createElement('div');body.className='cm-body shape-round';
+    body.style.cssText=`width:${tableR*2}px;height:${tableR*2}px;position:absolute;left:${cx-tableR}px;top:${cy-tableR}px`;
+    body.innerHTML=`<div class="cm-number">Mesa ${num}</div><div class="cm-name">${m.nombre}</div><div class="cm-count">${guests.length}/${m.cap}</div>`;
+
+    // Seat dots orbiting around the circle
+    for(let i=0;i<m.cap;i++){
+      const angle=(i/m.cap)*2*Math.PI - Math.PI/2;
+      const sx=cx+orbitR*Math.cos(angle)-seatR;
+      const sy=cy+orbitR*Math.sin(angle)-seatR;
+      const seat=document.createElement('div');
+      seat.className='cm-seat'+(i<guests.length?' occupied':'');
+      seat.style.cssText=`left:${sx}px;top:${sy}px;width:${seatR*2}px;height:${seatR*2}px;position:absolute`;
+      div.appendChild(seat);
+    }
+
+    div.appendChild(body);
+    body.addEventListener('mousedown',e=>{isDraggingMesa=true;dragMid=m.id;const rect=div.getBoundingClientRect();dragOffX=(e.clientX-rect.left)/zoom;dragOffY=(e.clientY-rect.top)/zoom;e.stopPropagation();});
+    return div;
+
+  } else {
+    // Rectangular table
+    const size=140,height=88;
+    const div=document.createElement('div');div.className='canvas-mesa';div.id='cm-'+m.id;
+    div.style.cssText=`left:${m.x}px;top:${m.y}px;width:${size}px;height:${height}px;position:absolute`;
+    const body=document.createElement('div');body.className='cm-body shape-rect';
+    body.style.cssText=`width:${size}px;height:${height}px`;
+    body.innerHTML=`<div class="cm-number">Mesa ${num}</div><div class="cm-name">${m.nombre}</div><div class="cm-count">${guests.length}/${m.cap}</div>`;
+    div.appendChild(body);
+    body.addEventListener('mousedown',e=>{isDraggingMesa=true;dragMid=m.id;const rect=div.getBoundingClientRect();dragOffX=(e.clientX-rect.left)/zoom;dragOffY=(e.clientY-rect.top)/zoom;e.stopPropagation();});
+    return div;
+  }
+}
+function applyTransform(){const c=document.getElementById('planoCanvas');c.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;c.style.transformOrigin='0 0';}
+function zoomIn(){zoom=Math.min(zoom*1.2,2);applyTransform();}
+function zoomOut(){zoom=Math.max(zoom/1.2,0.15);applyTransform();}
+function resetZoom(){const vp=document.getElementById('planoViewport');zoom=Math.min(vp.clientWidth/2400,vp.clientHeight/1600)*0.9;panX=(vp.clientWidth-2400*zoom)/2;panY=(vp.clientHeight-1600*zoom)/2;applyTransform();}
+function toggleShape(){tableShape=tableShape==='round'?'rect':'round';ST.mesas.forEach(m=>m.shape=tableShape);save();renderPlano();showToast('Forma: '+(tableShape==='round'?'Redonda':'Rectangular'));}
+function autoLayout(){const cols=Math.ceil(Math.sqrt(ST.mesas.length));ST.mesas.forEach((m,i)=>{m.x=220+(i%cols)*220;m.y=150+Math.floor(i/cols)*200;});save();renderPlano();showToast('✓ Distribución automática aplicada');}
+const vp2=document.getElementById('planoViewport'),canv=document.getElementById('planoCanvas');
+let panSX,panSY;
+vp2.addEventListener('mousedown',e=>{if(isDraggingMesa)return;isPanning=true;panSX=e.clientX-panX;panSY=e.clientY-panY;canv.classList.add('panning');});
+window.addEventListener('mousemove',e=>{
+  if(isDraggingMesa&&dragMid!==null){const vr=vp2.getBoundingClientRect();const m=ST.mesas.find(m=>m.id===dragMid);if(m){m.x=(e.clientX-vr.left-panX)/zoom-dragOffX;m.y=(e.clientY-vr.top-panY)/zoom-dragOffY;const el=document.getElementById('cm-'+dragMid);if(el){el.style.left=m.x+'px';el.style.top=m.y+'px';}}return;}
+  if(!isPanning)return;panX=e.clientX-panSX;panY=e.clientY-panSY;applyTransform();
+});
+window.addEventListener('mouseup',()=>{if(isDraggingMesa){save();isDraggingMesa=false;dragMid=null;}isPanning=false;canv.classList.remove('panning');});
+vp2.addEventListener('wheel',e=>{e.preventDefault();const d=e.deltaY>0?0.9:1.1;const r=vp2.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;panX=mx-(mx-panX)*d;panY=my-(my-panY)*d;zoom=Math.max(0.1,Math.min(3,zoom*d));applyTransform();},{passive:false});
+
+// ════════════════════════════════════════
+//  CRONOGRAMA
+// ════════════════════════════════════════
+const CAT_EMOJIS={ceremonia:'⛪',coctel:'🥂',banquete:'🍽️',musica:'🎶',foto:'📷',otro:'✦'};
+function createEvento(){
+  const nombre=document.getElementById('ev-nombre').value.trim();if(!nombre){showToast('Escribe el nombre del momento');return;}
+  // Límite plan gratuito
+  if(!isPro() && ST.eventos.length >= FREE_MOMENTS){
+    showPaywall('crono');
+    showToast('Límite de '+FREE_MOMENTS+' momentos en el plan gratuito');
+    return;
+  }
+  const cat=document.getElementById('ev-cat').value;
+  ST.eventos.push({id:uid('eid'),nombre,hora:document.getElementById('ev-hora').value,duracion:document.getElementById('ev-dur').value.trim(),cat,desc:document.getElementById('ev-desc').value.trim(),emoji:document.getElementById('ev-emoji').value.trim()||CAT_EMOJIS[cat]});
+  ST.eventos.sort((a,b)=>a.hora.localeCompare(b.hora));save();closeModal('eventoModal');renderCrono();updateStats();showToast('✓ Momento añadido');
+}
+function deleteEvento(id){ST.eventos=ST.eventos.filter(e=>e.id!==id);save();renderCrono();updateStats();}
+function renderCrono(){
+  const tl=document.getElementById('timeline'),sum=document.getElementById('cronoSummary');
+  // Banner de límite en cronograma
+  let limitHtml='';
+  if(!isPro()){
+    const used=ST.eventos.length, max=FREE_MOMENTS;
+    if(used>=max){
+      limitHtml=`<div class="limit-banner" onclick="showPaywall('crono')" style="margin-bottom:20px"><span class="lb-icon">🔒</span><span class="lb-text">Límite de ${max} momentos en el plan gratuito. Desbloquea el cronograma completo.</span><span class="lb-cta">3,99 € →</span></div>`;
+    } else if(used>=max-2){
+      limitHtml=`<div class="limit-banner" onclick="showPaywall('crono')" style="margin-bottom:20px"><span class="lb-icon">⚠</span><span class="lb-text">Te queda${max-used===1?'':'n'} <strong>${max-used}</strong> momento${max-used===1?'':'s'} en el plan gratuito</span><span class="lb-cta">Desbloquear →</span></div>`;
+    }
+  }
+  if(!ST.eventos.length){tl.innerHTML=limitHtml+'<div style="text-align:center;padding:48px 0;color:var(--muted);font-style:italic">Añade los momentos de tu boda</div>';sum.innerHTML='<div style="font-size:13px;color:var(--muted);font-style:italic;padding-top:8px">Sin eventos aún</div>';return;}
+  tl.innerHTML=limitHtml+ST.eventos.map((ev,i)=>`<div class="evento-item" style="animation-delay:${i*.04}s"><div class="evento-time">${ev.hora}</div><div class="evento-dot dot-${ev.cat}"></div><div class="evento-card"><div class="evento-emoji">${ev.emoji}</div><div class="evento-info"><div class="evento-nombre">${ev.nombre}</div>${ev.desc?`<div class="evento-desc">${ev.desc}</div>`:''}<div class="evento-meta"><span class="evento-chip cat-${ev.cat}">${ev.cat.charAt(0).toUpperCase()+ev.cat.slice(1)}</span>${ev.duracion?`<span class="evento-chip" style="background:rgba(0,0,0,.05);color:var(--muted)">⏱ ${ev.duracion}</span>`:''}</div></div><div class="evento-actions"><button class="evt-btn evt-del" onclick="deleteEvento(${ev.id})">✕</button></div></div></div>`).join('');
+  sum.innerHTML=ST.eventos.map(ev=>`<div class="crono-summary-item"><div class="cs-emoji">${ev.emoji}</div><div class="cs-info"><div class="cs-name">${ev.nombre}</div><div class="cs-time">${ev.hora}${ev.duracion?' · '+ev.duracion:''}</div></div></div>`).join('');
+}
+
+// ════════════════════════════════════════
+//  RESUMEN — ITEMS
+// ════════════════════════════════════════
+function addRItem(listId,emoji){
+  if(!ST.rItems[listId])ST.rItems[listId]=[];
+  const id=uid('riid');ST.rItems[listId].push({id,text:''});save();
+  const list=document.getElementById(listId);if(!list)return;
+  const row=document.createElement('div');row.className='item-row';row.id='ri-'+id;
+  row.innerHTML=`<span class="item-emoji">${emoji}</span><input class="item-input" placeholder="Escribe aquí…" onchange="updateRItem('${listId}',${id},this.value)"><button class="item-del" onclick="deleteRItem('${listId}',${id})">✕</button>`;
+  list.appendChild(row);row.querySelector('input').focus();
+}
+function updateRItem(lid,id,val){if(!ST.rItems[lid])return;const it=ST.rItems[lid].find(i=>i.id===id);if(it){it.text=val;save();}}
+function deleteRItem(lid,id){if(!ST.rItems[lid])return;ST.rItems[lid]=ST.rItems[lid].filter(i=>i.id!==id);document.getElementById('ri-'+id)?.remove();save();}
+
+// ── Speakers ──
+let spCount=0;
+function addSpeaker(){
+  spCount++;const id=uid('spid')||Date.now();
+  const c=document.getElementById('speakersContainer');
+  const el=document.createElement('div');el.className='speaker-card';el.id='sp-'+id;
+  el.innerHTML=`<div class="speaker-num">MOMENTO ${spCount}</div><button class="speaker-del" onclick="this.closest('.speaker-card').remove()">✕</button><div class="fr" style="margin-top:8px"><div class="fg"><label class="fl">Momento</label><select class="fs2"><option>Inicio / Bienvenida</option><option>Lectura 1</option><option>Lectura 2</option><option>Lectura 3</option><option>Intercambio de votos</option><option>Anillos / Arras</option><option>Discurso especial</option><option>Pronunciación</option><option>Cierre y bendición</option><option>Otro</option></select></div><div class="fg"><label class="fl">Nombre del participante</label><input class="fi2" placeholder="Quién lo hace"></div></div><div class="fr"><div class="fg"><label class="fl">Rol / Relación</label><input class="fi2" placeholder="Padrino, hermana, amigo…"></div><div class="fg"><label class="fl">Duración estimada</label><input class="fi2" placeholder="3 min"></div></div><div class="fg"><label class="fl">Contenido / texto</label><textarea class="ft2" placeholder="Pega el texto, la canción o describe qué va a hacer…"></textarea></div>`;
+  c.appendChild(el);
+}
+
+// ── Buses ──
+let busCount=0;
+function addBus(){
+  busCount++;const id=Date.now();const c=document.getElementById('busesContainer');
+  if(c.querySelector('[style*="font-style:italic"]'))c.innerHTML='';
+  const el=document.createElement('div');el.className='subsec';el.style.marginBottom='10px';
+  el.innerHTML=`<div class="subsec-head"><div class="subsec-title">🚌 Ruta ${busCount}</div><button class="btn-ghost" onclick="this.closest('.subsec').remove()">✕</button></div><div class="subsec-body"><div class="fr"><div class="fg"><label class="fl">Ruta (origen → destino)</label><input class="fi2" placeholder="Madrid centro → Finca"></div><div class="fg"><label class="fl">Nº de plazas</label><input class="fi2" placeholder="55 plazas"></div></div><div class="fr"><div class="fg"><label class="fl">Hora de salida</label><input class="fi2" type="time" value="11:00"></div><div class="fg"><label class="fl">Hora de vuelta</label><input class="fi2" type="time" value="01:00"></div><div class="fg"><label class="fl">Empresa</label><input class="fi2" placeholder="Nombre + contacto"></div><div class="fg"><label class="fl">Coste (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('transporte',this.value)"></div></div></div>`;
+  c.appendChild(el);
+}
+
+// ── Cost badges ──
+const costs2={};
+function updateCostBadge(key,val){
+  costs2[key]=(costs2[key]||0)+(parseFloat(val)||0);
+  const el=document.getElementById('cost-'+key);if(el)el.textContent=costs2[key].toLocaleString('es-ES')+' €';
+  updateBudgetDisplay();
+}
+function calcBanquete(){
+  const p=parseFloat(document.getElementById('r-preciopax')?.value)||0;
+  const n=parseFloat(document.getElementById('r-numpax')?.value)||0;
+  const t=p*n;
+  const el=document.getElementById('r-totalbq');if(el)el.value=t.toLocaleString('es-ES')+' €';
+  costs2.banquete=t;const badge=document.getElementById('cost-banquete');if(badge)badge.textContent=t.toLocaleString('es-ES')+' €';
+  updateBudgetDisplay();
+}
+let budget=0;
+function updateBudget(val){budget=parseFloat(val)||0;updateBudgetDisplay();}
+function updateBudgetDisplay(){
+  const conf=Object.values(costs2).reduce((a,b)=>a+b,0);
+  document.getElementById('bov-previsto').textContent=budget.toLocaleString('es-ES')+' €';
+  document.getElementById('bov-confirmado').textContent=conf.toLocaleString('es-ES')+' €';
+  document.getElementById('bov-pendiente').textContent=Math.max(0,budget-conf).toLocaleString('es-ES')+' €';
+}
+
+// ── Proveedores ──
+function saveProveedor(){
+  const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){showToast('Escribe el nombre del proveedor');return;}
+  ST.proveedores.push({id:uid('pvid'),tipo:document.getElementById('pv-tipo').value,nombre,contacto:document.getElementById('pv-contacto').value.trim(),precio:parseFloat(document.getElementById('pv-precio').value)||0,status:document.getElementById('pv-status').value,notas:document.getElementById('pv-notas').value.trim()});
+  save();closeModal('proveedorModal');renderProveedores();showToast('✓ Proveedor añadido');
+}
+function renderProveedores(){
+  const c=document.getElementById('proveedoresContainer');
+  if(!ST.proveedores.length){c.innerHTML='<div style="font-size:13px;color:var(--muted);font-style:italic;text-align:center;padding:24px">Añade tus proveedores para tenerlos todos centralizados</div>';return;}
+  const sMap={confirmado:'ps-confirmado',pendiente:'ps-pendiente',buscando:'ps-buscando'};
+  const sLabel={confirmado:'✓ Confirmado',pendiente:'⏳ En negociación',buscando:'🔍 Buscando'};
+  c.innerHTML=ST.proveedores.map(p=>`<div class="prov-card"><div class="prov-icon">${p.tipo.split(' ')[0]}</div><div class="prov-info"><div class="prov-tipo">${p.tipo.replace(/^[^\s]+\s/,'')}</div><div class="prov-nombre">${p.nombre}</div><div class="prov-contacto">${p.contacto}${p.precio?' · '+p.precio.toLocaleString('es-ES')+' €':''}</div>${p.notas?`<div class="prov-contacto" style="font-style:italic">${p.notas}</div>`:''}</div><div class="prov-status ${sMap[p.status]}">${sLabel[p.status]}</div><button class="btn-ghost" style="margin-left:7px" onclick="deleteProveedor(${p.id})">✕</button></div>`).join('');
+}
+function deleteProveedor(id){ST.proveedores=ST.proveedores.filter(p=>p.id!==id);save();renderProveedores();}
+
+// ── Checklist ──
+const DEFAULT_CL=[
+  {g:'18+ meses antes',c:'18 meses antes',n:'Fijar fecha de la boda',p:'urgente',nota:'Consultar disponibilidad con familia y religiosos si aplica'},
+  {g:'18+ meses antes',c:'18 meses antes',n:'Definir presupuesto total',p:'urgente',nota:'Incluir anillos, luna de miel, vestido, celebración y extras'},
+  {g:'18+ meses antes',c:'18 meses antes',n:'Hacer lista inicial de invitados',p:'urgente',nota:'Lista A (seguros) y lista B (si hay espacio)'},
+  {g:'18+ meses antes',c:'16 meses antes',n:'Visitar y reservar la finca / espacio',p:'urgente',nota:'Pedir contrato, señal y política de cancelación'},
+  {g:'18+ meses antes',c:'16 meses antes',n:'Contratar al fotógrafo/a',p:'urgente',nota:'Los buenos se reservan con mucha antelación'},
+  {g:'18+ meses antes',c:'15 meses antes',n:'Contratar al videógrafo/a',p:'urgente',nota:'Pedir vídeos de referencia de bodas anteriores'},
+  {g:'18+ meses antes',c:'14 meses antes',n:'Buscar y reservar catering',p:'urgente',nota:'Pedir al menos 3 presupuestos antes de decidir'},
+  {g:'12 meses antes',c:'12 meses antes',n:'Empezar búsqueda del vestido de novia',p:'urgente',nota:'Los plazos de fabricación son de 6–9 meses'},
+  {g:'12 meses antes',c:'12 meses antes',n:'Buscar y reservar DJ o banda',p:'urgente',nota:'Compartir lista de canciones vetadas y primer baile'},
+  {g:'12 meses antes',c:'12 meses antes',n:'Contratar al celebrante / oficiante',p:'urgente',nota:'Reunión inicial para conocer el estilo de ceremonia'},
+  {g:'12 meses antes',c:'12 meses antes',n:'Definir estilo y paleta de colores',p:'pronto',nota:'Influye en flores, decoración, papelería e invitaciones'},
+  {g:'12 meses antes',c:'11 meses antes',n:'Enviar save-the-date',p:'pronto',nota:'Especialmente si hay invitados de fuera o temporada alta'},
+  {g:'12 meses antes',c:'10 meses antes',n:'Buscar y reservar florista',p:'pronto',nota:'Pedir bocetos del ramo, centros de mesa y decoración'},
+  {g:'12 meses antes',c:'10 meses antes',n:'Buscar traje del novio',p:'pronto',nota:'Alquiler o compra — reservar con meses de antelación'},
+  {g:'9 meses antes',c:'9 meses antes',n:'Diseñar y encargar invitaciones',p:'pronto',nota:'Incluir RSVP, mapa y información de hoteles'},
+  {g:'9 meses antes',c:'9 meses antes',n:'Reservar hotel noche de bodas',p:'pronto',nota:'Suite nupcial — añadir extras (pétalos, champán, jacuzzi)'},
+  {g:'9 meses antes',c:'9 meses antes',n:'Gestionar alojamiento invitados de fuera',p:'pronto',nota:'Negociar precio grupal con hotel cercano'},
+  {g:'9 meses antes',c:'8 meses antes',n:'Contratar empresa de autobuses',p:'pronto',nota:'Definir rutas, horarios y número de plazas'},
+  {g:'9 meses antes',c:'8 meses antes',n:'Reservar coche nupcial',p:'pronto',nota:'Confirmar trayecto: domicilio → ceremonia → finca'},
+  {g:'9 meses antes',c:'8 meses antes',n:'Contratar empresa de decoración',p:'pronto',nota:'Centros de mesa, arco floral, iluminación, photocall'},
+  {g:'6 meses antes',c:'6 meses antes',n:'Enviar invitaciones formales',p:'pronto',nota:'Con fecha límite de confirmación (RSVP) clara'},
+  {g:'6 meses antes',c:'6 meses antes',n:'Organizar lista de bodas / regalos',p:'normal',nota:'Tienda física, plataforma online o viaje de novios'},
+  {g:'6 meses antes',c:'6 meses antes',n:'Primera prueba del vestido de novia',p:'urgente',nota:'Llevar los zapatos y ropa interior definitivos'},
+  {g:'6 meses antes',c:'6 meses antes',n:'Prueba de menú con el catering',p:'urgente',nota:'Asistir los dos novios — tomar notas de cambios'},
+  {g:'6 meses antes',c:'5 meses antes',n:'Contratar maquilladora y peluquería',p:'pronto',nota:'Hacer prueba de maquillaje y peinado antes del día'},
+  {g:'6 meses antes',c:'5 meses antes',n:'Elegir y confirmar padrinos y testigos',p:'pronto',nota:'Comunicarles sus roles y responsabilidades'},
+  {g:'6 meses antes',c:'5 meses antes',n:'Trabajar los votos de la ceremonia',p:'pronto',nota:'Si es simbólica o civil, escribir el discurso'},
+  {g:'6 meses antes',c:'5 meses antes',n:'Contratar animación infantil si hay niños',p:'normal',nota:'Espacio dedicado con monitor/a para los más pequeños'},
+  {g:'3 meses antes',c:'3 meses antes',n:'Confirmar número definitivo de invitados',p:'urgente',nota:'Comunicar al catering y a la finca el número final'},
+  {g:'3 meses antes',c:'3 meses antes',n:'Distribución definitiva de mesas',p:'urgente',nota:'Usar la app de mesas — comunicar intolerancias al catering'},
+  {g:'3 meses antes',c:'3 meses antes',n:'Comprar detalles / recuerdos para invitados',p:'pronto',nota:'Personalizar si es posible — calcular por invitado'},
+  {g:'3 meses antes',c:'3 meses antes',n:'Tramitar certificado de matrimonio civil',p:'urgente',nota:'Solicitar cita en juzgado o registro civil'},
+  {g:'3 meses antes',c:'2 meses antes',n:'Reunión final con el catering',p:'urgente',nota:'Menú definitivo, intolerancias, horarios de servicio'},
+  {g:'3 meses antes',c:'2 meses antes',n:'Reunión final con la finca / coordinador',p:'urgente',nota:'Plano del salón, horarios de montaje, acceso proveedores'},
+  {g:'3 meses antes',c:'2 meses antes',n:'Briefing con fotógrafo y videógrafo',p:'pronto',nota:'Lista de fotos obligatorias, momentos clave, horarios'},
+  {g:'3 meses antes',c:'2 meses antes',n:'Contratar seguro de boda',p:'pronto',nota:'Cubre cancelaciones, lluvia, daños a terceros'},
+  {g:'1 mes antes',c:'1 mes antes',n:'Segunda prueba del vestido de novia',p:'urgente',nota:'Ajuste final con accesorios definitivos'},
+  {g:'1 mes antes',c:'1 mes antes',n:'Confirmar todos los proveedores',p:'urgente',nota:'Llamada a cada proveedor para confirmar hora de llegada'},
+  {g:'1 mes antes',c:'1 mes antes',n:'Preparar sobres de propinas para proveedores',p:'pronto',nota:'Fotógrafo, catering, DJ, finca, florista — efectivo listo'},
+  {g:'1 mes antes',c:'3 semanas antes',n:'Ensayo de la ceremonia',p:'urgente',nota:'Con el celebrante y todos los participantes'},
+  {g:'1 mes antes',c:'2 semanas antes',n:'Hacer el guión definitivo del día',p:'urgente',nota:'Compartirlo con todos los proveedores involucrados'},
+  {g:'1 mes antes',c:'2 semanas antes',n:'Preparar maleta de luna de miel',p:'normal',nota:'Pasaportes, reservas, ropa de destino, seguro de viaje'},
+  {g:'1 mes antes',c:'1 semana antes',n:'Manicura y pedicura de la novia',p:'normal',nota:'Coordinar con el color del vestido y el ramo'},
+  {g:'1 mes antes',c:'3 días antes',n:'Recoger el vestido definitivo',p:'urgente',nota:'Colgar en lugar fresco y sin arrugas hasta el día B'},
+  {g:'1 mes antes',c:'1 día antes',n:'Preparar los detalles para el día B',p:'urgente',nota:'Anillos, arras, discursos, teléfono cargado, kit emergencia'},
+  {g:'El día de la boda',c:'El día',n:'Kit de emergencia de la novia',p:'urgente',nota:'Imperdibles, cinta doble cara, quitamanchas, analgésico, aguja e hilo'},
+  {g:'El día de la boda',c:'El día',n:'Designar persona de contacto con proveedores',p:'urgente',nota:'Un familiar de confianza que lleve el teléfono de coordinación'},
+  {g:'El día de la boda',c:'El día',n:'Entregar sobres de propinas',p:'urgente',nota:'Al final de cada servicio — llevar lista de a quién dar qué'},
+  {g:'El día de la boda',c:'El día',n:'Guardar el ramo de novia si se quiere conservar',p:'normal',nota:'Empresa de preservación floral o secado en casa'},
+  {g:'Después de la boda',c:'1 semana después',n:'Enviar notas de agradecimiento',p:'pronto',nota:'A los que han ayudado especialmente y a los proveedores'},
+  {g:'Después de la boda',c:'1 mes después',n:'Cambio de apellidos / documentación',p:'pronto',nota:'DNI, pasaporte, cuenta bancaria, contrato de trabajo…'},
+  {g:'Después de la boda',c:'1 mes después',n:'Recibir y revisar fotos y vídeo',p:'normal',nota:'Hacer copia de seguridad en dos lugares distintos'},
+  {g:'Después de la boda',c:'2 meses después',n:'Elegir álbum de fotos',p:'normal',nota:'El fotógrafo suele ofrecer varias opciones'},
+];
+let ckFilter='all';
+function initChecklist(){
+  if(!ST.checklist.length){ST.checklist=DEFAULT_CL.map((c,i)=>({...c,id:1000+i,done:false}));save();}
+  renderChecklist();
+}
+function filterCheck(f,el){ckFilter=f;document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderChecklist();}
+function renderChecklist(){
+  const cont=document.getElementById('checklistContainer');
+  const groups={};
+  let list=ST.checklist;
+  if(ckFilter==='pendiente')list=list.filter(c=>!c.done);
+  if(ckFilter==='hecho')list=list.filter(c=>c.done);
+  if(ckFilter==='urgente')list=list.filter(c=>c.p==='urgente'&&!c.done);
+  list.forEach(c=>{if(!groups[c.g])groups[c.g]=[];groups[c.g].push(c);});
+  const done=ST.checklist.filter(c=>c.done).length,tot=ST.checklist.length;
+  const pct=tot>0?Math.round(done/tot*100):0;
+  document.getElementById('checkPct').textContent=pct+'%';
+  document.getElementById('checkLabel').textContent=done+' de '+tot+' completadas';
+  document.getElementById('checkBar').style.width=pct+'%';
+  document.getElementById('stat-check').textContent=tot>0?pct+'%':'—';
+  if(!Object.keys(groups).length){cont.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted);font-style:italic">No hay tareas con este filtro</div>';return;}
+  cont.innerHTML=Object.entries(groups).map(([grupo,items])=>{
+    const gd=items.filter(c=>c.done).length;
+    return `<div class="check-month"><div class="month-title"><span>${grupo.toUpperCase()}</span><span style="font-weight:400;color:var(--muted2)">${gd}/${items.length}</span></div>${items.map(ck=>ckHTML(ck)).join('')}</div>`;
+  }).join('');
+}
+function ckHTML(c){
+  const pt=c.p==='urgente'?'<span class="check-tag tag-urgente">⚠ Urgente</span>':c.p==='pronto'?'<span class="check-tag tag-pronto">⏱ Pronto</span>':'<span class="check-tag tag-normal">· Normal</span>';
+  return `<div class="check-item ${c.done?'done':''} ${!c.done?c.p:''}" onclick="toggleCheck(${c.id})"><div class="check-box">${c.done?'✓':''}</div><div class="check-info"><div class="check-name">${c.n}</div><div class="check-meta"><span class="check-when">${c.c}</span>${pt}</div>${c.nota?`<div class="check-notas">${c.nota}</div>`:''}</div></div>`;
+}
+function toggleCheck(id){const c=ST.checklist.find(c=>c.id===id);if(!c)return;c.done=!c.done;save();renderChecklist();updateStats();if(c.done)showToast('✓ '+c.n.substring(0,44)+(c.n.length>44?'…':''));}
+function saveCheckItem(){
+  const n=document.getElementById('ck-name').value.trim();if(!n){showToast('Escribe el nombre de la tarea');return;}
+  ST.checklist.push({id:uid('ckid'),g:'Tareas personalizadas',c:document.getElementById('ck-when').value.trim()||'—',n,p:document.getElementById('ck-prio').value,nota:document.getElementById('ck-nota').value.trim(),done:false});
+  save();closeModal('checkModal');renderChecklist();showToast('✓ Tarea añadida');
+}
+
+// ── Resumen nav ──
+function rScrollTo(id,el){
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.rnav-link').forEach(l=>l.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ════════════════════════════════════════
+//  MODALS & TOAST
+// ════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
+let toastT;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400);}
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+updatePlanUI(); // aplicar estado PRO/gratuito al arrancar
+renderPool();renderAllMesas();updateStats();
+setTimeout(()=>{
+  resetZoom();
+  if(!ST.eventos.length){
+    const demos=[
+      {nombre:'Llegada de los novios',hora:'11:30',duracion:'15 min',cat:'ceremonia',desc:'Llegada al lugar de la ceremonia',emoji:'👰'},
+      {nombre:'Ceremonia civil',hora:'12:00',duracion:'45 min',cat:'ceremonia',desc:'En el jardín principal',emoji:'⛪'},
+      {nombre:'Sesión de fotos',hora:'12:45',duracion:'30 min',cat:'foto',desc:'Fotos de familia y pareja en los jardines',emoji:'📷'},
+      {nombre:'Cóctel de bienvenida',hora:'13:30',duracion:'90 min',cat:'coctel',desc:'Aperitivo y canapés en la terraza',emoji:'🥂'},
+      {nombre:'Entrada al salón',hora:'15:00',duracion:'15 min',cat:'banquete',desc:'Los novios entran al ritmo de la música',emoji:'💃'},
+      {nombre:'Banquete',hora:'15:15',duracion:'3 h',cat:'banquete',desc:'Menú degustación',emoji:'🍽️'},
+      {nombre:'Discursos y brindis',hora:'18:00',duracion:'30 min',cat:'coctel',desc:'Padrinos, testigos y sorpresas',emoji:'🥂'},
+      {nombre:'Tarta nupcial',hora:'18:30',duracion:'20 min',cat:'banquete',desc:'Corte de la tarta y primer baile',emoji:'🎂'},
+      {nombre:'Primer baile',hora:'18:50',duracion:'10 min',cat:'musica',desc:'',emoji:'💃'},
+      {nombre:'Fiesta y baile',hora:'19:00',duracion:'5 h',cat:'musica',desc:'DJ y barra libre',emoji:'🎶'},
+    ];
+    demos.forEach(d=>ST.eventos.push({id:uid('eid'),...d}));save();
+  }
+  renderCrono();
+  initChecklist();
+},100);
+</script>
+<!-- Banner de instalación PWA -->
+<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#2d2d30;border-top:1px solid #b8965a;padding:14px 20px;z-index:1000;align-items:center;gap:14px;box-shadow:0 -4px 20px rgba(0,0,0,.3)">
+  <div style="font-size:26px">💍</div>
+  <div style="flex:1">
+    <div style="font-family:'Playfair Display',serif;font-size:15px;color:#e8cfa0;font-style:italic">Instalar Enlace</div>
+    <div style="font-size:12px;color:#8a7d6e;margin-top:2px">Añadir a tu pantalla de inicio para acceso rápido</div>
+  </div>
+  <button id="install-btn" style="background:#b8965a;color:#1c1c1e;border:none;border-radius:6px;padding:9px 18px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;white-space:nowrap">Instalar</button>
+  <button id="dismiss-btn" style="background:none;border:none;color:#8a7d6e;font-size:20px;cursor:pointer;padding:4px;line-height:1">✕</button>
+</div>
+
+<!-- Banner de actualización PWA -->
+<div id="update-banner" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#2d2d30;border:1px solid #b8965a;border-radius:8px;padding:12px 20px;z-index:1000;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.4);white-space:nowrap">
+  <div style="font-size:13px;color:#e8cfa0">Nueva versión disponible</div>
+  <button id="update-btn" style="background:#b8965a;color:#1c1c1e;border:none;border-radius:4px;padding:7px 14px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer">Actualizar</button>
+</div>
+
+<!-- PWA: Registro del Service Worker + Banner de instalación -->
+<script>
+// ── Registro del Service Worker ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('[Enlace] Service Worker registrado:', reg.scope);
+
+        // Notificar si hay actualización disponible
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateBanner();
+            }
+          });
+        });
+      })
+      .catch(err => console.warn('[Enlace] SW error:', err));
+  });
+}
+
+// ── Banner de instalación (Android) ──
+let deferredPrompt = null;
+const installBanner = document.getElementById('install-banner');
+const installBtn    = document.getElementById('install-btn');
+const dismissBtn    = document.getElementById('dismiss-btn');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (installBanner) {
+    installBanner.style.display = 'flex';
+    // Auto-ocultar después de 12 segundos si no hay acción
+    setTimeout(() => { installBanner.style.display = 'none'; }, 12000);
+  }
+});
+
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('[Enlace] Instalación:', outcome);
+    deferredPrompt = null;
+    installBanner.style.display = 'none';
+  });
+}
+
+if (dismissBtn) {
+  dismissBtn.addEventListener('click', () => {
+    installBanner.style.display = 'none';
+    // No volver a mostrar en esta sesión
+    sessionStorage.setItem('install-dismissed', '1');
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  console.log('[Enlace] App instalada correctamente ✓');
+  if (installBanner) installBanner.style.display = 'none';
+});
+
+// ── Banner de actualización ──
+function showUpdateBanner() {
+  const b = document.getElementById('update-banner');
+  if (b) b.style.display = 'flex';
+}
+document.getElementById('update-btn')?.addEventListener('click', () => {
+  navigator.serviceWorker.controller?.postMessage('SKIP_WAITING');
+  window.location.reload();
+});
+</script>
+</body>
+</html>
