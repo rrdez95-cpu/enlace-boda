@@ -233,8 +233,139 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
 .dot-foto{background:#3a64a0}
 .dot-otro{background:var(--muted)}
 /* ── RESUMEN ── */
-/* ── PAYWALL ── */
-.paywall-overlay{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(13,13,15,.92);backdrop-filter:blur(6px)}
+/* ════════════════════════════════
+   RESPONSIVE MÓVIL
+   ════════════════════════════════ */
+@media(max-width:768px){
+  /* Header compacto */
+  .app-header{padding:0 12px;height:auto;flex-wrap:wrap;gap:6px;padding-top:8px;padding-bottom:8px}
+  .app-logo{font-size:15px;letter-spacing:2px}
+  .header-stats{gap:10px;flex-wrap:wrap;order:3;width:100%;justify-content:space-between;padding-bottom:4px}
+  .hstat-val{font-size:14px}
+  .hstat-key{font-size:8px}
+  .header-date{display:none}
+  .plan-pill{font-size:9px;padding:2px 8px}
+
+  /* Tabs — scroll horizontal */
+  .tab-bar{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tab-bar::-webkit-scrollbar{display:none}
+  .tab-btn{padding:0 14px;height:40px;font-size:10px;letter-spacing:1px;white-space:nowrap;flex-shrink:0}
+  .tab-lock{display:none}
+
+  /* ── MESAS: sidebar arriba, main abajo ── */
+  #s-mesas{flex-direction:column}
+  .mesas-sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid rgba(184,150,90,.2);flex-shrink:0}
+  .sidebar-head{padding:12px}
+  .sidebar-title{font-size:13px;margin-bottom:10px}
+  .add-guest-form{gap:6px}
+  .fi{padding:8px 10px;font-size:13px}
+  .btn-add-guest{padding:9px}
+  .guest-pool-label{padding:8px 12px 5px}
+  .guest-pool{max-height:180px;padding:4px 8px 8px}
+  .mesas-main{padding:12px}
+  .mesas-topbar{margin-bottom:10px}
+  .mesas-topbar-title{font-size:17px}
+  .btn-new-mesa{padding:7px 14px;font-size:10px}
+  .mesas-grid{grid-template-columns:1fr}
+
+  /* ── PLANO: toolbar simplificado ── */
+  .plano-toolbar{padding:7px 12px;gap:8px}
+  .plano-toolbar-title{display:none}
+  .toolbar-sep{display:none}
+  .tool-btn{padding:5px 10px;font-size:11px}
+  .plano-legend{bottom:12px;right:8px;padding:10px 12px;font-size:10px}
+  .plano-compass{top:12px;right:8px;width:36px;height:36px;font-size:14px}
+  .plano-controls{top:8px;left:8px}
+  .pc-btn{width:30px;height:30px;font-size:13px}
+
+  /* ── CRONOGRAMA: sin sidebar ── */
+  #s-crono{flex-direction:column}
+  .crono-sidebar{display:none}
+  .crono-main{padding:14px 16px}
+  .crono-header{flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:18px}
+  .crono-title{font-size:20px}
+  .btn-add-evento{padding:8px 14px;font-size:10px;width:100%;justify-content:center}
+  .timeline{padding-left:60px}
+  .evento-time{left:-60px;width:44px;font-size:11px}
+  .evento-card{padding:10px 12px;gap:8px}
+  .evento-emoji{font-size:17px}
+  .evento-nombre{font-size:13px}
+  .evento-desc{font-size:11px}
+
+  /* ── RESUMEN: sin sidenav ── */
+  #s-resumen{flex-direction:column}
+  .res-sidenav{display:none}
+  .res-main{padding:14px 12px;gap:16px}
+  .sec-body-3{grid-template-columns:1fr;gap:0;padding:14px}
+  .sec-body-split{grid-template-columns:1fr}
+  .sec-body-split > div{border-right:none!important;border-bottom:1px solid var(--border)}
+  .sec-body-split > div:last-child{border-bottom:none}
+  .sec-body{padding:14px}
+  .subsec-body{padding:12px}
+  .fr{grid-template-columns:1fr}
+  .fr3{grid-template-columns:1fr}
+  .fg{margin-bottom:10px}
+  .sec-title{font-size:15px}
+  .sec-head{padding:12px 16px}
+  .sec-icon{font-size:16px}
+  .cost-badge{font-size:12px;padding:4px 9px}
+  .bov{grid-template-columns:1fr 1fr}
+  .btn-primary-sm{padding:7px 12px;font-size:10px}
+
+  /* ── CHECKLIST mobile ── */
+  .check-item{padding:9px 11px}
+  .check-name{font-size:12px}
+  .check-filters{gap:5px}
+  .filter-chip{padding:4px 10px;font-size:9px}
+  .check-progress{flex-direction:column;align-items:flex-start;gap:8px;padding:12px 14px}
+  .check-pct{font-size:22px}
+
+  /* ── PROVEEDORES mobile ── */
+  .prov-card{flex-wrap:wrap;gap:8px}
+  .prov-status{width:100%;text-align:center}
+
+  /* ── MESAS CARDS ── */
+  .mesa-card{margin:0}
+  .guest-row{padding:5px 8px;gap:6px}
+  .gr-name{font-size:12px}
+  .detail-grid{grid-template-columns:1fr}
+
+  /* ── PAYWALL ── */
+  .paywall-box{border-radius:12px}
+  .paywall-top{padding:24px 20px 18px}
+  .paywall-rings{font-size:32px;margin-bottom:10px}
+  .paywall-title{font-size:20px}
+  .paywall-price{padding:14px 20px 4px}
+  .paywall-amount{font-size:44px}
+  .paywall-once{margin-bottom:14px}
+  .paywall-features{padding:0 20px;gap:7px;margin-bottom:18px}
+  .pf-item{font-size:12px}
+  .paywall-cta{margin:0 20px 8px;width:calc(100% - 40px);padding:14px;font-size:13px}
+  .paywall-guarantee{padding:0 20px 14px;font-size:10px}
+  .paywall-skip{padding:0 20px 16px;font-size:11px}
+
+  /* ── MODALS ── */
+  .modal-box{border-radius:12px}
+  .modal-header{padding:14px 18px}
+  .modal-body{padding:16px 18px}
+  .modal-footer{padding:12px 18px;flex-direction:column}
+  .btn-save,.btn-cancel{width:100%;text-align:center;padding:12px}
+  .modal-row{grid-template-columns:1fr}
+  .modal-input,.modal-select{font-size:16px}/* evita zoom en iOS */
+
+  /* Evitar zoom en inputs iOS */
+  .fi,.fi2,.fs2,.ft2,.detail-input,.detail-select{font-size:16px!important}
+
+  /* Install banner */
+  #install-banner{padding:12px 14px;gap:10px}
+  #install-banner > div:first-child{font-size:22px}
+}
+
+@media(max-width:380px){
+  .hstat-val{font-size:12px}
+  .tab-btn{padding:0 10px;font-size:9px}
+  .mesas-topbar-title{font-size:15px}
+};inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(13,13,15,.92);backdrop-filter:blur(6px)}
 .paywall-box{background:var(--charcoal2);border:1px solid var(--gold);border-radius:16px;width:100%;max-width:400px;overflow:hidden;animation:mIn .3s ease;box-shadow:0 24px 80px rgba(0,0,0,.6)}
 .paywall-top{background:linear-gradient(135deg,#2a2420 0%,var(--charcoal2) 100%);padding:36px 32px 28px;text-align:center;border-bottom:1px solid rgba(184,150,90,.2)}
 .paywall-rings{font-size:42px;margin-bottom:16px;display:block}
