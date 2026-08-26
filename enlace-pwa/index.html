@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Enlace · Organizador de Boda</title>
-
+ 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1c1c1e">
@@ -245,13 +245,13 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .hstat-key{font-size:8px}
   .header-date{display:none}
   .plan-pill{font-size:9px;padding:2px 8px}
-
+ 
   /* Tabs — scroll horizontal */
   .tab-bar{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .tab-bar::-webkit-scrollbar{display:none}
   .tab-btn{padding:0 14px;height:40px;font-size:10px;letter-spacing:1px;white-space:nowrap;flex-shrink:0}
   .tab-lock{display:none}
-
+ 
   /* ── MESAS: sidebar arriba, main abajo ── */
   #s-mesas{flex-direction:column}
   .mesas-sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid rgba(184,150,90,.2);flex-shrink:0}
@@ -267,7 +267,7 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .mesas-topbar-title{font-size:17px}
   .btn-new-mesa{padding:7px 14px;font-size:10px}
   .mesas-grid{grid-template-columns:1fr}
-
+ 
   /* ── PLANO: toolbar simplificado ── */
   .plano-toolbar{padding:7px 12px;gap:8px}
   .plano-toolbar-title{display:none}
@@ -277,7 +277,7 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .plano-compass{top:12px;right:8px;width:36px;height:36px;font-size:14px}
   .plano-controls{top:8px;left:8px}
   .pc-btn{width:30px;height:30px;font-size:13px}
-
+ 
   /* ── CRONOGRAMA: sin sidebar ── */
   #s-crono{flex-direction:column}
   .crono-sidebar{display:none}
@@ -291,7 +291,7 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .evento-emoji{font-size:17px}
   .evento-nombre{font-size:13px}
   .evento-desc{font-size:11px}
-
+ 
   /* ── RESUMEN: sin sidenav ── */
   #s-resumen{flex-direction:column}
   .res-sidenav{display:none}
@@ -311,7 +311,7 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .cost-badge{font-size:12px;padding:4px 9px}
   .bov{grid-template-columns:1fr 1fr}
   .btn-primary-sm{padding:7px 12px;font-size:10px}
-
+ 
   /* ── CHECKLIST mobile ── */
   .check-item{padding:9px 11px}
   .check-name{font-size:12px}
@@ -319,17 +319,17 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .filter-chip{padding:4px 10px;font-size:9px}
   .check-progress{flex-direction:column;align-items:flex-start;gap:8px;padding:12px 14px}
   .check-pct{font-size:22px}
-
+ 
   /* ── PROVEEDORES mobile ── */
   .prov-card{flex-wrap:wrap;gap:8px}
   .prov-status{width:100%;text-align:center}
-
+ 
   /* ── MESAS CARDS ── */
   .mesa-card{margin:0}
   .guest-row{padding:5px 8px;gap:6px}
   .gr-name{font-size:12px}
   .detail-grid{grid-template-columns:1fr}
-
+ 
   /* ── PAYWALL ── */
   .paywall-box{border-radius:12px}
   .paywall-top{padding:24px 20px 18px}
@@ -343,7 +343,7 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .paywall-cta{margin:0 20px 8px;width:calc(100% - 40px);padding:14px;font-size:13px}
   .paywall-guarantee{padding:0 20px 14px;font-size:10px}
   .paywall-skip{padding:0 20px 16px;font-size:11px}
-
+ 
   /* ── MODALS ── */
   .modal-box{border-radius:12px}
   .modal-header{padding:14px 18px}
@@ -352,15 +352,15 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .btn-save,.btn-cancel{width:100%;text-align:center;padding:12px}
   .modal-row{grid-template-columns:1fr}
   .modal-input,.modal-select{font-size:16px}/* evita zoom en iOS */
-
+ 
   /* Evitar zoom en inputs iOS */
   .fi,.fi2,.fs2,.ft2,.detail-input,.detail-select{font-size:16px!important}
-
+ 
   /* Install banner */
   #install-banner{padding:12px 14px;gap:10px}
   #install-banner > div:first-child{font-size:22px}
 }
-
+ 
 @media(max-width:380px){
   .hstat-val{font-size:12px}
   .tab-btn{padding:0 10px;font-size:9px}
@@ -523,7 +523,7 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   <div class="header-date" id="header-date">— días para la boda</div>
   <div class="plan-pill free" id="planPill" onclick="showPaywall('header')">✦ Plan gratuito</div>
 </header>
-
+ 
 <!-- PAYWALL MODAL -->
 <div class="paywall-overlay" id="paywallOverlay" style="display:none">
   <div class="paywall-box">
@@ -958,7 +958,7 @@ const STRIPE_KEY   = 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX'; // ← tu clave públic
 const PRICE_ID     = 'price_XXXXXXXXXXXXXXXXXXXXXXXX';   // ← tu Price ID de Stripe
 const FREE_GUESTS  = 30;   // máx. invitados en gratis
 const FREE_MOMENTS = 5;    // máx. momentos en cronograma
-
+ 
 // ── Estado del plan ──
 // isPro() devuelve true si el usuario ha pagado
 // Para simulación: cambia localStorage manualmente con isPro_enlace=1
@@ -981,7 +981,7 @@ function updatePlanUI() {
   document.getElementById('lock-plano')  && (document.getElementById('lock-plano').style.display  = pro ? 'none' : '');
   document.getElementById('lock-resumen')&& (document.getElementById('lock-resumen').style.display = pro ? 'none' : '');
 }
-
+ 
 // ── Mostrar/cerrar paywall ──
 function showPaywall(origin) {
   document.getElementById('paywallOverlay').style.display = 'flex';
@@ -991,14 +991,14 @@ function showPaywall(origin) {
 function closePaywall() {
   document.getElementById('paywallOverlay').style.display = 'none';
 }
-
+ 
 // ── Procesar pago ──
 // Simulado: activa PRO directo. Con Stripe real: redirige a Checkout.
 async function processPayment() {
   const btn = document.querySelector('.paywall-cta');
   btn.textContent = 'Procesando...';
   btn.disabled = true;
-
+ 
   // ── MODO SIMULADO ──
   // Elimina este bloque y descomenta el de Stripe cuando estés listo
   await new Promise(r => setTimeout(r, 1800)); // simula latencia de red
@@ -1016,20 +1016,20 @@ async function processPayment() {
     const tab = document.querySelectorAll('.tab-btn')[3];
     switchTab('resumen', tab);
   }
-
+ 
   // ── MODO STRIPE REAL (descomentar cuando tengas cuenta) ──
   // const stripe = Stripe(STRIPE_KEY);
   // const { error } = await stripe.redirectToCheckout({ lineItems:[{price:PRICE_ID,quantity:1}], mode:'payment', successUrl: window.location.origin + '?paid=1', cancelUrl: window.location.href });
   // if (error) { showToast('Error: ' + error.message); btn.textContent='Desbloquear por 3,99 € →'; btn.disabled=false; }
 }
-
+ 
 // ── Detectar retorno de Stripe con ?paid=1 ──
 if (new URLSearchParams(location.search).get('paid') === '1') {
   activatePro();
   history.replaceState({}, '', location.pathname);
   setTimeout(() => showToast('🎉 ¡Pago confirmado! Enlace desbloqueado'), 500);
 }
-
+ 
 // ════════════════════════════════════════
 //  UNIFIED STATE
 // ════════════════════════════════════════
@@ -1041,7 +1041,7 @@ let ST = JSON.parse(localStorage.getItem('enlace_unified') || 'null') || {
 };
 function save(){localStorage.setItem('enlace_unified',JSON.stringify(ST))}
 function uid(k){const v=ST[k];ST[k]++;return v}
-
+ 
 // ════════════════════════════════════════
 //  NAVIGATION
 // ════════════════════════════════════════
@@ -1059,7 +1059,7 @@ function switchTab(name,btn){
   if(name==='crono')renderCrono();
   if(name==='resumen'){renderProveedores();renderChecklist();}
 }
-
+ 
 // ════════════════════════════════════════
 //  HEADER STATS
 // ════════════════════════════════════════
@@ -1085,7 +1085,7 @@ function updateHeaderDate(){
   document.getElementById('crono-date-sub').textContent=d.toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
   save();
 }
-
+ 
 // ════════════════════════════════════════
 //  GUESTS
 // ════════════════════════════════════════
@@ -1140,7 +1140,7 @@ function deleteGuest(gid){
   ST.guests=ST.guests.filter(g=>g.id!==gid);save();
   if(mid)renderMesaCard(mid);renderPool();updateStats();showToast('Invitado eliminado');
 }
-
+ 
 // ════════════════════════════════════════
 //  MESAS
 // ════════════════════════════════════════
@@ -1196,7 +1196,7 @@ document.getElementById('guestPool').addEventListener('drop',e=>{
   const g=ST.guests.find(g=>g.id===dragGid);if(!g)return;
   const prev=g.mesaId;g.mesaId=null;save();if(prev)renderMesaCard(prev);renderPool();updateStats();dragGid=null;
 });
-
+ 
 // ════════════════════════════════════════
 //  PLANO
 // ════════════════════════════════════════
@@ -1209,22 +1209,22 @@ function renderPlano(){
 }
 function createCanvasMesa(m,num){
   const guests=ST.guests.filter(g=>g.mesaId===m.id);
-
+ 
   if(m.shape==='round'){
     const tableR=54; // radius of the table circle
     const seatR=7;   // radius of each seat dot
     const orbitR=tableR+14; // distance from centre to seat centre
     const totalW=2*(orbitR+seatR+2);
     const cx=totalW/2, cy=totalW/2;
-
+ 
     const div=document.createElement('div');div.className='canvas-mesa';div.id='cm-'+m.id;
     div.style.cssText=`left:${m.x}px;top:${m.y}px;width:${totalW}px;height:${totalW}px;position:absolute`;
-
+ 
     // Table circle (centred inside div)
     const body=document.createElement('div');body.className='cm-body shape-round';
     body.style.cssText=`width:${tableR*2}px;height:${tableR*2}px;position:absolute;left:${cx-tableR}px;top:${cy-tableR}px`;
     body.innerHTML=`<div class="cm-number">Mesa ${num}</div><div class="cm-name">${m.nombre}</div><div class="cm-count">${guests.length}/${m.cap}</div>`;
-
+ 
     // Seat dots orbiting around the circle
     for(let i=0;i<m.cap;i++){
       const angle=(i/m.cap)*2*Math.PI - Math.PI/2;
@@ -1235,11 +1235,11 @@ function createCanvasMesa(m,num){
       seat.style.cssText=`left:${sx}px;top:${sy}px;width:${seatR*2}px;height:${seatR*2}px;position:absolute`;
       div.appendChild(seat);
     }
-
+ 
     div.appendChild(body);
     body.addEventListener('mousedown',e=>{isDraggingMesa=true;dragMid=m.id;const rect=div.getBoundingClientRect();dragOffX=(e.clientX-rect.left)/zoom;dragOffY=(e.clientY-rect.top)/zoom;e.stopPropagation();});
     return div;
-
+ 
   } else {
     // Rectangular table
     const size=140,height=88;
@@ -1268,7 +1268,7 @@ window.addEventListener('mousemove',e=>{
 });
 window.addEventListener('mouseup',()=>{if(isDraggingMesa){save();isDraggingMesa=false;dragMid=null;}isPanning=false;canv.classList.remove('panning');});
 vp2.addEventListener('wheel',e=>{e.preventDefault();const d=e.deltaY>0?0.9:1.1;const r=vp2.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;panX=mx-(mx-panX)*d;panY=my-(my-panY)*d;zoom=Math.max(0.1,Math.min(3,zoom*d));applyTransform();},{passive:false});
-
+ 
 // ════════════════════════════════════════
 //  CRONOGRAMA
 // ════════════════════════════════════════
@@ -1302,7 +1302,7 @@ function renderCrono(){
   tl.innerHTML=limitHtml+ST.eventos.map((ev,i)=>`<div class="evento-item" style="animation-delay:${i*.04}s"><div class="evento-time">${ev.hora}</div><div class="evento-dot dot-${ev.cat}"></div><div class="evento-card"><div class="evento-emoji">${ev.emoji}</div><div class="evento-info"><div class="evento-nombre">${ev.nombre}</div>${ev.desc?`<div class="evento-desc">${ev.desc}</div>`:''}<div class="evento-meta"><span class="evento-chip cat-${ev.cat}">${ev.cat.charAt(0).toUpperCase()+ev.cat.slice(1)}</span>${ev.duracion?`<span class="evento-chip" style="background:rgba(0,0,0,.05);color:var(--muted)">⏱ ${ev.duracion}</span>`:''}</div></div><div class="evento-actions"><button class="evt-btn evt-del" onclick="deleteEvento(${ev.id})">✕</button></div></div></div>`).join('');
   sum.innerHTML=ST.eventos.map(ev=>`<div class="crono-summary-item"><div class="cs-emoji">${ev.emoji}</div><div class="cs-info"><div class="cs-name">${ev.nombre}</div><div class="cs-time">${ev.hora}${ev.duracion?' · '+ev.duracion:''}</div></div></div>`).join('');
 }
-
+ 
 // ════════════════════════════════════════
 //  RESUMEN — ITEMS
 // ════════════════════════════════════════
@@ -1316,7 +1316,7 @@ function addRItem(listId,emoji){
 }
 function updateRItem(lid,id,val){if(!ST.rItems[lid])return;const it=ST.rItems[lid].find(i=>i.id===id);if(it){it.text=val;save();}}
 function deleteRItem(lid,id){if(!ST.rItems[lid])return;ST.rItems[lid]=ST.rItems[lid].filter(i=>i.id!==id);document.getElementById('ri-'+id)?.remove();save();}
-
+ 
 // ── Speakers ──
 let spCount=0;
 function addSpeaker(){
@@ -1326,7 +1326,7 @@ function addSpeaker(){
   el.innerHTML=`<div class="speaker-num">MOMENTO ${spCount}</div><button class="speaker-del" onclick="this.closest('.speaker-card').remove()">✕</button><div class="fr" style="margin-top:8px"><div class="fg"><label class="fl">Momento</label><select class="fs2"><option>Inicio / Bienvenida</option><option>Lectura 1</option><option>Lectura 2</option><option>Lectura 3</option><option>Intercambio de votos</option><option>Anillos / Arras</option><option>Discurso especial</option><option>Pronunciación</option><option>Cierre y bendición</option><option>Otro</option></select></div><div class="fg"><label class="fl">Nombre del participante</label><input class="fi2" placeholder="Quién lo hace"></div></div><div class="fr"><div class="fg"><label class="fl">Rol / Relación</label><input class="fi2" placeholder="Padrino, hermana, amigo…"></div><div class="fg"><label class="fl">Duración estimada</label><input class="fi2" placeholder="3 min"></div></div><div class="fg"><label class="fl">Contenido / texto</label><textarea class="ft2" placeholder="Pega el texto, la canción o describe qué va a hacer…"></textarea></div>`;
   c.appendChild(el);
 }
-
+ 
 // ── Buses ──
 let busCount=0;
 function addBus(){
@@ -1336,7 +1336,7 @@ function addBus(){
   el.innerHTML=`<div class="subsec-head"><div class="subsec-title">🚌 Ruta ${busCount}</div><button class="btn-ghost" onclick="this.closest('.subsec').remove()">✕</button></div><div class="subsec-body"><div class="fr"><div class="fg"><label class="fl">Ruta (origen → destino)</label><input class="fi2" placeholder="Madrid centro → Finca"></div><div class="fg"><label class="fl">Nº de plazas</label><input class="fi2" placeholder="55 plazas"></div></div><div class="fr"><div class="fg"><label class="fl">Hora de salida</label><input class="fi2" type="time" value="11:00"></div><div class="fg"><label class="fl">Hora de vuelta</label><input class="fi2" type="time" value="01:00"></div><div class="fg"><label class="fl">Empresa</label><input class="fi2" placeholder="Nombre + contacto"></div><div class="fg"><label class="fl">Coste (€)</label><input class="fi2" type="number" placeholder="0" oninput="updateCostBadge('transporte',this.value)"></div></div></div>`;
   c.appendChild(el);
 }
-
+ 
 // ── Cost badges ──
 const costs2={};
 function updateCostBadge(key,val){
@@ -1360,7 +1360,7 @@ function updateBudgetDisplay(){
   document.getElementById('bov-confirmado').textContent=conf.toLocaleString('es-ES')+' €';
   document.getElementById('bov-pendiente').textContent=Math.max(0,budget-conf).toLocaleString('es-ES')+' €';
 }
-
+ 
 // ── Proveedores ──
 function saveProveedor(){
   const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){showToast('Escribe el nombre del proveedor');return;}
@@ -1375,7 +1375,7 @@ function renderProveedores(){
   c.innerHTML=ST.proveedores.map(p=>`<div class="prov-card"><div class="prov-icon">${p.tipo.split(' ')[0]}</div><div class="prov-info"><div class="prov-tipo">${p.tipo.replace(/^[^\s]+\s/,'')}</div><div class="prov-nombre">${p.nombre}</div><div class="prov-contacto">${p.contacto}${p.precio?' · '+p.precio.toLocaleString('es-ES')+' €':''}</div>${p.notas?`<div class="prov-contacto" style="font-style:italic">${p.notas}</div>`:''}</div><div class="prov-status ${sMap[p.status]}">${sLabel[p.status]}</div><button class="btn-ghost" style="margin-left:7px" onclick="deleteProveedor(${p.id})">✕</button></div>`).join('');
 }
 function deleteProveedor(id){ST.proveedores=ST.proveedores.filter(p=>p.id!==id);save();renderProveedores();}
-
+ 
 // ── Checklist ──
 const DEFAULT_CL=[
   {g:'18+ meses antes',c:'18 meses antes',n:'Fijar fecha de la boda',p:'urgente',nota:'Consultar disponibilidad con familia y religiosos si aplica'},
@@ -1468,14 +1468,14 @@ function saveCheckItem(){
   ST.checklist.push({id:uid('ckid'),g:'Tareas personalizadas',c:document.getElementById('ck-when').value.trim()||'—',n,p:document.getElementById('ck-prio').value,nota:document.getElementById('ck-nota').value.trim(),done:false});
   save();closeModal('checkModal');renderChecklist();showToast('✓ Tarea añadida');
 }
-
+ 
 // ── Resumen nav ──
 function rScrollTo(id,el){
   document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
   document.querySelectorAll('.rnav-link').forEach(l=>l.classList.remove('active'));
   el.classList.add('active');
 }
-
+ 
 // ════════════════════════════════════════
 //  MODALS & TOAST
 // ════════════════════════════════════════
@@ -1484,7 +1484,7 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
 let toastT;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400);}
-
+ 
 // ════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════
@@ -1494,15 +1494,10 @@ setTimeout(()=>{
   resetZoom();
   if(!ST.eventos.length){
     const demos=[
-      {nombre:'Llegada de los novios',hora:'11:30',duracion:'15 min',cat:'ceremonia',desc:'Llegada al lugar de la ceremonia',emoji:'👰'},
       {nombre:'Ceremonia civil',hora:'12:00',duracion:'45 min',cat:'ceremonia',desc:'En el jardín principal',emoji:'⛪'},
-      {nombre:'Sesión de fotos',hora:'12:45',duracion:'30 min',cat:'foto',desc:'Fotos de familia y pareja en los jardines',emoji:'📷'},
-      {nombre:'Cóctel de bienvenida',hora:'13:30',duracion:'90 min',cat:'coctel',desc:'Aperitivo y canapés en la terraza',emoji:'🥂'},
-      {nombre:'Entrada al salón',hora:'15:00',duracion:'15 min',cat:'banquete',desc:'Los novios entran al ritmo de la música',emoji:'💃'},
+      {nombre:'Sesión de fotos',hora:'12:45',duracion:'30 min',cat:'foto',desc:'Fotos de familia y pareja',emoji:'📷'},
+      {nombre:'Cóctel de bienvenida',hora:'13:30',duracion:'90 min',cat:'coctel',desc:'Aperitivo en la terraza',emoji:'🥂'},
       {nombre:'Banquete',hora:'15:15',duracion:'3 h',cat:'banquete',desc:'Menú degustación',emoji:'🍽️'},
-      {nombre:'Discursos y brindis',hora:'18:00',duracion:'30 min',cat:'coctel',desc:'Padrinos, testigos y sorpresas',emoji:'🥂'},
-      {nombre:'Tarta nupcial',hora:'18:30',duracion:'20 min',cat:'banquete',desc:'Corte de la tarta y primer baile',emoji:'🎂'},
-      {nombre:'Primer baile',hora:'18:50',duracion:'10 min',cat:'musica',desc:'',emoji:'💃'},
       {nombre:'Fiesta y baile',hora:'19:00',duracion:'5 h',cat:'musica',desc:'DJ y barra libre',emoji:'🎶'},
     ];
     demos.forEach(d=>ST.eventos.push({id:uid('eid'),...d}));save();
@@ -1521,13 +1516,37 @@ setTimeout(()=>{
   <button id="install-btn" style="background:#b8965a;color:#1c1c1e;border:none;border-radius:6px;padding:9px 18px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;white-space:nowrap">Instalar</button>
   <button id="dismiss-btn" style="background:none;border:none;color:#8a7d6e;font-size:20px;cursor:pointer;padding:4px;line-height:1">✕</button>
 </div>
-
+ 
+<!-- Modal instrucciones iOS -->
+<div id="ios-modal" style="display:none;position:fixed;inset:0;z-index:1001;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:0">
+  <div style="background:#2d2d30;border-top:1px solid #b8965a;border-radius:16px 16px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;animation:slideUp .3s ease">
+    <div style="width:36px;height:4px;background:#3d3d42;border-radius:2px;margin:0 auto 24px"></div>
+    <div style="font-family:'Playfair Display',serif;font-size:20px;color:#e8cfa0;font-style:italic;margin-bottom:6px">Instalar Enlace en tu iPhone</div>
+    <div style="font-size:13px;color:#8a7d6e;margin-bottom:24px">Sigue estos 3 pasos desde Safari</div>
+    <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:32px;height:32px;background:#b8965a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#1c1c1e;flex-shrink:0">1</div>
+        <div style="font-size:14px;color:#e8e8f0">Toca el botón de <strong style="color:#b8965a">compartir</strong> <span style="font-size:16px">⬆</span> en la barra inferior de Safari</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:32px;height:32px;background:#b8965a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#1c1c1e;flex-shrink:0">2</div>
+        <div style="font-size:14px;color:#e8e8f0">Desplázate y toca <strong style="color:#b8965a">"Añadir a pantalla de inicio"</strong></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:32px;height:32px;background:#b8965a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#1c1c1e;flex-shrink:0">3</div>
+        <div style="font-size:14px;color:#e8e8f0">Toca <strong style="color:#b8965a">"Añadir"</strong> arriba a la derecha</div>
+      </div>
+    </div>
+    <button onclick="document.getElementById('ios-modal').style.display='none'" style="width:100%;background:#b8965a;color:#1c1c1e;border:none;border-radius:8px;padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Entendido</button>
+  </div>
+</div>
+ 
 <!-- Banner de actualización PWA -->
 <div id="update-banner" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#2d2d30;border:1px solid #b8965a;border-radius:8px;padding:12px 20px;z-index:1000;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.4);white-space:nowrap">
   <div style="font-size:13px;color:#e8cfa0">Nueva versión disponible</div>
   <button id="update-btn" style="background:#b8965a;color:#1c1c1e;border:none;border-radius:4px;padding:7px 14px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer">Actualizar</button>
 </div>
-
+ 
 <!-- PWA: Registro del Service Worker + Banner de instalación -->
 <script>
 // ── Registro del Service Worker ──
@@ -1535,62 +1554,65 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => {
-        console.log('[Enlace] Service Worker registrado:', reg.scope);
-
-        // Notificar si hay actualización disponible
         reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdateBanner();
-            }
+          const nw = reg.installing;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner();
           });
         });
-      })
-      .catch(err => console.warn('[Enlace] SW error:', err));
+      }).catch(err => console.warn('[Enlace] SW error:', err));
   });
 }
-
-// ── Banner de instalación (Android) ──
+ 
+// ── Detectar iOS ──
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isInStandaloneMode = window.navigator.standalone === true;
+const iosInstallDismissed = sessionStorage.getItem('ios-install-dismissed');
+ 
+// En iOS Safari: mostrar banner con instrucciones si no está instalada ni dismisseada
+if (isIos && !isInStandaloneMode && !iosInstallDismissed) {
+  setTimeout(() => {
+    document.getElementById('ios-modal').style.display = 'flex';
+    sessionStorage.setItem('ios-install-dismissed', '1');
+  }, 3000); // esperar 3s para que el usuario vea la app primero
+}
+ 
+// ── Banner de instalación (Android/Chrome) ──
 let deferredPrompt = null;
 const installBanner = document.getElementById('install-banner');
 const installBtn    = document.getElementById('install-btn');
 const dismissBtn    = document.getElementById('dismiss-btn');
-
+ 
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
   if (installBanner) {
     installBanner.style.display = 'flex';
-    // Auto-ocultar después de 12 segundos si no hay acción
     setTimeout(() => { installBanner.style.display = 'none'; }, 12000);
   }
 });
-
+ 
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log('[Enlace] Instalación:', outcome);
     deferredPrompt = null;
     installBanner.style.display = 'none';
   });
 }
-
+ 
 if (dismissBtn) {
   dismissBtn.addEventListener('click', () => {
     installBanner.style.display = 'none';
-    // No volver a mostrar en esta sesión
     sessionStorage.setItem('install-dismissed', '1');
   });
 }
-
+ 
 window.addEventListener('appinstalled', () => {
-  console.log('[Enlace] App instalada correctamente ✓');
   if (installBanner) installBanner.style.display = 'none';
 });
-
+ 
 // ── Banner de actualización ──
 function showUpdateBanner() {
   const b = document.getElementById('update-banner');
