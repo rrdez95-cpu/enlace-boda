@@ -19,6 +19,7 @@
 <meta name="msapplication-TileImage" content="/icons/icon-144.png">
 <meta name="msapplication-TileColor" content="#1c1c1e">
 <meta name="description" content="Organizador completo de boda: mesas, plano del salón, cronograma y checklist profesional."
+<script src="https://js.stripe.com/v3/"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--ivory:#f8f4ed;--ivory2:#f0e9db;--ivory3:#e5d9c5;--charcoal:#1c1c1e;--charcoal2:#2d2d30;--charcoal3:#3d3d42;--gold:#b8965a;--gold2:#d4b07a;--gold3:#e8cfa0;--muted:#8a7d6e;--muted2:#b5a898;--border:#d8cfc2;--white:#ffffff;--paid:#4a7c59;--unpaid:#8b3a3a;--warn:#7a6020}
@@ -954,8 +955,8 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
 //  PAYWALL CONFIG
 //  Para activar Stripe real: cambia STRIPE_KEY y PRICE_ID
 // ════════════════════════════════════════
-const STRIPE_KEY   = 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX'; // ← tu clave pública de Stripe
-const PRICE_ID     = 'price_XXXXXXXXXXXXXXXXXXXXXXXX';   // ← tu Price ID de Stripe
+const STRIPE_KEY   = 'pk_live_51U8kYI1OqyS1m9NcfVuU2zNSaeNxBVKmPVhzOE8F29IWRupwkzIUYxoZh5AeEOa03iEtM8O6B2TCCXRovYDEviJ100HLfxIXV7';
+const PRICE_ID     = 'price_1U8lZN1OqyS1m9Ncr0gmZSvP';
 const FREE_GUESTS  = 30;   // máx. invitados en gratis
 const FREE_MOMENTS = 5;    // máx. momentos en cronograma
  
@@ -999,28 +1000,19 @@ async function processPayment() {
   btn.textContent = 'Procesando...';
   btn.disabled = true;
  
-  // ── MODO SIMULADO ──
-  // Elimina este bloque y descomenta el de Stripe cuando estés listo
-  await new Promise(r => setTimeout(r, 1800)); // simula latencia de red
-  activatePro();
-  closePaywall();
-  showToast('🎉 ¡Enlace desbloqueado! Gracias por tu compra');
-  btn.textContent = 'Desbloquear por 3,99 € →';
-  btn.disabled = false;
-  // Redirigir a la pestaña que intentaba abrir
-  const origin = sessionStorage.getItem('paywall_origin');
-  if (origin === 'plano') {
-    const tab = document.querySelectorAll('.tab-btn')[1];
-    switchTab('plano', tab);
-  } else if (origin === 'resumen') {
-    const tab = document.querySelectorAll('.tab-btn')[3];
-    switchTab('resumen', tab);
+  // ── MODO STRIPE REAL ──
+  const stripe = Stripe(STRIPE_KEY);
+  const { error } = await stripe.redirectToCheckout({
+    lineItems: [{ price: PRICE_ID, quantity: 1 }],
+    mode: 'payment',
+    successUrl: window.location.origin + '/enlace-pwa/?paid=1',
+    cancelUrl: window.location.href
+  });
+  if (error) {
+    showToast('Error: ' + error.message);
+    btn.textContent = 'Desbloquear por 3,99 € →';
+    btn.disabled = false;
   }
- 
-  // ── MODO STRIPE REAL (descomentar cuando tengas cuenta) ──
-  // const stripe = Stripe(STRIPE_KEY);
-  // const { error } = await stripe.redirectToCheckout({ lineItems:[{price:PRICE_ID,quantity:1}], mode:'payment', successUrl: window.location.origin + '?paid=1', cancelUrl: window.location.href });
-  // if (error) { showToast('Error: ' + error.message); btn.textContent='Desbloquear por 3,99 € →'; btn.disabled=false; }
 }
  
 // ── Detectar retorno de Stripe con ?paid=1 ──
@@ -1625,3 +1617,4 @@ document.getElementById('update-btn')?.addEventListener('click', () => {
 </script>
 </body>
 </html>
+ 
