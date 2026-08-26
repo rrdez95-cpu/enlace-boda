@@ -996,15 +996,26 @@ function closePaywall() {
 // ── Procesar pago ──
 // Simulado: activa PRO directo. Con Stripe real: redirige a Checkout.
 async function processPayment() {
-  // Redirige directamente al Payment Link de Stripe — sin dominios, sin configuración
-  window.location.href = 'https://buy.stripe.com/7sY3cn6nC8xDaMg4rj33W00';
+  // Generar token de sesión único antes de ir a Stripe
+  const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+  sessionStorage.setItem('stripe_session', token);
+  // Redirigir al Payment Link con el token en la URL de retorno
+  window.location.href = 'https://buy.stripe.com/7sY3cn6nC8xDaMg4rj33W00?client_reference_id=' + token;
 }
  
 // ── Detectar retorno de Stripe con ?paid=1 ──
 if (new URLSearchParams(location.search).get('paid') === '1') {
-  activatePro();
-  history.replaceState({}, '', location.pathname);
-  setTimeout(() => showToast('🎉 ¡Pago confirmado! Enlace desbloqueado'), 500);
+  const token = sessionStorage.getItem('stripe_session');
+  if (token) {
+    // Viene de un pago real iniciado en este dispositivo
+    activatePro();
+    sessionStorage.removeItem('stripe_session');
+    history.replaceState({}, '', location.pathname);
+    setTimeout(() => showToast('🎉 ¡Pago confirmado! Enlace desbloqueado'), 500);
+  } else {
+    // URL manipulada manualmente — ignorar
+    history.replaceState({}, '', location.pathname);
+  }
 }
  
 // ════════════════════════════════════════
