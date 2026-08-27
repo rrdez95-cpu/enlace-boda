@@ -1,21 +1,43 @@
-import { createClient } from '@/lib/supabase-server'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/app'
-
-  // Usar la URL pública configurada, no el origin interno
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin
 
-  if (code) {
-    const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      return NextResponse.redirect(`${siteUrl}${next}`)
-    }
+  if (!code) {
+    return NextResponse.redirect(`${siteUrl}/login?error=nocode`)
   }
 
-  return NextResponse.redirect(`${siteUrl}/login?error=auth`)
+  const cookieStore = await cookies()
+  const response = NextResponse.redirect(`${siteUrl}${next}`)
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options)
+          })
+        },
+      },
+    }
+  )
+
+  const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+  if (error) {
+    console.error('[callback]', error.message)
+    return NextResponse.redirect(`${siteUrl}/login?error=${encodeURIComponent(error.message)}`)
+  }
+
+  return response
 }
