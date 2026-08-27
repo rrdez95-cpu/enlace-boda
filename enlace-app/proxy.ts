@@ -7,48 +7,32 @@ export async function proxy(request: NextRequest) {
 
   if (!url || !key) return NextResponse.next()
 
-  try {
-    let supabaseResponse = NextResponse.next({ request })
+  let supabaseResponse = NextResponse.next({ request })
 
-    const supabase = createServerClient(url, key, {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
       },
-    })
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value)
+        )
+        supabaseResponse = NextResponse.next({ request })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        )
+      },
+    },
+  })
 
-    const { data: { user } } = await supabase.auth.getUser()
+  // Solo refresca la sesión y devuelve las cookies actualizadas.
+  // No redirige: de eso se encarga cada página.
+  await supabase.auth.getUser()
 
-    const path = request.nextUrl.pathname
-
-    if (!user && path.startsWith('/app')) {
-      const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = '/login'
-      return NextResponse.redirect(redirectUrl)
-    }
-
-    if (user && path === '/login') {
-      const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = '/app'
-      return NextResponse.redirect(redirectUrl)
-    }
-
-    return supabaseResponse
-  } catch {
-    return NextResponse.next()
-  }
+  return supabaseResponse
 }
 
 export const config = {
-  matcher: ['/app/:path*', '/login'],
+  matcher: ['/app/:path*'],
 }
