@@ -2,12 +2,18 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  // Si faltan variables, dejar pasar sin romper
+  if (!url || !key) {
+    return NextResponse.next()
+  }
+
+  try {
+    let supabaseResponse = NextResponse.next({ request })
+
+    const supabase = createServerClient(url, key, {
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -22,32 +28,35 @@ export async function middleware(request: NextRequest) {
           )
         },
       },
+    })
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const path = request.nextUrl.pathname
+    const isAuthPage = path.startsWith('/login') || path.startsWith('/auth')
+    const isPublic = path === '/' || isAuthPage
+
+    if (!user && !isPublic) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/login'
+      return NextResponse.redirect(redirectUrl)
     }
-  )
 
-  const { data: { user } } = await supabase.auth.getUser()
+    if (user && isAuthPage && !path.startsWith('/auth')) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/app'
+      return NextResponse.redirect(redirectUrl)
+    }
 
-  // Rutas protegidas: si no hay sesión, al login
-  const path = request.nextUrl.pathname
-  const isAuthPage = path.startsWith('/login') || path.startsWith('/auth')
-  const isPublic = path === '/' || isAuthPage
-
-  if (!user && !isPublic) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    return supabaseResponse
+  } catch (e) {
+    console.error('[middleware]', e)
+    return NextResponse.next()
   }
-
-  // Si hay sesión y está en login, al panel
-  if (user && isAuthPage) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/app'
-    return NextResponse.redirect(url)
-  }
-
-  return supabaseResponse
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
