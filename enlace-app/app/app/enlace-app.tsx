@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import { useBoda } from '@/lib/use-boda'
 import TabMesas from './tab-mesas'
+import TabPlano from './tab-plano'
+import TabCrono from './tab-crono'
+import TabResumen from './tab-resumen'
 import Paywall from './paywall'
 
 const FREE_GUESTS = 30
@@ -27,7 +30,9 @@ export default function EnlaceApp({
   }
 
   function goTab(t: typeof tab) {
-    if (!isPro && (t === 'plano' || t === 'resumen')) { setPaywall(true); return }
+    // Solo el plano está bloqueado por completo.
+    // El resumen se abre siempre (fecha gratis, resto bloqueado dentro).
+    if (!isPro && t === 'plano') { setPaywall(true); return }
     setTab(t)
   }
 
@@ -53,10 +58,26 @@ export default function EnlaceApp({
   const checkDone = data.checklist.filter(c => c.done).length
   const checkPct = data.checklist.length ? Math.round(checkDone / data.checklist.length * 100) : 0
 
+  // Contador de días
+  let diasTexto = '— días para la boda'
+  const fechaBoda = data.resumen?.fecha
+  if (fechaBoda) {
+    const d = new Date(fechaBoda)
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    d.setHours(0, 0, 0, 0)
+    const diff = Math.ceil((d.getTime() - hoy.getTime()) / 86400000)
+    diasTexto = diff > 0
+      ? `${diff} ${diff === 1 ? 'día' : 'días'} para la boda`
+      : diff === 0
+        ? '¡HOY ES EL DÍA!'
+        : 'Boda celebrada'
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div className="app-logo">En<span>lace</span></div>
+        <div className="app-logo">EN<span>·</span>LACE</div>
         <div className="header-stats">
           <Stat val={data.guests.length} label="Invitados" />
           <Stat val={data.mesas.length} label="Mesas" />
@@ -65,6 +86,7 @@ export default function EnlaceApp({
           <Stat val={`${checkPct}%`} label="Checklist" />
         </div>
         <div className="header-right">
+          <span className="header-date">{diasTexto}</span>
           {saving && <span className="save-dot">Guardando…</span>}
           <button
             className={`plan-pill ${isPro ? 'pro' : 'free'}`}
@@ -87,7 +109,7 @@ export default function EnlaceApp({
           ◷ Cronograma
         </TabBtn>
         <TabBtn active={tab === 'resumen'} onClick={() => goTab('resumen')}>
-          ✦ Resumen general {!isPro && <span className="tab-lock">🔒</span>}
+          ✦ Resumen general
         </TabBtn>
       </nav>
 
@@ -102,12 +124,33 @@ export default function EnlaceApp({
         />
       )}
 
+      {tab === 'plano' && (
+        <TabPlano
+          data={data}
+          setData={setData}
+          showToast={showToast}
+        />
+      )}
+
       {tab === 'crono' && (
-        <div className="screen" style={{ padding: 40, justifyContent: 'center', alignItems: 'center' }}>
-          <div style={{ color: 'var(--muted)', fontStyle: 'italic' }}>
-            Cronograma — próximo paso
-          </div>
-        </div>
+        <TabCrono
+          data={data}
+          setData={setData}
+          isPro={isPro}
+          freeLimit={FREE_MOMENTS}
+          onPaywall={() => setPaywall(true)}
+          showToast={showToast}
+        />
+      )}
+
+      {tab === 'resumen' && (
+        <TabResumen
+          data={data}
+          setData={setData}
+          showToast={showToast}
+          isPro={isPro}
+          onPaywall={() => setPaywall(true)}
+        />
       )}
 
       {paywall && <Paywall onClose={() => setPaywall(false)} />}
