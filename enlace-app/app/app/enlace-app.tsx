@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import { useBoda } from '@/lib/use-boda'
@@ -14,7 +14,7 @@ const FREE_GUESTS = 30
 const FREE_MOMENTS = 5
 
 export default function EnlaceApp({
-  userId, userName, isPro,
+  userId, userName, isPro: initialIsPro,
 }: { userId: string; userName: string; isPro: boolean }) {
   const router = useRouter()
   const supabase = createClient()
@@ -23,15 +23,47 @@ export default function EnlaceApp({
   const [tab, setTab] = useState<'mesas' | 'plano' | 'crono' | 'resumen'>('mesas')
   const [paywall, setPaywall] = useState(false)
   const [toast, setToast] = useState('')
+  const [isPro, setIsPro] = useState(initialIsPro)
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(''), 2400)
   }
 
+  // Detectar vuelta de Stripe y comprobar el pago
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('paid') !== '1') return
+
+    // Limpiar la URL
+    window.history.replaceState({}, '', window.location.pathname)
+    showToast('Verificando tu pago…')
+
+    // Reintentar durante 30s: el webhook puede tardar unos segundos
+    let attempts = 0
+    const timer = setInterval(async () => {
+      attempts++
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_pro')
+        .eq('id', userId)
+        .single()
+
+      if (profile?.is_pro) {
+        clearInterval(timer)
+        setIsPro(true)
+        showToast('🎉 ¡Pago confirmado! Enlace desbloqueado')
+        router.refresh()
+      } else if (attempts >= 10) {
+        clearInterval(timer)
+        showToast('El pago se está procesando. Recarga en un minuto.')
+      }
+    }, 3000)
+
+    return () => clearInterval(timer)
+  }, [userId])
+
   function goTab(t: typeof tab) {
-    // Solo el plano está bloqueado por completo.
-    // El resumen se abre siempre (fecha gratis, resto bloqueado dentro).
     if (!isPro && t === 'plano') { setPaywall(true); return }
     setTab(t)
   }
@@ -58,7 +90,6 @@ export default function EnlaceApp({
   const checkDone = data.checklist.filter(c => c.done).length
   const checkPct = data.checklist.length ? Math.round(checkDone / data.checklist.length * 100) : 0
 
-  // Contador de días
   let diasTexto = '— días para la boda'
   const fechaBoda = data.resumen?.fecha
   if (fechaBoda) {
@@ -125,11 +156,7 @@ export default function EnlaceApp({
       )}
 
       {tab === 'plano' && (
-        <TabPlano
-          data={data}
-          setData={setData}
-          showToast={showToast}
-        />
+        <TabPlano data={data} setData={setData} showToast={showToast} />
       )}
 
       {tab === 'crono' && (
@@ -153,7 +180,7 @@ export default function EnlaceApp({
         />
       )}
 
-      {paywall && <Paywall onClose={() => setPaywall(false)} />}
+      {paywall && <Paywall onClose={() => setPaywall(false)} userId={userId} />}
       {toast && <div className="toast">{toast}</div>}
     </div>
   )

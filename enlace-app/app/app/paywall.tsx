@@ -2,9 +2,10 @@
 
 const STRIPE_LINK = 'https://buy.stripe.com/7sY3cn6nC8xDaMg4rj33W00'
 
-export default function Paywall({ onClose }: { onClose: () => void }) {
+export default function Paywall({ onClose, userId }: { onClose: () => void; userId: string }) {
   function pay() {
-    window.location.href = STRIPE_LINK
+    // client_reference_id le dice a Stripe qué usuario está pagando
+    window.location.href = `${STRIPE_LINK}?client_reference_id=${userId}`
   }
 
   return (
