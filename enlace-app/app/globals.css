@@ -395,13 +395,16 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
 
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:768px){
-  .app-header{padding:0 12px;height:auto;flex-wrap:wrap;gap:6px;padding-top:8px;padding-bottom:8px}
-  .app-logo{font-size:15px;letter-spacing:2px}
-  .header-stats{gap:10px;flex-wrap:wrap;order:3;width:100%;justify-content:space-between}
-  .hstat-val{font-size:14px}
-  .hstat-key{font-size:8px}
-  .header-right{gap:8px}
-  .header-date{display:none}
+  .app-header{padding:8px 12px;height:auto;flex-wrap:wrap;gap:8px;align-items:center}
+  .app-logo{font-size:14px;letter-spacing:2px;flex-shrink:0}
+  .header-date{display:block;font-size:10px;letter-spacing:1px;flex:1;text-align:center;padding:0 6px}
+  .header-right{gap:6px;flex-shrink:0}
+  .save-dot{display:none}
+  .btn-logout{padding:3px 8px;font-size:10px}
+  .plan-pill{font-size:9px;padding:2px 7px}
+  .header-stats{gap:8px;flex-wrap:nowrap;order:3;width:100%;justify-content:space-between;padding-top:2px}
+  .hstat-val{font-size:13px}
+  .hstat-key{font-size:7px;letter-spacing:1px}
   .tab-btn{padding:0 14px;height:40px;font-size:10px;letter-spacing:1px}
   .tab-lock{display:none}
   .screen{flex-direction:column}
