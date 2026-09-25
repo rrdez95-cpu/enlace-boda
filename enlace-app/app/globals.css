@@ -411,6 +411,109 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
 .btn-primary-sm:hover{background:var(--charcoal2)}
 
 
+
+/* ═══ FINCAS ═══ */
+.fincas-side{width:260px;flex-shrink:0;background:var(--charcoal2);border-right:1px solid rgba(184,150,90,.2);display:flex;flex-direction:column;overflow:hidden}
+.fincas-side-head{padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fincas-side-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--gold3);font-style:italic}
+.btn-new-finca{background:var(--gold);color:var(--charcoal);border:none;border-radius:4px;padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.btn-new-finca:hover{background:var(--gold2)}
+.btn-new-finca.big{padding:13px 28px;font-size:13px;letter-spacing:2px}
+.fincas-warn{margin:12px;padding:11px 13px;background:rgba(184,150,90,.1);border:1px solid rgba(184,150,90,.25);border-radius:6px;font-size:11px;line-height:1.5;color:var(--gold2)}
+.fincas-warn strong{color:var(--gold3)}
+.fincas-list{flex:1;overflow-y:auto;padding:8px 10px 14px}
+.fincas-empty{text-align:center;padding:26px 14px;color:var(--muted2);font-size:12px;line-height:1.6}
+.finca-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-left:3px solid transparent;border-radius:7px;padding:12px 13px;margin-bottom:7px;cursor:pointer;transition:all .18s}
+.finca-item:hover{background:rgba(184,150,90,.12);border-color:rgba(184,150,90,.3)}
+.finca-item.active{background:rgba(184,150,90,.16);border-color:rgba(184,150,90,.4);border-left-color:var(--gold)}
+.finca-item-name{font-size:13px;font-weight:600;color:var(--ivory);margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finca-item-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px}
+.finca-item-price{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:var(--gold2);line-height:1}
+.finca-item-unit{font-family:'Barlow',sans-serif;font-size:10px;font-weight:400;color:var(--muted2);margin-left:2px}
+.finca-item-score{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;line-height:1;color:var(--muted2)}
+.finca-item-score.good{color:#6fcf8a}
+.finca-item-score.mid{color:var(--gold2)}
+.finca-item-score.bad{color:#e08b8b}
+.finca-item-total{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:.5px;color:var(--muted2)}
+
+.fincas-main{flex:1;overflow-y:auto;padding:22px 26px 40px;display:flex;flex-direction:column;gap:16px}
+.fincas-none{margin:auto;text-align:center;max-width:420px;padding:40px 20px}
+.fincas-none-icon{font-size:46px;margin-bottom:16px}
+.fincas-none-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;font-style:italic;color:var(--charcoal);margin-bottom:12px}
+.fincas-none-text{font-size:14px;line-height:1.75;color:var(--muted);margin-bottom:24px}
+
+.finca-head{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.finca-name-input{flex:1;background:transparent;border:none;border-bottom:2px solid var(--border);font-family:'Playfair Display',serif;font-size:25px;font-weight:600;font-style:italic;color:var(--charcoal);outline:none;padding:4px 0;transition:border-color .2s}
+.finca-name-input:focus{border-bottom-color:var(--gold)}
+.finca-del{background:none;border:1px solid rgba(139,58,58,.3);border-radius:4px;color:var(--unpaid);font-family:'Barlow',sans-serif;font-size:12px;padding:7px 14px;cursor:pointer;flex-shrink:0;transition:background .2s}
+.finca-del:hover{background:rgba(139,58,58,.08)}
+
+.finca-summary{display:flex;background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);flex-shrink:0}
+.fsum-item{flex:1;padding:17px 20px}
+.fsum-sep{width:1px;background:var(--border)}
+.fsum-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:7px}
+.fsum-val{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:5px}
+.fsum-val.good{color:var(--paid)}
+.fsum-val.mid{color:var(--gold)}
+.fsum-val.bad{color:var(--unpaid)}
+.fsum-sub{font-size:11px;color:var(--muted);line-height:1.4}
+
+.finca-block{background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);flex-shrink:0}
+.finca-block-head{background:var(--charcoal);padding:13px 20px;display:flex;align-items:center;gap:11px}
+.fb-icon{font-size:16px}
+.fb-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;font-style:italic;color:var(--gold3);flex:1}
+.fb-score{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--gold2)}
+.finca-block-body{padding:18px 20px}
+
+.campo-row{display:flex;align-items:flex-end;gap:18px;padding:11px 0;border-bottom:1px solid var(--ivory2)}
+.campo-row:last-child{border-bottom:none}
+.campo-input{flex:1;min-width:0}
+.campo-coste-tag{margin-left:8px;font-family:'Barlow',sans-serif;font-size:9px;letter-spacing:.5px;text-transform:none;color:var(--gold);background:rgba(184,150,90,.12);border:1px solid rgba(184,150,90,.25);border-radius:3px;padding:1px 6px;font-weight:500}
+.campo-score{flex-shrink:0;text-align:right}
+.campo-score-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:5px}
+
+.score{display:flex;align-items:center;gap:3px}
+.score-dot{width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:var(--ivory);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.score-dot:hover{border-color:var(--gold);transform:translateY(-1px)}
+.score-num{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:var(--muted2)}
+.score-dot.on.good{background:var(--paid);border-color:var(--paid)}
+.score-dot.on.mid{background:var(--gold);border-color:var(--gold)}
+.score-dot.on.bad{background:var(--unpaid);border-color:var(--unpaid)}
+.score-dot.on .score-num{color:#fff}
+.score-val{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;margin-left:7px;min-width:20px}
+.score-val.good{color:var(--paid)}
+.score-val.mid{color:var(--gold)}
+.score-val.bad{color:var(--unpaid)}
+.score.compact .score-dot{width:19px;height:19px;border-radius:4px}
+.score.compact .score-num{font-size:9px}
+.score.compact .score-val{font-size:15px;margin-left:5px}
+
+.finca-subblock{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.finca-subhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.finca-subtitle{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--charcoal2);margin-bottom:3px}
+.finca-subhint{font-size:11px;color:var(--muted);line-height:1.5;max-width:400px}
+.extra-empty{font-size:12px;color:var(--muted2);font-style:italic;padding:8px 0}
+.extra-list{display:flex;flex-direction:column;gap:7px}
+.extra-row{display:flex;align-items:center;gap:8px}
+.extra-name{flex:1;background:var(--ivory);border:1px solid var(--border);border-radius:5px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--charcoal);outline:none}
+.extra-name:focus{border-color:var(--gold);background:var(--white)}
+.extra-cost{width:92px;background:var(--ivory);border:1px solid var(--border);border-radius:5px;padding:9px 10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--gold);text-align:right;outline:none}
+.extra-cost:focus{border-color:var(--gold);background:var(--white)}
+.extra-eur{font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--gold);font-weight:700}
+.extra-del{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:17px;padding:2px 5px;line-height:1}
+.extra-del:hover{color:var(--unpaid)}
+.extra-sum{text-align:right;font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--muted);padding-top:5px;letter-spacing:.5px}
+.extra-sum strong{color:var(--gold);font-size:15px}
+
+.expect-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.expect-col{background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:16px}
+.expect-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--charcoal2);margin-bottom:3px}
+.expect-hint{font-size:11px;color:var(--muted);margin-bottom:12px}
+.expect-verdict{margin-top:16px;padding:13px 17px;border-radius:7px;font-size:13px;line-height:1.6}
+.expect-verdict.up{background:rgba(74,124,89,.08);border:1px solid rgba(74,124,89,.25);color:#3c6749}
+.expect-verdict.same{background:rgba(184,150,90,.08);border:1px solid rgba(184,150,90,.25);color:#8b6a2a}
+.expect-verdict.down{background:rgba(139,58,58,.07);border:1px solid rgba(139,58,58,.22);color:#8b3a3a}
+
 /* ═══ BARRA RESUMEN SUPERIOR ═══ */
 .res-topbar{display:flex;align-items:stretch;gap:0;background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);flex-shrink:0}
 .rtb-item{flex:1;padding:18px 22px;cursor:pointer;transition:background .2s}
@@ -540,6 +643,22 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .subsec-body{padding:12px}
   .fr,.fr3{grid-template-columns:1fr}
   .bov{grid-template-columns:1fr 1fr}
+  .fincas-side{width:100%;height:auto;max-height:230px;border-right:none;border-bottom:1px solid rgba(184,150,90,.2)}
+  .fincas-list{max-height:150px}
+  .fincas-main{padding:14px 14px 30px;gap:12px}
+  .finca-name-input{font-size:20px}
+  .finca-summary{flex-direction:column}
+  .fsum-sep{width:100%;height:1px}
+  .fsum-item{padding:13px 16px}
+  .fsum-val{font-size:22px}
+  .finca-block-body{padding:14px 15px}
+  .campo-row{flex-direction:column;align-items:stretch;gap:9px}
+  .campo-score{text-align:left}
+  .score-dot{width:26px;height:26px}
+  .score.compact .score-dot{width:25px;height:25px}
+  .score.compact .score-num{font-size:11px}
+  .expect-grid{grid-template-columns:1fr;gap:12px}
+  .extra-cost{width:78px}
   .res-topbar{flex-direction:column}
   .rtb-sep{width:100%;height:1px}
   .rtb-item{padding:14px 18px}

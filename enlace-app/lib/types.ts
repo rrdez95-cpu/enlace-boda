@@ -60,6 +60,31 @@ export type ChecklistItem = {
   done: boolean
 }
 
+/* ═══ FINCAS ═══ */
+
+export type FincaExtra = {
+  id: string
+  nombre: string
+  coste: string
+}
+
+export type Finca = {
+  id: string
+  nombre: string
+  /** Puntuación de 0-10 antes de visitarla (fotos, dosier) */
+  notaEsperada: number | null
+  /** Puntuación de 0-10 después de visitarla */
+  notaReal: number | null
+  /** Valores de texto de cada campo, indexados por clave */
+  campos: Record<string, string>
+  /** Puntuación 0-10 de cada campo, indexada por la misma clave */
+  notas: Record<string, number>
+  /** Listas dinámicas con coste */
+  exclusividades: FincaExtra[]
+  cornersExtra: FincaExtra[]
+  sonidoExtras: FincaExtra[]
+}
+
 export type BodaData = {
   guests: Guest[]
   mesas: Mesa[]
@@ -69,6 +94,7 @@ export type BodaData = {
   checklist: ChecklistItem[]
   rItems: Record<string, { id: number; text: string }[]>
   resumen: Record<string, string>
+  fincas: Finca[]
   gid: number
   mid: number
   eid: number
@@ -80,5 +106,6 @@ export type BodaData = {
 export const emptyBoda: BodaData = {
   guests: [], mesas: [], eventos: [], eventosBuses: {},
   proveedores: [], checklist: [], rItems: {}, resumen: {},
+  fincas: [],
   gid: 1, mid: 1, eid: 1, pvid: 1, ckid: 1, riid: 1,
 }

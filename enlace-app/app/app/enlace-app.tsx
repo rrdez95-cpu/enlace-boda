@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import { useBoda } from '@/lib/use-boda'
 import TabInicio from './tab-inicio'
+import TabFincas from './tab-fincas'
 import TabMesas from './tab-mesas'
 import TabPlano from './tab-plano'
 import TabCrono from './tab-crono'
@@ -14,7 +15,7 @@ import Paywall from './paywall'
 const FREE_GUESTS = 30
 const FREE_MOMENTS = 5
 
-type Tab = 'inicio' | 'mesas' | 'plano' | 'crono' | 'resumen'
+type Tab = 'inicio' | 'fincas' | 'mesas' | 'plano' | 'crono' | 'resumen'
 
 export default function EnlaceApp({
   userId, userName, isPro: initialIsPro,
@@ -109,6 +110,9 @@ export default function EnlaceApp({
         <TabBtn active={tab === 'inicio'} onClick={() => goTab('inicio')}>
           ⌂ Inicio
         </TabBtn>
+        <TabBtn active={tab === 'fincas'} onClick={() => goTab('fincas')}>
+          🌿 Fincas
+        </TabBtn>
         <TabBtn active={tab === 'mesas'} onClick={() => goTab('mesas')}>
           ⬡ Mesas e invitados
         </TabBtn>
@@ -130,6 +134,14 @@ export default function EnlaceApp({
           isPro={isPro}
           onPaywall={() => setPaywall(true)}
           onGoTab={goTab}
+        />
+      )}
+
+      {tab === 'fincas' && (
+        <TabFincas
+          data={data}
+          setData={setData}
+          showToast={showToast}
         />
       )}
 
