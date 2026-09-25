@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import { useBoda } from '@/lib/use-boda'
+import TabInicio from './tab-inicio'
 import TabMesas from './tab-mesas'
 import TabPlano from './tab-plano'
 import TabCrono from './tab-crono'
@@ -13,6 +14,8 @@ import Paywall from './paywall'
 const FREE_GUESTS = 30
 const FREE_MOMENTS = 5
 
+type Tab = 'inicio' | 'mesas' | 'plano' | 'crono' | 'resumen'
+
 export default function EnlaceApp({
   userId, userName, isPro: initialIsPro,
 }: { userId: string; userName: string; isPro: boolean }) {
@@ -20,7 +23,7 @@ export default function EnlaceApp({
   const supabase = createClient()
   const { data, setData, loading, saving } = useBoda(userId)
 
-  const [tab, setTab] = useState<'mesas' | 'plano' | 'crono' | 'resumen'>('mesas')
+  const [tab, setTab] = useState<Tab>('inicio')
   const [paywall, setPaywall] = useState(false)
   const [toast, setToast] = useState('')
   const [isPro, setIsPro] = useState(initialIsPro)
@@ -30,16 +33,14 @@ export default function EnlaceApp({
     setTimeout(() => setToast(''), 2400)
   }
 
-  // Detectar vuelta de Stripe y comprobar el pago
+  // Retorno desde Stripe
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('paid') !== '1') return
 
-    // Limpiar la URL
     window.history.replaceState({}, '', window.location.pathname)
     showToast('Verificando tu pago…')
 
-    // Reintentar durante 30s: el webhook puede tardar unos segundos
     let attempts = 0
     const timer = setInterval(async () => {
       attempts++
@@ -63,7 +64,7 @@ export default function EnlaceApp({
     return () => clearInterval(timer)
   }, [userId])
 
-  function goTab(t: typeof tab) {
+  function goTab(t: Tab) {
     if (!isPro && t === 'plano') { setPaywall(true); return }
     setTab(t)
   }
@@ -79,45 +80,20 @@ export default function EnlaceApp({
       <div className="loading-screen">
         <div className="spinner" />
         <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: 1 }}>
-          Cargando tu boda...
+          Cargando tu boda…
         </div>
       </div>
     )
   }
 
-  const paidGuests = data.guests.filter(g => g.paid === 'si')
-  const totalRecaudado = paidGuests.reduce((s, g) => s + (parseFloat(g.importe) || 0), 0)
-  const checkDone = data.checklist.filter(c => c.done).length
-  const checkPct = data.checklist.length ? Math.round(checkDone / data.checklist.length * 100) : 0
-
-  let diasTexto = '— días para la boda'
-  const fechaBoda = data.resumen?.fecha
-  if (fechaBoda) {
-    const d = new Date(fechaBoda)
-    const hoy = new Date()
-    hoy.setHours(0, 0, 0, 0)
-    d.setHours(0, 0, 0, 0)
-    const diff = Math.ceil((d.getTime() - hoy.getTime()) / 86400000)
-    diasTexto = diff > 0
-      ? `${diff} ${diff === 1 ? 'día' : 'días'} para la boda`
-      : diff === 0
-        ? '¡HOY ES EL DÍA!'
-        : 'Boda celebrada'
-  }
-
   return (
     <div className="app-shell">
+
       <header className="app-header">
-        <div className="app-logo">EN<span>·</span>LACE</div>
-        <div className="header-stats">
-          <Stat val={data.guests.length} label="Invitados" />
-          <Stat val={data.mesas.length} label="Mesas" />
-          <Stat val={paidGuests.length} label="Han pagado" />
-          <Stat val={`${totalRecaudado.toLocaleString('es-ES')} €`} label="Recaudado" />
-          <Stat val={`${checkPct}%`} label="Checklist" />
-        </div>
+        <button className="app-logo-btn" onClick={() => setTab('inicio')}>
+          <span className="app-logo">EN<span>·</span>LACE</span>
+        </button>
         <div className="header-right">
-          <span className="header-date">{diasTexto}</span>
           {saving && <span className="save-dot">Guardando…</span>}
           <button
             className={`plan-pill ${isPro ? 'pro' : 'free'}`}
@@ -130,6 +106,9 @@ export default function EnlaceApp({
       </header>
 
       <nav className="tab-bar">
+        <TabBtn active={tab === 'inicio'} onClick={() => goTab('inicio')}>
+          ⌂ Inicio
+        </TabBtn>
         <TabBtn active={tab === 'mesas'} onClick={() => goTab('mesas')}>
           ⬡ Mesas e invitados
         </TabBtn>
@@ -143,6 +122,16 @@ export default function EnlaceApp({
           ✦ Resumen general
         </TabBtn>
       </nav>
+
+      {tab === 'inicio' && (
+        <TabInicio
+          data={data}
+          userName={userName}
+          isPro={isPro}
+          onPaywall={() => setPaywall(true)}
+          onGoTab={goTab}
+        />
+      )}
 
       {tab === 'mesas' && (
         <TabMesas
@@ -182,15 +171,6 @@ export default function EnlaceApp({
 
       {paywall && <Paywall onClose={() => setPaywall(false)} userId={userId} />}
       {toast && <div className="toast">{toast}</div>}
-    </div>
-  )
-}
-
-function Stat({ val, label }: { val: string | number; label: string }) {
-  return (
-    <div className="hstat">
-      <div className="hstat-val">{val}</div>
-      <div className="hstat-key">{label}</div>
     </div>
   )
 }
