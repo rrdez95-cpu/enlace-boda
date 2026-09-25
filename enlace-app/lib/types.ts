@@ -66,20 +66,17 @@ export type FincaExtra = {
   id: string
   nombre: string
   coste: string
+  tipoPrecio: 'total' | 'porPersona'
+  nota: number | null
 }
 
 export type Finca = {
   id: string
   nombre: string
-  /** Puntuación de 0-10 antes de visitarla (fotos, dosier) */
   notaEsperada: number | null
-  /** Puntuación de 0-10 después de visitarla */
   notaReal: number | null
-  /** Valores de texto de cada campo, indexados por clave */
   campos: Record<string, string>
-  /** Puntuación 0-10 de cada campo, indexada por la misma clave */
   notas: Record<string, number>
-  /** Listas dinámicas con coste */
   exclusividades: FincaExtra[]
   cornersExtra: FincaExtra[]
   sonidoExtras: FincaExtra[]

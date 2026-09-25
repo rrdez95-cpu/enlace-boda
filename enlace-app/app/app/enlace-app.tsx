@@ -34,23 +34,16 @@ export default function EnlaceApp({
     setTimeout(() => setToast(''), 2400)
   }
 
-  // Retorno desde Stripe
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('paid') !== '1') return
-
     window.history.replaceState({}, '', window.location.pathname)
     showToast('Verificando tu pago…')
-
     let attempts = 0
     const timer = setInterval(async () => {
       attempts++
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_pro')
-        .eq('id', userId)
-        .single()
-
+        .from('profiles').select('is_pro').eq('id', userId).single()
       if (profile?.is_pro) {
         clearInterval(timer)
         setIsPro(true)
@@ -61,7 +54,6 @@ export default function EnlaceApp({
         showToast('El pago se está procesando. Recarga en un minuto.')
       }
     }, 3000)
-
     return () => clearInterval(timer)
   }, [userId])
 
@@ -80,16 +72,13 @@ export default function EnlaceApp({
     return (
       <div className="loading-screen">
         <div className="spinner" />
-        <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: 1 }}>
-          Cargando tu boda…
-        </div>
+        <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: 1 }}>Cargando tu boda…</div>
       </div>
     )
   }
 
   return (
     <div className="app-shell">
-
       <header className="app-header">
         <button className="app-logo-btn" onClick={() => setTab('inicio')}>
           <span className="app-logo">EN<span>·</span>LACE</span>
@@ -98,8 +87,7 @@ export default function EnlaceApp({
           {saving && <span className="save-dot">Guardando…</span>}
           <button
             className={`plan-pill ${isPro ? 'pro' : 'free'}`}
-            onClick={() => !isPro && setPaywall(true)}
-          >
+            onClick={() => !isPro && setPaywall(true)}>
             {isPro ? '✦ Plan completo' : '✦ Plan gratuito'}
           </button>
           <button className="btn-logout" onClick={logout}>Salir</button>
@@ -107,78 +95,38 @@ export default function EnlaceApp({
       </header>
 
       <nav className="tab-bar">
-        <TabBtn active={tab === 'inicio'} onClick={() => goTab('inicio')}>
-          ⌂ Inicio
-        </TabBtn>
-        <TabBtn active={tab === 'fincas'} onClick={() => goTab('fincas')}>
-          🌿 Fincas
-        </TabBtn>
-        <TabBtn active={tab === 'mesas'} onClick={() => goTab('mesas')}>
-          ⬡ Mesas e invitados
-        </TabBtn>
+        <TabBtn active={tab === 'inicio'} onClick={() => goTab('inicio')}>⌂ Inicio</TabBtn>
+        <TabBtn active={tab === 'fincas'} onClick={() => goTab('fincas')}>🌿 Fincas</TabBtn>
+        <TabBtn active={tab === 'mesas'} onClick={() => goTab('mesas')}>⬡ Mesas</TabBtn>
         <TabBtn active={tab === 'plano'} onClick={() => goTab('plano')}>
-          □ Plano del salón {!isPro && <span className="tab-lock">🔒</span>}
+          □ Plano {!isPro && <span className="tab-lock">🔒</span>}
         </TabBtn>
-        <TabBtn active={tab === 'crono'} onClick={() => goTab('crono')}>
-          ◷ Cronograma
-        </TabBtn>
-        <TabBtn active={tab === 'resumen'} onClick={() => goTab('resumen')}>
-          ✦ Resumen general
-        </TabBtn>
+        <TabBtn active={tab === 'crono'} onClick={() => goTab('crono')}>◷ Cronograma</TabBtn>
+        <TabBtn active={tab === 'resumen'} onClick={() => goTab('resumen')}>✦ Resumen</TabBtn>
       </nav>
 
       {tab === 'inicio' && (
-        <TabInicio
-          data={data}
-          userName={userName}
-          isPro={isPro}
-          onPaywall={() => setPaywall(true)}
-          onGoTab={goTab}
-        />
+        <TabInicio data={data} userName={userName} isPro={isPro}
+          onPaywall={() => setPaywall(true)} onGoTab={goTab} />
       )}
-
       {tab === 'fincas' && (
-        <TabFincas
-          data={data}
-          setData={setData}
-          showToast={showToast}
-        />
+        <TabFincas data={data} setData={setData} showToast={showToast}
+          isPro={isPro} onPaywall={() => setPaywall(true)} />
       )}
-
       {tab === 'mesas' && (
-        <TabMesas
-          data={data}
-          setData={setData}
-          isPro={isPro}
-          freeLimit={FREE_GUESTS}
-          onPaywall={() => setPaywall(true)}
-          showToast={showToast}
-        />
+        <TabMesas data={data} setData={setData} isPro={isPro}
+          freeLimit={FREE_GUESTS} onPaywall={() => setPaywall(true)} showToast={showToast} />
       )}
-
       {tab === 'plano' && (
         <TabPlano data={data} setData={setData} showToast={showToast} />
       )}
-
       {tab === 'crono' && (
-        <TabCrono
-          data={data}
-          setData={setData}
-          isPro={isPro}
-          freeLimit={FREE_MOMENTS}
-          onPaywall={() => setPaywall(true)}
-          showToast={showToast}
-        />
+        <TabCrono data={data} setData={setData} isPro={isPro}
+          freeLimit={FREE_MOMENTS} onPaywall={() => setPaywall(true)} showToast={showToast} />
       )}
-
       {tab === 'resumen' && (
-        <TabResumen
-          data={data}
-          setData={setData}
-          showToast={showToast}
-          isPro={isPro}
-          onPaywall={() => setPaywall(true)}
-        />
+        <TabResumen data={data} setData={setData} showToast={showToast}
+          isPro={isPro} onPaywall={() => setPaywall(true)} />
       )}
 
       {paywall && <Paywall onClose={() => setPaywall(false)} userId={userId} />}
