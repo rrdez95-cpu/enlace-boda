@@ -88,7 +88,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
     transporte: parseFloat(R.costeCoche || '0'),
     alojamiento: parseFloat(R.costeHotel || '0'),
   }
-  const totalConfirmado = Object.values(costes).reduce((a, b) => a + (b || 0), 0)
+  const totalGastado = Object.values(costes).reduce((a, b) => a + (b || 0), 0)
   const presupuesto = parseFloat(R.presupuesto || '0')
   const recaudado = data.guests.filter(g => g.paid === 'si')
     .reduce((s, g) => s + (parseFloat(g.importe) || 0), 0)
@@ -106,6 +106,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
   })
   const ckDone = data.checklist.filter(c => c.done).length
   const ckPct = data.checklist.length ? Math.round(ckDone / data.checklist.length * 100) : 0
+  const ckUrgentes = data.checklist.filter(c => c.p === 'urgente' && !c.done).length
 
   function toggleCheck(id: number) {
     setData(d => ({
@@ -138,6 +139,42 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
       </nav>
 
       <div className="res-main">
+
+        {/* ═══ BARRA DE RESUMEN ═══ */}
+        {isPro && (
+          <div className="res-topbar">
+            <div className="rtb-item rtb-check" onClick={() => scrollTo('sec-checklist')}>
+              <div className="rtb-label">Checklist completado</div>
+              <div className="rtb-row">
+                <div className="rtb-pct">{ckPct}%</div>
+                <div className="rtb-bar-bg">
+                  <div className="rtb-bar-fill" style={{ width: `${ckPct}%` }} />
+                </div>
+              </div>
+              <div className="rtb-sub">
+                {ckDone} de {data.checklist.length} tareas
+                {ckUrgentes > 0 && (
+                  <span className="rtb-urgent"> · {ckUrgentes} urgente{ckUrgentes > 1 ? 's' : ''}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="rtb-sep" />
+
+            <div className="rtb-item rtb-money" onClick={() => scrollTo('sec-presupuesto')}>
+              <div className="rtb-label">Gasto confirmado</div>
+              <div className="rtb-amount">{totalGastado.toLocaleString('es-ES')} €</div>
+              <div className="rtb-sub">
+                {presupuesto > 0
+                  ? totalGastado > presupuesto
+                    ? <span className="rtb-over">{(totalGastado - presupuesto).toLocaleString('es-ES')} € por encima del presupuesto</span>
+                    : <>Quedan {(presupuesto - totalGastado).toLocaleString('es-ES')} € de {presupuesto.toLocaleString('es-ES')} €</>
+                  : 'Define tu presupuesto para ver el margen'}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* FECHA — SIEMPRE GRATIS */}
         <Section id="sec-fecha" icon="📅" title="Fecha y datos de la boda" sub="Información general del gran día">
           <div className="sec-body-3">
@@ -432,14 +469,34 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
               </div>
             </div>
 
-            <Section id="sec-presupuesto" icon="💰" title="Presupuesto total" sub="Resumen económico">
+            <Section id="sec-presupuesto" icon="💰" title="Presupuesto total" sub="Resumen económico completo">
               <div className="sec-body">
                 <div className="bov">
                   <BovItem val={presupuesto} label="Previsto" />
-                  <BovItem val={totalConfirmado} label="Confirmado" />
-                  <BovItem val={Math.max(0, presupuesto - totalConfirmado)} label="Pendiente" />
+                  <BovItem val={totalGastado} label="Gastado" />
+                  <BovItem val={Math.max(0, presupuesto - totalGastado)} label="Disponible" />
                   <BovItem val={recaudado} label="En sobres" />
                 </div>
+
+                <div className="balance-box">
+                  <div className="balance-label">Coste real de la boda</div>
+                  <div className="balance-row">
+                    <span>Gasto confirmado</span>
+                    <span className="balance-neg">− {totalGastado.toLocaleString('es-ES')} €</span>
+                  </div>
+                  <div className="balance-row">
+                    <span>Regalos recibidos en sobres</span>
+                    <span className="balance-pos">+ {recaudado.toLocaleString('es-ES')} €</span>
+                  </div>
+                  <div className="balance-total">
+                    <span>Os ha costado</span>
+                    <span className={totalGastado - recaudado > 0 ? 'balance-final' : 'balance-final ok'}>
+                      {Math.abs(totalGastado - recaudado).toLocaleString('es-ES')} €
+                      {totalGastado - recaudado < 0 && ' a favor'}
+                    </span>
+                  </div>
+                </div>
+
                 <Field label="Presupuesto total estimado (€)" type="number" value={R.presupuesto || ''}
                   placeholder="30000" onChange={v => setR('presupuesto', v)} />
                 <TextArea label="Notas económicas" value={R.notasEco || ''} onChange={v => setR('notasEco', v)} />
