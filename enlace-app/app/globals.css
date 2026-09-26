@@ -723,6 +723,65 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
   .paywall-plans{grid-template-columns:1fr}
 }
 
+
+/* ═══ PAYWALL NUEVO ═══ */
+.pw-box{
+  background:#1a1714;border:1px solid rgba(184,150,90,.3);border-radius:16px;
+  max-width:560px;width:calc(100% - 32px);position:relative;overflow:hidden;
+}
+.pw-close{
+  position:absolute;top:14px;right:16px;background:none;border:none;
+  color:rgba(255,255,255,.4);font-size:22px;cursor:pointer;line-height:1;padding:4px;z-index:1;
+}
+.pw-close:hover{color:rgba(255,255,255,.8)}
+.pw-top{text-align:center;padding:32px 28px 20px}
+.pw-icon{font-size:36px;margin-bottom:14px}
+.pw-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:600;font-style:italic;color:#f0ead8;margin-bottom:6px}
+.pw-subtitle{font-size:13px;color:rgba(255,255,255,.5);font-weight:300}
+
+.pw-plans{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 16px}
+
+/* Plan marfil */
+.pw-plan.ivory{background:#f5f0e8;border-radius:10px;padding:22px 18px;display:flex;flex-direction:column;gap:0}
+.pw-plan.ivory.highlighted{box-shadow:0 0 0 2px rgba(184,150,90,.5)}
+.pw-plan-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.pw-plan-name{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3a3025}
+.pw-plan-tag{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.ivory-tag{background:rgba(160,113,58,.15);color:#8a5e20;border:1px solid rgba(160,113,58,.3)}
+.pw-price{display:flex;align-items:baseline;gap:1px;margin-bottom:4px}
+.ivory-cur{font-family:'Playfair Display',serif;font-size:15px;color:#6b4c1e}
+.ivory-amount{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:#3a2810;line-height:1;letter-spacing:-1px}
+.pw-cents{font-size:22px}
+.ivory-once{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8a7a68;margin-bottom:16px}
+.pw-features{list-style:none;display:flex;flex-direction:column;gap:8px;flex:1;margin-bottom:20px}
+.pw-features li{display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.4;font-weight:300}
+.pw-tick{font-size:10px;flex-shrink:0;margin-top:1px;font-weight:700}
+.ivory-tick{color:#6b8c52}
+.pw-features li{color:#3a3025}
+.pw-btn{display:block;text-align:center;padding:13px;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:opacity .2s;margin-top:auto}
+.ivory-btn{background:#1a1714;color:#f5f0e8}
+.ivory-btn:hover{opacity:.85}
+
+/* Plan dorado */
+.pw-plan.gold{background:#b8965a;border-radius:10px;padding:22px 18px;display:flex;flex-direction:column;gap:0}
+.pw-plan.gold.highlighted{box-shadow:0 0 0 2px #fff}
+.gold-name{color:#1a1410}
+.gold-tag{background:rgba(0,0,0,.18);color:#1a1410;border:1px solid rgba(0,0,0,.15)}
+.gold-cur{font-family:'Playfair Display',serif;font-size:15px;color:#1a1410}
+.gold-amount{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:#1a1410;line-height:1;letter-spacing:-1px}
+.gold-once{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(26,20,16,.6);margin-bottom:16px}
+.gold-tick{color:#1a1410;opacity:.8}
+.gold-feat-text{color:#1a1410;font-size:12px;line-height:1.4;font-weight:400}
+.gold-btn{background:#1a1410;color:#c49256}
+.gold-btn:hover{opacity:.85}
+
+.pw-legal{text-align:center;font-size:11px;color:rgba(255,255,255,.3);padding:4px 20px 20px;line-height:1.5}
+
+@media(max-width:480px){
+  .pw-plans{grid-template-columns:1fr}
+  .pw-top{padding:28px 20px 16px}
+}
+
 /* ═══ MODALS ═══ */
 .modal-overlay{position:fixed;inset:0;background:rgba(28,28,30,.65);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal-box{background:var(--white);border:1px solid var(--border);border-radius:8px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2)}
