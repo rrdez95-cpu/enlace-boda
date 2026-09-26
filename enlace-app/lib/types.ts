@@ -61,7 +61,6 @@ export type ChecklistItem = {
 }
 
 /* ═══ FINCAS ═══ */
-
 export type FincaExtra = {
   id: string
   nombre: string
@@ -82,6 +81,34 @@ export type Finca = {
   sonidoExtras: FincaExtra[]
 }
 
+/* ═══ INVITACIONES ═══ */
+export type InvitacionTema = 'marfil' | 'jardin' | 'marino' | 'rosa' | 'grafito'
+
+export type InvitacionConfig = {
+  activa: boolean
+  codigo: string
+  tema: InvitacionTema
+  mensaje: string
+  fotoPortada?: string   // URL pública de Supabase Storage
+  foto2?: string
+  fechaLimiteRsvp?: string
+}
+
+export type RsvpResponse = {
+  id: string
+  nombre: string
+  apellido?: string
+  asiste: boolean
+  num_acomp: number
+  nombre_acomp?: string
+  intolerancia?: string
+  necesita_bus: boolean
+  ruta_bus?: string
+  importado: boolean
+  created_at: string
+}
+
+/* ═══ BODA DATA ═══ */
 export type BodaData = {
   guests: Guest[]
   mesas: Mesa[]
@@ -92,6 +119,7 @@ export type BodaData = {
   rItems: Record<string, { id: number; text: string }[]>
   resumen: Record<string, string>
   fincas: Finca[]
+  invitacion?: InvitacionConfig
   gid: number
   mid: number
   eid: number

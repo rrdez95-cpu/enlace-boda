@@ -8,7 +8,7 @@ type Props = {
   data: BodaData
   userName: string
   isPro: boolean
-  onPaywall: () => void
+  onPaywall: (t: 'pro' | 'premium') => void
   onGoTab: (t: Tab) => void
 }
 

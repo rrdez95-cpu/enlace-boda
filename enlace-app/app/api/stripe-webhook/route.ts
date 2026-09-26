@@ -1,69 +1,56 @@
-import { NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import Stripe from 'stripe'
 
-export async function POST(req: Request) {
-  const stripeKey = process.env.STRIPE_SECRET_KEY
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
-  if (!stripeKey || !webhookSecret || !supabaseUrl || !serviceKey) {
-    return NextResponse.json({ error: 'Config incompleta' }, { status: 500 })
-  }
+export async function POST(request: Request) {
+  const body = await request.text()
+  const sig = request.headers.get('stripe-signature')
 
-  const stripe = new Stripe(stripeKey)
-  const body = await req.text()
-  const signature = req.headers.get('stripe-signature')
-
-  if (!signature) {
-    return NextResponse.json({ error: 'Sin firma' }, { status: 400 })
-  }
+  if (!sig) return new Response('No signature', { status: 400 })
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err) {
-    console.error('[webhook] Firma inválida:', err)
-    return NextResponse.json({ error: 'Firma inválida' }, { status: 400 })
+    console.error('[webhook] Invalid signature:', err)
+    return new Response('Webhook error', { status: 400 })
   }
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
     const email = session.customer_details?.email
-    const clientRef = session.client_reference_id
+    const amount = session.amount_total // en céntimos
 
-    if (!email && !clientRef) {
-      console.warn('[webhook] Sin email ni referencia')
-      return NextResponse.json({ received: true })
+    if (!email) return new Response('OK', { status: 200 })
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    // 399 = Plan completo (3,99€) → is_pro
+    // 999 = Plan premium (9,99€) → is_premium + is_pro (incluye todo)
+    const updates: Record<string, boolean> = {}
+    if (amount === 399) {
+      updates.is_pro = true
+    } else if (amount === 999) {
+      updates.is_pro = true
+      updates.is_premium = true
     }
 
-    // Cliente admin de Supabase (salta RLS)
-    const supabase = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false },
-    })
-
-    // Buscar por user id (client_reference_id) o por email
-    let query = supabase.from('profiles').update({
-      is_pro: true,
-      stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
-      updated_at: new Date().toISOString(),
-    })
-
-    if (clientRef) {
-      query = query.eq('id', clientRef)
-    } else {
-      query = query.eq('email', email!)
+    if (Object.keys(updates).length === 0) {
+      return new Response('OK', { status: 200 })
     }
 
-    const { error } = await query
-    if (error) {
-      console.error('[webhook] Error actualizando perfil:', error)
-      return NextResponse.json({ error: 'Error BD' }, { status: 500 })
-    }
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('email', email)
 
-    console.log('[webhook] PRO activado para', clientRef || email)
+    if (error) console.error('[webhook] DB error:', error)
+    else console.log('[webhook] Updated', email, updates)
   }
 
-  return NextResponse.json({ received: true })
+  return new Response('OK', { status: 200 })
 }
