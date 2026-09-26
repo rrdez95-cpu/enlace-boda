@@ -23,7 +23,7 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
 .btn-logout{background:none;border:1px solid rgba(255,255,255,.15);color:var(--muted2);border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Barlow',sans-serif}
 .btn-logout:hover{color:var(--ivory);border-color:rgba(255,255,255,.3)}
 
-.tab-bar{background:var(--charcoal2);display:flex;flex-shrink:0;border-bottom:1px solid rgba(184,150,90,.2);overflow-x:auto}
+.tab-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:var(--charcoal2);display:flex;flex-shrink:0;border-bottom:1px solid rgba(184,150,90,.2);overflow-x:auto}
 .tab-bar::-webkit-scrollbar{display:none}
 .tab-btn{padding:0 22px;height:44px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0}
 .tab-btn:hover{color:var(--gold2)}
