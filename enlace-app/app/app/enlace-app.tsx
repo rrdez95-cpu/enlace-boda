@@ -74,7 +74,7 @@ export default function EnlaceApp({
 
   function goTab(t: Tab) {
     if (!isPro && t === 'plano') { setPaywall('pro'); return }
-    if (!isPremium && t === 'invitaciones') { setPaywall('premium'); return }
+    // Sin bloqueo: el tab muestra overlay interno
     setTab(t)
   }
 
@@ -149,7 +149,8 @@ export default function EnlaceApp({
       )}
       {tab === 'invitaciones' && (
         <TabInvitaciones data={data} setData={setData} showToast={showToast}
-          userId={userId} bodaId={bodaId} />
+          userId={userId} bodaId={bodaId}
+          isPremium={isPremium} onPaywall={() => setPaywall('premium')} />
       )}
 
       {paywall && (
