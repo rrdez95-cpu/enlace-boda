@@ -667,8 +667,8 @@ body{font-family:'Barlow',sans-serif;background:var(--ivory);color:var(--charcoa
 .inv-activate-btn:hover{background:var(--gold2)}
 .inv-warn{margin-top:16px;font-size:12px;color:var(--muted);font-style:italic}
 
-.inv-layout{display:flex;flex:1;overflow:hidden}
-.inv-side{width:300px;flex-shrink:0;background:var(--charcoal2);border-right:1px solid rgba(184,150,90,.2);overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.inv-layout{display:flex;flex:1;overflow:hidden;min-height:0}
+.inv-side{width:320px;flex-shrink:0;background:var(--charcoal2);border-right:1px solid rgba(184,150,90,.2);overflow-y:auto;overflow-x:hidden;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
 .inv-main{flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:20px}
 
 .inv-url-card{background:rgba(255,255,255,.06);border:1px solid rgba(184,150,90,.25);border-radius:8px;padding:16px}
