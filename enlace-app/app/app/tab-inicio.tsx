@@ -2,17 +2,18 @@
 
 import { BodaData } from '@/lib/types'
 
-type Tab = 'inicio' | 'fincas' | 'mesas' | 'plano' | 'crono' | 'resumen'
+type Tab = 'inicio' | 'fincas' | 'mesas' | 'plano' | 'crono' | 'resumen' | 'invitaciones'
 
 type Props = {
   data: BodaData
   userName: string
   isPro: boolean
+  isPremium: boolean
   onPaywall: (t: 'pro' | 'premium') => void
   onGoTab: (t: Tab) => void
 }
 
-export default function TabInicio({ data, userName, isPro, onPaywall, onGoTab }: Props) {
+export default function TabInicio({ data, userName, isPro, isPremium, onPaywall, onGoTab }: Props) {
   const nombres = data.resumen?.novios
   const fecha = data.resumen?.fecha
 
@@ -65,7 +66,7 @@ export default function TabInicio({ data, userName, isPro, onPaywall, onGoTab }:
       <section className="home-steps">
         <div className="home-steps-head">
           <div className="home-eyebrow">Cómo funciona</div>
-          <h2 className="home-h2">Cinco espacios, una boda perfecta</h2>
+          <h2 className="home-h2">Seis espacios, una boda perfecta</h2>
         </div>
 
         <StepCard
@@ -77,10 +78,10 @@ export default function TabInicio({ data, userName, isPro, onPaywall, onGoTab }:
           desc="Compara todas las fincas que visites sin Excel. Coste total, precio por invitado calculado automáticamente y puntuación de cada apartado para decidir sin dudas."
           perks={[
             'Precio real por invitado con todos los extras sumados',
-            'Extras con precio fijo o por persona (exclusividades, corners...)',
-            'Comparativa entre lo esperado y lo que viste en persona',
+            'Extras con precio fijo o por persona',
+            'Plan B para lluvia en cada espacio',
           ]}
-          perksPro={['Puntuación de cada apartado del 1 al 10', 'Nota media por finca para comparar de un vistazo']}
+          perksPro={['Puntuación del 1 al 10 por apartado', 'Comparativa esperado vs lo que viste']}
           isPro={isPro}
           locked={false}
           onClick={() => onGoTab('fincas')}
@@ -96,7 +97,7 @@ export default function TabInicio({ data, userName, isPro, onPaywall, onGoTab }:
           perks={[
             'Arrastra y suelta para mover invitados entre mesas',
             'Aviso automático si una mesa se llena',
-            'Las intolerancias se recopilan solas para el catering',
+            'Las intolerancias se recopilan solas',
           ]}
           isPro={isPro}
           locked={false}
@@ -109,7 +110,7 @@ export default function TabInicio({ data, userName, isPro, onPaywall, onGoTab }:
           title="Plano del salón"
           badge={isPro ? 'Desbloqueado' : 'Plan completo'}
           badgeType={isPro ? 'pro' : 'locked'}
-          desc="Coloca cada mesa exactamente donde va a estar el día de la boda sobre un plano con aspecto de proyecto de arquitecto. Los asientos se marcan solos."
+          desc="Coloca cada mesa exactamente donde va a estar el día de la boda sobre un plano con aspecto de proyecto de arquitecto."
           perks={[
             'Mueve las mesas libremente por el salón',
             'Mesas redondas o rectangulares',
@@ -117,7 +118,7 @@ export default function TabInicio({ data, userName, isPro, onPaywall, onGoTab }:
           ]}
           isPro={isPro}
           locked={!isPro}
-          onClick={() => isPro ? onGoTab('plano') : onPaywall()}
+          onClick={() => isPro ? onGoTab('plano') : onPaywall('pro')}
         />
 
         <StepCard
@@ -126,7 +127,7 @@ export default function TabInicio({ data, userName, isPro, onPaywall, onGoTab }:
           title="Cronograma del día"
           badge="Incluido"
           badgeType="free"
-          desc="El guion minuto a minuto de tu boda. Ceremonia, fotos, cóctel, banquete, primer baile. Cada momento con su hora, su duración y sus notas."
+          desc="El guion minuto a minuto de tu boda. Ceremonia, fotos, cóctel, banquete, primer baile. Cada momento con su hora y sus notas."
           perks={[
             'Línea de tiempo visual por categorías',
             'Gestión de autobuses con rutas y pasajeros',
@@ -143,7 +144,7 @@ export default function TabInicio({ data, userName, isPro, onPaywall, onGoTab }:
           title="Resumen general"
           badge={isPro ? 'Desbloqueado' : 'Fecha gratis'}
           badgeType={isPro ? 'pro' : 'partial'}
-          desc="El cuaderno de una wedding planner profesional. Ceremonia, cóctel, banquete, música, foto, transporte, alojamiento, proveedores y presupuesto con balance de sobres."
+          desc="El cuaderno de una wedding planner profesional. Ceremonia, cóctel, banquete, música, foto, transporte, alojamiento, proveedores y presupuesto."
           perks={[
             'Checklist de 52 tareas ordenadas en el tiempo',
             'Presupuesto que se calcula solo por sección',
@@ -153,25 +154,43 @@ export default function TabInicio({ data, userName, isPro, onPaywall, onGoTab }:
           locked={false}
           onClick={() => onGoTab('resumen')}
         />
+
+        <StepCard
+          num="06"
+          icon="💌"
+          title="Invitación digital"
+          badge={isPremium ? 'Desbloqueado' : 'Plan premium'}
+          badgeType={isPremium ? 'pro' : 'locked'}
+          desc="Crea una página personalizada con vuestros nombres, el cronograma del día, el mapa y un formulario para que los invitados confirmen asistencia."
+          perks={[
+            '5 estilos visuales distintos',
+            'Fotos propias en la invitación',
+            'Descarga del plano de mesas en PDF',
+          ]}
+          perksPro={['Confirmaciones automáticas en la lista de invitados', 'URL personalizada con vuestros nombres']}
+          isPro={isPremium}
+          locked={!isPremium}
+          onClick={() => onGoTab('invitaciones')}
+        />
       </section>
 
       {/* CTA */}
-      {!isPro && (
+      {!isPremium && (
         <section className="home-cta">
           <div className="home-cta-box">
             <div className="home-cta-rings">💍</div>
             <h3 className="home-cta-title">Desbloquea <em>Enlace</em> al completo</h3>
             <p className="home-cta-text">
-              Puntuaciones en el comparador de fincas, plano del salón, cronograma sin límite
-              y el resumen completo de wedding planner con checklist de 52 tareas.
+              Desde 3,99€ de pago único. Sin suscripción, sin renovaciones.
+              Todo lo que necesitas para organizar vuestra boda perfecta.
             </p>
             <div className="home-cta-price">
               <span className="home-cta-cur">€</span>
               <span className="home-cta-amount">3<span className="home-cta-cents">,99</span></span>
             </div>
             <div className="home-cta-once">Pago único · Para siempre · Sin suscripción</div>
-            <button className="home-cta-btn" onClick={onPaywall}>
-              Ver qué incluye →
+            <button className="home-cta-btn" onClick={() => onPaywall('pro')}>
+              Ver planes →
             </button>
           </div>
         </section>
