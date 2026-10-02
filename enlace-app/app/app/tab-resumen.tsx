@@ -1,8 +1,11 @@
 'use client'
 
+import './tab-resumen.css'
+
 import { useState, useEffect } from 'react'
 import { BodaData, Proveedor } from '@/lib/types'
 import { DEFAULT_CHECKLIST } from './checklist-data'
+import { MOMENTOS_RESUMEN, sincronizarMomentos, momentosSinPasar } from '@/lib/momentos'
 
 type Props = {
   data: BodaData
@@ -48,8 +51,13 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
   }, [])
 
   const R = data.resumen || {}
+  const pendientesCrono = momentosSinPasar(data)
+  // Las horas de cada apartado se pasan solas al Cronograma
   function setR(k: string, v: string) {
-    setData(d => ({ ...d, resumen: { ...d.resumen, [k]: v } }))
+    const creaMomento = MOMENTOS_RESUMEN.some(m => m.hora === k && /^\d{2}:\d{2}$/.test(v)
+      && !data.eventos.some(e => e.origen === `resumen:${m.id}`))
+    setData(d => sincronizarMomentos({ ...d, resumen: { ...d.resumen, [k]: v } }, [k]))
+    if (creaMomento) showToast('Añadido al Cronograma')
   }
 
   function scrollTo(id: string, free?: boolean) {
@@ -140,6 +148,20 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
 
       <div className="res-main">
 
+        {isPro && (
+          <div className="res-sync">
+            <span>Las horas que pongas en cada apartado se añaden solas al Cronograma.</span>
+            {pendientesCrono > 0 && (
+              <button className="res-sync-btn" onClick={() => {
+                setData(d => sincronizarMomentos(d, MOMENTOS_RESUMEN.map(m => m.hora)))
+                showToast(pendientesCrono === 1 ? '1 momento añadido al Cronograma' : `${pendientesCrono} momentos añadidos al Cronograma`)
+              }}>
+                Añadir {pendientesCrono === 1 ? 'la hora que falta' : `las ${pendientesCrono} horas que faltan`}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* ═══ BARRA DE RESUMEN ═══ */}
         {isPro && (
           <div className="res-topbar">
@@ -180,7 +202,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
           <div className="sec-body-3">
             <div>
               <Field label="Fecha de la boda" type="date" value={R.fecha || ''} onChange={v => setR('fecha', v)} />
-              <Field label="Hora de inicio" type="time" value={R.horaInicio || '12:00'} onChange={v => setR('horaInicio', v)} />
+              <Field label="Hora de inicio" type="time" value={R.horaInicio || ''} onChange={v => setR('horaInicio', v)} />
             </div>
             <div>
               <Field label="Nombre de los novios" value={R.novios || ''} placeholder="Laura y Alejandro" onChange={v => setR('novios', v)} />
@@ -218,7 +240,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                     <Field label="Lugar" value={R.lugarCeremonia || ''} placeholder="Jardín de la finca" onChange={v => setR('lugarCeremonia', v)} />
                   </div>
                   <div className="fr">
-                    <Field label="Hora de inicio" type="time" value={R.horaCeremonia || '12:00'} onChange={v => setR('horaCeremonia', v)} />
+                    <Field label="Hora de inicio" type="time" value={R.horaCeremonia || ''} onChange={v => setR('horaCeremonia', v)} />
                     <Field label="Duración" value={R.durCeremonia || ''} placeholder="45 minutos" onChange={v => setR('durCeremonia', v)} />
                   </div>
                   <Field label="Coste ceremonia (€)" type="number" value={R.costeCeremonia || ''} onChange={v => setR('costeCeremonia', v)} />
@@ -253,7 +275,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
             <Section id="sec-coctel" icon="🥂" title="Cóctel de bienvenida" sub="Aperitivos, bebidas y entretenimiento" cost={costes.coctel}>
               <div className="sec-body">
                 <div className="fr" style={{ marginBottom: 14 }}>
-                  <Field label="Hora de inicio" type="time" value={R.horaCoctel || '13:30'} onChange={v => setR('horaCoctel', v)} />
+                  <Field label="Hora de inicio" type="time" value={R.horaCoctel || ''} onChange={v => setR('horaCoctel', v)} />
                   <Field label="Duración" value={R.durCoctel || ''} placeholder="90 minutos" onChange={v => setR('durCoctel', v)} />
                   <Field label="Ubicación" value={R.ubiCoctel || ''} placeholder="Terraza" onChange={v => setR('ubiCoctel', v)} />
                   <Field label="Coste total (€)" type="number" value={R.costeCoctel || ''} onChange={v => setR('costeCoctel', v)} />
@@ -274,6 +296,10 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
 
             <Section id="sec-banquete" icon="🍽️" title="Banquete" sub="Menú completo, vinos y servicio" cost={costes.banquete}>
               <div className="sec-body">
+                <div className="fr" style={{ marginBottom: 14 }}>
+                  <Field label="Hora de inicio" type="time" value={R.horaBanquete || ''} onChange={v => setR('horaBanquete', v)} />
+                  <Field label="Duración" value={R.durBanquete || ''} placeholder="2 horas 30 minutos" onChange={v => setR('durBanquete', v)} />
+                </div>
                 <div className="fr" style={{ marginBottom: 14 }}>
                   <Field label="Catering" value={R.catering || ''} placeholder="Nombre empresa" onChange={v => setR('catering', v)} />
                   <Field label="€/persona" type="number" value={R.precioPax || ''} placeholder="95" onChange={v => setR('precioPax', v)} />
@@ -314,9 +340,9 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
             <Section id="sec-barra" icon="🍸" title="Barra libre" sub="Bebidas, horas y extras" cost={costes.barra}>
               <div className="sec-body">
                 <div className="fr" style={{ marginBottom: 14 }}>
-                  <Field label="Hora inicio" type="time" value={R.horaBarra || '19:00'} onChange={v => setR('horaBarra', v)} />
+                  <Field label="Hora inicio" type="time" value={R.horaBarra || ''} onChange={v => setR('horaBarra', v)} />
                   <Field label="Horas contratadas" value={R.horasBarra || ''} placeholder="5 horas" onChange={v => setR('horasBarra', v)} />
-                  <Field label="Hora cierre" type="time" value={R.cierreBarra || '00:00'} onChange={v => setR('cierreBarra', v)} />
+                  <Field label="Hora cierre" type="time" value={R.cierreBarra || ''} onChange={v => setR('cierreBarra', v)} />
                   <Field label="Coste total (€)" type="number" value={R.costeBarra || ''} onChange={v => setR('costeBarra', v)} />
                 </div>
                 <ItemList title="Bebidas incluidas" list="beb-barra" data={data} onAdd={addItem} onUpd={updItem} onDel={delItem} />
@@ -350,6 +376,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                 </SubSec>
                 <SubSec title="Momentos especiales">
                   <div className="fr">
+                    <Field label="Hora del primer baile" type="time" value={R.horaBaile || ''} onChange={v => setR('horaBaile', v)} />
                     <Field label="Canción primer baile" value={R.primerBaile || ''} placeholder="Título - Artista" onChange={v => setR('primerBaile', v)} />
                     <Field label="Baile padre/madre" value={R.bailePadre || ''} placeholder="Título - Artista" onChange={v => setR('bailePadre', v)} />
                   </div>
@@ -367,7 +394,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                   <div className="subsec-title" style={{ marginBottom: 12 }}>Fotógrafo/a</div>
                   <Field label="Nombre" value={R.fotografo || ''} onChange={v => setR('fotografo', v)} />
                   <div className="fr">
-                    <Field label="Hora inicio" type="time" value={R.horaFoto || '11:00'} onChange={v => setR('horaFoto', v)} />
+                    <Field label="Hora inicio" type="time" value={R.horaFoto || ''} onChange={v => setR('horaFoto', v)} />
                     <Field label="Horas" value={R.horasFoto || ''} placeholder="10 h" onChange={v => setR('horasFoto', v)} />
                   </div>
                   <Field label="Coste (€)" type="number" value={R.costeFoto || ''} onChange={v => setR('costeFoto', v)} />
@@ -377,7 +404,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                   <div className="subsec-title" style={{ marginBottom: 12 }}>Videógrafo/a</div>
                   <Field label="Nombre" value={R.videografo || ''} onChange={v => setR('videografo', v)} />
                   <div className="fr">
-                    <Field label="Hora inicio" type="time" value={R.horaVideo || '11:00'} onChange={v => setR('horaVideo', v)} />
+                    <Field label="Hora inicio" type="time" value={R.horaVideo || ''} onChange={v => setR('horaVideo', v)} />
                     <Field label="Horas" value={R.horasVideo || ''} placeholder="10 h" onChange={v => setR('horasVideo', v)} />
                   </div>
                   <Field label="Coste (€)" type="number" value={R.costeVideo || ''} onChange={v => setR('costeVideo', v)} />
@@ -399,6 +426,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                 </div>
                 <SubSec title="Coche nupcial">
                   <div className="fr">
+                    <Field label="Hora de recogida" type="time" value={R.horaCoche || ''} onChange={v => setR('horaCoche', v)} />
                     <Field label="Empresa / modelo" value={R.cocheNupcial || ''} placeholder="Rolls Royce" onChange={v => setR('cocheNupcial', v)} />
                     <Field label="Trayecto" value={R.trayecto || ''} placeholder="Casa - Ceremonia - Finca" onChange={v => setR('trayecto', v)} />
                     <Field label="Coste (€)" type="number" value={R.costeCoche || ''} onChange={v => setR('costeCoche', v)} />
@@ -407,7 +435,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                 <SubSec title="Traslado post-boda">
                   <div className="fr">
                     <Field label="Empresa" value={R.traslado || ''} placeholder="Taxi, VTC..." onChange={v => setR('traslado', v)} />
-                    <Field label="Hora estimada" type="time" value={R.horaTraslado || '01:00'} onChange={v => setR('horaTraslado', v)} />
+                    <Field label="Hora estimada" type="time" value={R.horaTraslado || ''} onChange={v => setR('horaTraslado', v)} />
                     <Field label="Destino" value={R.destinoTraslado || ''} onChange={v => setR('destinoTraslado', v)} />
                   </div>
                 </SubSec>

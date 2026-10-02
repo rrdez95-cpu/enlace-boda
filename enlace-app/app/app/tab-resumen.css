@@ -1,0 +1,5 @@
+/* ═══ Resumen: aviso de horas que pasan al Cronograma ═══ */
+.res-sync{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:rgba(184,150,90,.08);border:1px solid rgba(184,150,90,.25);border-radius:8px;font-size:13px;line-height:1.5;color:var(--charcoal2);flex-shrink:0}
+.res-sync span{flex:1;min-width:200px}
+.res-sync-btn{font:inherit;font-size:12.5px;font-weight:600;color:var(--charcoal);background:var(--gold);border:0;border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap}
+.res-sync-btn:hover{background:var(--gold2)}

@@ -26,6 +26,8 @@ export type Evento = {
   cat: string
   desc: string
   emoji: string
+  /** "resumen:ceremonia"… si el momento viene de una hora puesta en el Resumen */
+  origen?: string
 }
 
 export type Bus = {
