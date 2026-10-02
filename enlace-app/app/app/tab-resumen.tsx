@@ -9,6 +9,7 @@ import {
   MOMENTOS_RESUMEN, HORAS_AUTOMATICAS, LIMITE_MOMENTOS_GRATIS,
   sincronizarMomentos, momentosSinPasar, anadirMomento, momentoEnCronograma, horaMomento, hayCoche, hayBus,
 } from '@/lib/momentos'
+import { lineasExtrasFinca } from '@/lib/finca-elegida'
 
 type Props = {
   data: BodaData
@@ -108,6 +109,10 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
     }))
   }
 
+  // Extras de la finca elegida en Fincas (se calculan en directo)
+  const fincaElegida = (data.fincas || []).find(f => f.id === R.fincaElegida) || null
+  const extrasFinca = fincaElegida ? lineasExtrasFinca(fincaElegida, parseInt(R.totalInv || '') || 0) : []
+
   const costes = {
     ceremonia: parseFloat(R.costeCeremonia || '0'),
     coctel: parseFloat(R.costeCoctel || '0'),
@@ -117,6 +122,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
     foto: parseFloat(R.costeFoto || '0') + parseFloat(R.costeVideo || '0'),
     transporte: (hayCoche(R) ? parseFloat(R.costeCoche || '0') : 0) + (hayBus(R) ? parseFloat(R.costeBus || '0') : 0),
     alojamiento: parseFloat(R.costeHotel || '0'),
+    fincaExtras: extrasFinca.reduce((s, l) => s + l.importe, 0),
   }
   const totalGastado = Object.values(costes).reduce((a, b) => a + (b || 0), 0)
   const presupuesto = parseFloat(R.presupuesto || '0')
@@ -565,6 +571,30 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                   <BovItem val={Math.max(0, presupuesto - totalGastado)} label="Disponible" />
                   <BovItem val={recaudado} label="En sobres" />
                 </div>
+
+                {fincaElegida && (
+                  <div className="fe-box">
+                    <div className="fe-box-h">
+                      <span>Extras de {fincaElegida.nombre}</span>
+                      <b>{costes.fincaExtras.toLocaleString('es-ES')} €</b>
+                    </div>
+                    {extrasFinca.length === 0 ? (
+                      <p className="fe-box-empty">Esta finca no tiene extras con coste.</p>
+                    ) : (
+                      <ul className="fe-box-list">
+                        {extrasFinca.map((l, i) => (
+                          <li key={i}>
+                            <span>{l.concepto}{l.detalle && <small>{l.detalle}</small>}</span>
+                            <span>{Math.round(l.importe).toLocaleString('es-ES')} €</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="fe-box-note">
+                      El menú, la ceremonia y el sonido de la finca están en sus apartados. Estos extras se actualizan solos si los cambias en Fincas.
+                    </p>
+                  </div>
+                )}
 
                 <div className="balance-box">
                   <div className="balance-label">Coste real de la boda</div>

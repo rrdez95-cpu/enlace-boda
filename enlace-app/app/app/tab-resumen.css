@@ -14,3 +14,14 @@
 .bus-tramo{background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:12px 14px 4px}
 .bus-tramo-t{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--charcoal2);margin-bottom:8px}
 .res-hint{font-size:12.5px;line-height:1.55;color:var(--muted);margin:12px 0 0}
+
+/* ═══ Extras de la finca elegida ═══ */
+.fe-box{background:var(--white);border:1px solid var(--gold);border-radius:8px;padding:14px 18px;margin-bottom:18px}
+.fe-box-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--charcoal);margin-bottom:8px}
+.fe-box-h b{font-size:20px;color:var(--gold)}
+.fe-box-list{list-style:none;margin:0;padding:0}
+.fe-box-list li{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid var(--border);font-size:13.5px;color:var(--charcoal2)}
+.fe-box-list li span:last-child{font-weight:600;white-space:nowrap}
+.fe-box-list small{display:block;font-size:11.5px;color:var(--muted)}
+.fe-box-empty{font-size:13px;color:var(--muted);margin:0}
+.fe-box-note{font-size:12px;line-height:1.5;color:var(--muted);margin:10px 0 0}

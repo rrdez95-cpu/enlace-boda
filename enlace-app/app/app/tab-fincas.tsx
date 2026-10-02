@@ -4,6 +4,7 @@ import './tab-fincas.css'
 
 import { useState } from 'react'
 import { BodaData, Finca, FincaExtra, FincaVisita } from '@/lib/types'
+import { aplicarFinca, quitarEleccion, conflictosAlElegir } from '@/lib/finca-elegida'
 
 type Props = {
   data: BodaData
@@ -106,6 +107,7 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
   const invitados = parseInt(data.resumen?.totalInv || '0') || 0
 
   const sel = fincas.find(f => f.id === selId) || null
+  const elegidaId = data.resumen?.fincaElegida || ''
   const pendientes = fincas.filter(esPendiente).sort((a, b) => claveVisita(a).localeCompare(claveVisita(b)))
   const visitadas = fincas.filter(f => !esPendiente(f))
 
@@ -140,6 +142,24 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
     showToast(estado === 'visitada'
       ? 'Marcada como visitada. Ya puedes apuntar precios y puntuarla'
       : 'Marcada como pendiente de visitar')
+  }
+
+  // Elegir finca: sus datos pasan al Resumen y los extras al Presupuesto
+  function elegir(f: Finca) {
+    const otra = elegidaId && elegidaId !== f.id ? fincas.find(x => x.id === elegidaId) : null
+    const cambios = conflictosAlElegir(data, f)
+    const avisos = [
+      otra ? `Dejará de estar elegida ${otra.nombre}.` : '',
+      cambios.length ? `En el Resumen se sustituirá ${cambios.join(', ')}.` : '',
+    ].filter(Boolean)
+    if (avisos.length && !window.confirm(`${avisos.join(' ')} ¿Continuar?`)) return
+    setData(d => aplicarFinca(d, f))
+    showToast(elegidaId === f.id ? 'Datos actualizados en el Resumen' : `¡${f.nombre} elegida! Sus datos ya están en el Resumen`)
+  }
+
+  function quitar() {
+    setData(d => quitarEleccion(d))
+    showToast('Ya no hay finca elegida. Los datos del Resumen se mantienen')
   }
 
   function delFinca(id: string) {
@@ -242,9 +262,12 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
                 const media = notaMedia(f)
                 return (
                   <div key={f.id}
-                    className={`finca-item ${selId === f.id ? 'active' : ''}`}
+                    className={`finca-item ${selId === f.id ? 'active' : ''} ${elegidaId === f.id ? 'elegida' : ''}`}
                     onClick={() => setSelId(f.id)}>
-                    <div className="finca-item-name">{f.nombre || 'Sin nombre'}</div>
+                    <div className="finca-item-name">
+                      {f.nombre || 'Sin nombre'}
+                      {elegidaId === f.id && <span className="finca-item-tag">Elegida</span>}
+                    </div>
                     <div className="finca-item-row">
                       <span className="finca-item-price">
                         {porInv > 0 ? `${Math.round(porInv).toLocaleString('es-ES')} €` : '— €'}
@@ -291,6 +314,9 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
             onPaywall={onPaywall}
             onNombre={v => updFinca(sel.id, { nombre: v })}
             onEstado={e => setEstado(sel.id, e)}
+            elegida={elegidaId === sel.id}
+            onElegir={() => elegir(sel)}
+            onQuitar={quitar}
             onVisita={p => setVisita(sel.id, p)}
             onDel={() => { delFinca(sel.id); showToast('Finca eliminada') }}
             onCampo={(k, v) => setCampo(sel.id, k, v)}
@@ -309,7 +335,7 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
 /* ═══ DETALLE ═══ */
 
 function FincaDetalle({
-  finca, invitados, isPro, onPaywall, onNombre, onEstado, onVisita, onDel, onCampo, onNota,
+  finca, invitados, isPro, onPaywall, onNombre, onEstado, elegida, onElegir, onQuitar, onVisita, onDel, onCampo, onNota,
   onNotaGlobal, onAddExtra, onUpdExtra, onDelExtra,
 }: {
   finca: Finca
@@ -318,6 +344,9 @@ function FincaDetalle({
   onPaywall: () => void
   onNombre: (v: string) => void
   onEstado: (e: 'pendiente' | 'visitada') => void
+  elegida: boolean
+  onElegir: () => void
+  onQuitar: () => void
   onVisita: (p: Partial<FincaVisita>) => void
   onDel: () => void
   onCampo: (k: string, v: string) => void
@@ -395,6 +424,29 @@ function FincaDetalle({
   return (
     <>
       {cabecera}
+
+      <div className={`finca-elegir ${elegida ? 'on' : ''}`}>
+        {elegida ? (
+          <>
+            <div className="fe-txt">
+              <b>✓ Es vuestra finca</b>
+              <span>El menú, la ceremonia y el sonido están en el Resumen, y el resto de extras en el Presupuesto. Si cambias algo aquí, los extras se actualizan solos.</span>
+            </div>
+            <div className="fe-actions">
+              <button type="button" className="fe-btn ghost" onClick={onElegir}>Volver a pasar precios</button>
+              <button type="button" className="fe-link" onClick={onQuitar}>Quitar</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="fe-txt">
+              <b>¿Es la vuestra?</b>
+              <span>Al elegirla, sus precios pasan al Resumen y empezáis a ver el presupuesto final con todos los extras.</span>
+            </div>
+            <button type="button" className="fe-btn" onClick={onElegir}>Elegir esta finca</button>
+          </>
+        )}
+      </div>
 
       {/* Resumen de costes */}
       <div className="finca-summary">
