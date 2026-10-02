@@ -9,11 +9,13 @@ type Props = {
   userName: string
   isPro: boolean
   isPremium: boolean
+  isGuest?: boolean
+  onRegistro?: () => void
   onPaywall: (t: 'pro' | 'premium') => void
   onGoTab: (t: Tab) => void
 }
 
-export default function TabInicio({ data, userName, isPro, isPremium, onPaywall, onGoTab }: Props) {
+export default function TabInicio({ data, userName, isPro, isPremium, isGuest, onRegistro, onPaywall, onGoTab }: Props) {
   const nombres = data.resumen?.novios
   const fecha = data.resumen?.fecha
 
@@ -51,7 +53,7 @@ export default function TabInicio({ data, userName, isPro, isPremium, onPaywall,
 
       {/* INTRO */}
       <section className="home-intro">
-        <div className="home-eyebrow">Bienvenida, {userName}</div>
+        <div className="home-eyebrow">{isGuest || !userName ? 'Bienvenidos a Enlace' : `Hola, ${userName}`}</div>
         <h1 className="home-title">
           Todo lo que necesitas,<br /><em>en un solo lugar</em>
         </h1>
@@ -61,6 +63,19 @@ export default function TabInicio({ data, userName, isPro, isPremium, onPaywall,
           para que dejes de improvisar y disfrutes del proceso.
         </p>
       </section>
+
+      {/* GUARDAR (sin cuenta) */}
+      {isGuest && (
+        <section className="home-guest">
+          <div className="home-guest-box">
+            <div className="home-guest-txt">
+              <h3>Prueba todo sin registrarte</h3>
+              <p>Lo que hagas se queda guardado en este navegador. Crea tu cuenta gratis para no perderlo y tener tu boda también en el móvil.</p>
+            </div>
+            <button className="home-guest-btn" onClick={onRegistro}>Crear cuenta gratis</button>
+          </div>
+        </section>
+      )}
 
       {/* PASOS */}
       <section className="home-steps">

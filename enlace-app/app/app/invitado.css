@@ -1,0 +1,25 @@
+/* ═══ Uso sin cuenta ═══ */
+.btn-entrar{font:inherit;font-size:12px;color:var(--gold3);background:none;border:0;padding:6px 8px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.btn-crear-cuenta{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--charcoal);background:var(--gold);border:0;border-radius:6px;padding:7px 14px;cursor:pointer;white-space:nowrap;transition:background .2s}
+.btn-crear-cuenta:hover{background:var(--gold2)}
+
+.guest-bar{display:flex;align-items:center;gap:12px;padding:9px 16px;background:#2a2620;border-bottom:1px solid rgba(184,150,90,.3);color:var(--gold3);font-size:13px;flex-shrink:0}
+.guest-bar-txt{flex:1;line-height:1.4}
+.guest-bar-btn{font:inherit;font-size:12.5px;font-weight:600;color:var(--charcoal);background:var(--gold);border:0;border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.guest-bar-btn:hover{background:var(--gold2)}
+.guest-bar-x{font-size:18px;line-height:1;color:var(--muted2);background:none;border:0;cursor:pointer;padding:2px 6px}
+.guest-bar-x:hover{color:var(--ivory)}
+
+.home-guest{max-width:720px;margin:0 auto;padding:8px 20px 4px}
+.home-guest-box{display:flex;align-items:center;gap:20px;background:var(--white);border:1px solid var(--gold);border-radius:14px;padding:20px 22px}
+.home-guest-txt{flex:1}
+.home-guest-box h3{margin:0 0 4px;font-family:'Playfair Display',serif;font-size:19px;font-style:italic;font-weight:600;color:var(--charcoal)}
+.home-guest-box p{margin:0;font-size:13.5px;line-height:1.6;color:var(--muted)}
+.home-guest-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--charcoal);background:var(--gold);border:0;border-radius:8px;padding:12px 18px;cursor:pointer;white-space:nowrap}
+.home-guest-btn:hover{background:var(--gold2)}
+
+@media (max-width:768px){
+  .guest-bar{padding:8px 12px;font-size:12px;gap:8px}
+  .btn-entrar{display:none}
+  .home-guest-box{flex-direction:column;align-items:stretch;text-align:left}
+}

@@ -6,46 +6,25 @@ import type { BodaData, Guest, InvitacionConfig, InvitacionLugar, RsvpResponse }
 import { createClient } from '@/lib/supabase-client'
 import { TEMAS, buildInvitacion, normalizeConfig, parseNames, slugCodigo } from '@/lib/invitacion'
 import InvitacionView from '../_components/invitacion/invitacion-view'
+import { reducirFoto, blobADataUrl, subirFoto, borrarFoto } from '@/lib/fotos'
 
 type Props = {
   data: BodaData
   setData: React.Dispatch<React.SetStateAction<BodaData>>
   showToast: (m: string) => void
-  userId: string
+  userId: string | null
   bodaId: string
   isPremium: boolean
+  isGuest: boolean
+  onRegistro: () => void
   onPaywall: () => void
 }
 
 type Hueco = 'portada' | 'ceremonia' | 'celebracion'
 
-// Reduce las fotos del móvil antes de subirlas (máx. 1800 px)
-async function reducirFoto(file: File, max = 1800): Promise<Blob> {
-  const url = URL.createObjectURL(file)
-  try {
-    const img = await new Promise<HTMLImageElement>((ok, ko) => {
-      const i = new Image()
-      i.onload = () => ok(i)
-      i.onerror = ko
-      i.src = url
-    })
-    const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight))
-    const c = document.createElement('canvas')
-    c.width = Math.round(img.naturalWidth * k)
-    c.height = Math.round(img.naturalHeight * k)
-    c.getContext('2d')?.drawImage(img, 0, 0, c.width, c.height)
-    return await new Promise<Blob>(ok => c.toBlob(b => ok(b || file), 'image/jpeg', 0.84))
-  } catch {
-    return file
-  } finally {
-    URL.revokeObjectURL(url)
-  }
-}
-
-export default function TabInvitaciones({ data, setData, showToast, userId, bodaId, isPremium, onPaywall }: Props) {
+export default function TabInvitaciones({ data, setData, showToast, userId, bodaId, isPremium, isGuest, onRegistro, onPaywall }: Props) {
   const supabase = useMemo(() => createClient(), [])
   const cfg = useMemo(() => normalizeConfig(data.invitacion, data), [data])
-  const [fotosLocales, setFotosLocales] = useState<Partial<Record<Hueco, string>>>({})
   const [subiendo, setSubiendo] = useState<Hueco | null>(null)
   const [panel, setPanel] = useState<'editar' | 'ver'>('editar')
   const [dispositivo, setDispositivo] = useState<'movil' | 'ordenador'>('movil')
@@ -76,34 +55,30 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
   }
 
   /* ─── vista previa ─── */
-  const vista = useMemo(() => buildInvitacion(data, {
-    ...cfg,
-    fotoPortada: fotosLocales.portada || cfg.fotoPortada,
-    ceremonia: { ...cfg.ceremonia, foto: fotosLocales.ceremonia || cfg.ceremonia.foto },
-    celebracion: { ...cfg.celebracion, foto: fotosLocales.celebracion || cfg.celebracion.foto },
-  }), [data, cfg, fotosLocales])
+  const vista = useMemo(() => buildInvitacion(data, cfg), [data, cfg])
 
   useEffect(() => { vistaRef.current?.scrollTo({ top: 0 }) }, [cfg.tema])
 
-  /* ─── fotos ─── */
+  /* ─── fotos ───
+     Sin cuenta: se guardan en este navegador.
+     Con cuenta (cualquier plan): se suben a su carpeta y no se pierden. */
   async function elegirFoto(hueco: Hueco, file?: File) {
     if (!file) return
-    const blob = await reducirFoto(file)
-    if (!isPremium) {
-      setFotosLocales(f => ({ ...f, [hueco]: URL.createObjectURL(blob) }))
-      showToast('Así quedaría tu foto. Se guarda al publicar con el plan premium')
+    const anterior = hueco === 'portada' ? cfg.fotoPortada : cfg[hueco].foto
+    const guardar = (url: string) => hueco === 'portada' ? upd({ fotoPortada: url }) : updLugar(hueco, { foto: url })
+
+    if (isGuest || !userId) {
+      const blob = await reducirFoto(file, 1400, 0.78)
+      guardar(await blobADataUrl(blob))
+      showToast('Foto guardada en este navegador. Crea tu cuenta para no perderla')
       return
     }
+
     setSubiendo(hueco)
     try {
-      const path = `${userId}/${hueco}-${Date.now()}.jpg`
-      const { error } = await supabase.storage.from('invitaciones')
-        .upload(path, blob, { contentType: 'image/jpeg', upsert: false })
-      if (error) throw error
-      const publicUrl = supabase.storage.from('invitaciones').getPublicUrl(path).data.publicUrl
-      if (hueco === 'portada') upd({ fotoPortada: publicUrl })
-      else updLugar(hueco, { foto: publicUrl })
-      setFotosLocales(f => ({ ...f, [hueco]: undefined }))
+      const blob = await reducirFoto(file)
+      guardar(await subirFoto(supabase, userId, hueco, blob))
+      borrarFoto(supabase, anterior)
       showToast('Foto guardada')
     } catch {
       showToast('No se ha podido subir la foto. Inténtalo de nuevo')
@@ -112,15 +87,16 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
     }
   }
   function quitarFoto(hueco: Hueco) {
-    setFotosLocales(f => ({ ...f, [hueco]: undefined }))
+    const anterior = hueco === 'portada' ? cfg.fotoPortada : cfg[hueco].foto
     if (hueco === 'portada') upd({ fotoPortada: undefined })
     else updLugar(hueco, { foto: undefined })
+    if (userId) borrarFoto(supabase, anterior)
   }
-  const fotoActual = (h: Hueco) =>
-    fotosLocales[h] || (h === 'portada' ? cfg.fotoPortada : cfg[h].foto)
+  const fotoActual = (h: Hueco) => (h === 'portada' ? cfg.fotoPortada : cfg[h].foto)
 
   /* ─── publicar ─── */
   function publicar() {
+    if (isGuest) { onRegistro(); return }
     if (!isPremium) { onPaywall(); return }
     if (!data.resumen?.novios || !data.resumen?.fecha) {
       showToast('Antes de publicar, añade vuestros nombres y la fecha en Resumen general')
@@ -207,12 +183,14 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
             <>
               <div className="ivt-status-h">{isPremium ? 'Sin publicar' : 'Prueba tu invitación'}</div>
               <p className="ivt-note">
-                {isPremium
-                  ? 'Cuando la publiques tendrá un enlace propio para enviar a tus invitados.'
-                  : 'Cambia el estilo, los textos y las fotos, y mira el resultado a la derecha. Para enviarla a tus invitados y recibir sus respuestas necesitas el plan premium.'}
+                {isGuest
+                  ? 'Cambia el estilo, los textos y las fotos, y mira el resultado. Todo se guarda en este navegador; crea tu cuenta gratis para no perderlo.'
+                  : isPremium
+                    ? 'Cuando la publiques tendrá un enlace propio para enviar a tus invitados.'
+                    : 'Cambia el estilo, los textos y las fotos, y mira el resultado. Todo queda guardado en tu cuenta. Para enviarla a tus invitados y recibir sus respuestas necesitas el plan premium.'}
               </p>
               <button className="ivt-btn primary" onClick={publicar}>
-                {isPremium ? 'Publicar invitación' : 'Publicar invitación · 9,99 €'}
+                {isGuest ? 'Crear cuenta para publicar' : isPremium ? 'Publicar invitación' : 'Publicar invitación · 9,99 €'}
               </button>
             </>
           )}

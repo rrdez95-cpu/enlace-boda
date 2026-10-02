@@ -7,9 +7,9 @@ export default async function Home({
 }) {
   const params = await searchParams
 
-  if (params.code) {
-    redirect(`/auth/callback?code=${params.code}`)
-  }
+  // Enlaces de confirmación de email que llegan a la raíz
+  if (params.code) redirect(`/auth/callback?code=${params.code}`)
 
-  redirect('/login')
+  // Cualquiera puede entrar y probar la app sin cuenta
+  redirect('/app')
 }

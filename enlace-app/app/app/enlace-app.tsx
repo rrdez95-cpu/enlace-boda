@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import './invitado.css'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import { useBoda } from '@/lib/use-boda'
@@ -12,16 +13,18 @@ import TabCrono from './tab-crono'
 import TabResumen from './tab-resumen'
 import TabInvitaciones from './tab-invitaciones'
 import Paywall from './paywall'
+import AuthModal, { type MotivoRegistro } from '../_components/auth-modal'
 
 const FREE_GUESTS = 30
 const FREE_MOMENTS = 5
+const CAMBIOS_PARA_AVISAR = 15
 
 type Tab = 'inicio' | 'fincas' | 'mesas' | 'plano' | 'crono' | 'resumen' | 'invitaciones'
 
 export default function EnlaceApp({
-  userId, userName, isPro: initialIsPro, isPremium: initialIsPremium, bodaId,
+  userId, userName, isPro: initialIsPro, isPremium: initialIsPremium, bodaId: bodaIdServidor,
 }: {
-  userId: string
+  userId: string | null
   userName: string
   isPro: boolean
   isPremium: boolean
@@ -29,23 +32,59 @@ export default function EnlaceApp({
 }) {
   const router = useRouter()
   const supabase = createClient()
-  const { data, setData, loading, saving } = useBoda(userId)
+  const invitado = !userId
+  const { data, setData, loading, saving, bodaId: bodaIdHook } = useBoda(userId)
+  const bodaId = bodaIdServidor || bodaIdHook || ''
 
   const [tab, setTab] = useState<Tab>('inicio')
   const [paywall, setPaywall] = useState<false | 'pro' | 'premium'>(false)
+  const [registro, setRegistro] = useState<MotivoRegistro | null>(null)
+  const [avisoCerrado, setAvisoCerrado] = useState(true)
   const [toast, setToast] = useState('')
   const [isPro, setIsPro] = useState(initialIsPro)
   const [isPremium, setIsPremium] = useState(initialIsPremium)
 
   function showToast(msg: string) {
     setToast(msg)
-    setTimeout(() => setToast(''), 2400)
+    setTimeout(() => setToast(''), 2600)
   }
 
+  // Sin cuenta, los pagos y la publicación piden registrarse antes
+  const abrirPago = useCallback((t: 'pro' | 'premium') => {
+    if (!userId) { setRegistro('pagar'); return }
+    setPaywall(t)
+  }, [userId])
+
+  const cerrarRegistro = useCallback(() => setRegistro(null), [])
+
+  // Aviso de uso sin cuenta (se puede ocultar durante la sesión)
   useEffect(() => {
+    if (!invitado) return
+    try { setAvisoCerrado(sessionStorage.getItem('enlace:aviso-cerrado') === '1') } catch { setAvisoCerrado(false) }
+  }, [invitado])
+  function cerrarAviso() {
+    setAvisoCerrado(true)
+    try { sessionStorage.setItem('enlace:aviso-cerrado', '1') } catch { /* sin acceso */ }
+  }
+
+  // Tras un rato usándola sin cuenta, se le propone guardar (una vez por sesión)
+  const cambios = useRef(0)
+  useEffect(() => {
+    if (!invitado || loading) return
+    cambios.current++
+    if (cambios.current !== CAMBIOS_PARA_AVISAR) return
+    try {
+      if (sessionStorage.getItem('enlace:propuesta-vista') === '1') return
+      sessionStorage.setItem('enlace:propuesta-vista', '1')
+    } catch { /* sin acceso */ }
+    setRegistro(r => r || 'guardar')
+  }, [data, invitado, loading])
+
+  // Vuelta desde Stripe
+  useEffect(() => {
+    if (!userId) return
     const params = new URLSearchParams(window.location.search)
-    const paid = params.get('paid')
-    if (!paid) return
+    if (!params.get('paid')) return
     window.history.replaceState({}, '', window.location.pathname)
     showToast('Verificando tu pago…')
     let attempts = 0
@@ -73,8 +112,7 @@ export default function EnlaceApp({
   }, [userId])
 
   function goTab(t: Tab) {
-    if (!isPro && t === 'plano') { setPaywall('pro'); return }
-    // Sin bloqueo: el tab muestra overlay interno
+    if (!isPro && t === 'plano') { abrirPago('pro'); return }
     setTab(t)
   }
 
@@ -101,12 +139,21 @@ export default function EnlaceApp({
         </button>
         <div className="header-right">
           {saving && <span className="save-dot">Guardando…</span>}
-          <button
-            className={`plan-pill ${isPremium ? 'premium' : isPro ? 'pro' : 'free'}`}
-            onClick={() => !isPro && setPaywall('pro')}>
-            {isPremium ? '✦ Premium' : isPro ? '✦ Plan completo' : '✦ Gratuito'}
-          </button>
-          <button className="btn-logout" onClick={logout}>Salir</button>
+          {invitado ? (
+            <>
+              <button className="btn-entrar" onClick={() => setRegistro('login')}>Ya tengo cuenta</button>
+              <button className="btn-crear-cuenta" onClick={() => setRegistro('guardar')}>Crear cuenta gratis</button>
+            </>
+          ) : (
+            <>
+              <button
+                className={`plan-pill ${isPremium ? 'premium' : isPro ? 'pro' : 'free'}`}
+                onClick={() => !isPro && abrirPago('pro')}>
+                {isPremium ? '✦ Premium' : isPro ? '✦ Plan completo' : '✦ Gratuito'}
+              </button>
+              <button className="btn-logout" onClick={logout}>Salir</button>
+            </>
+          )}
         </div>
       </header>
 
@@ -124,42 +171,48 @@ export default function EnlaceApp({
         </TabBtn>
       </nav>
 
+      {invitado && !avisoCerrado && (
+        <div className="guest-bar" role="status">
+          <span className="guest-bar-txt">Estás usando Enlace sin cuenta. Lo que hagas se guarda solo en este navegador.</span>
+          <button className="guest-bar-btn" onClick={() => setRegistro('guardar')}>Guardar mi boda</button>
+          <button className="guest-bar-x" onClick={cerrarAviso} aria-label="Ocultar aviso">×</button>
+        </div>
+      )}
+
       {tab === 'inicio' && (
         <TabInicio data={data} userName={userName} isPro={isPro} isPremium={isPremium}
-          onPaywall={t => setPaywall(t)} onGoTab={goTab} />
+          isGuest={invitado} onRegistro={() => setRegistro('guardar')}
+          onPaywall={t => abrirPago(t)} onGoTab={goTab} />
       )}
       {tab === 'fincas' && (
         <TabFincas data={data} setData={setData} showToast={showToast}
-          isPro={isPro} onPaywall={() => setPaywall('pro')} />
+          isPro={isPro} onPaywall={() => abrirPago('pro')} />
       )}
       {tab === 'mesas' && (
         <TabMesas data={data} setData={setData} isPro={isPro}
-          freeLimit={FREE_GUESTS} onPaywall={() => setPaywall('pro')} showToast={showToast} />
+          freeLimit={FREE_GUESTS} onPaywall={() => abrirPago('pro')} showToast={showToast} />
       )}
       {tab === 'plano' && (
         <TabPlano data={data} setData={setData} showToast={showToast} />
       )}
       {tab === 'crono' && (
         <TabCrono data={data} setData={setData} isPro={isPro}
-          freeLimit={FREE_MOMENTS} onPaywall={() => setPaywall('pro')} showToast={showToast} />
+          freeLimit={FREE_MOMENTS} onPaywall={() => abrirPago('pro')} showToast={showToast} />
       )}
       {tab === 'resumen' && (
         <TabResumen data={data} setData={setData} showToast={showToast}
-          isPro={isPro} onPaywall={() => setPaywall('pro')} />
+          isPro={isPro} onPaywall={() => abrirPago('pro')} />
       )}
       {tab === 'invitaciones' && (
         <TabInvitaciones data={data} setData={setData} showToast={showToast}
-          userId={userId} bodaId={bodaId}
-          isPremium={isPremium} onPaywall={() => setPaywall('premium')} />
+          userId={userId} bodaId={bodaId} isPremium={isPremium} isGuest={invitado}
+          onRegistro={() => setRegistro('publicar')} onPaywall={() => abrirPago('premium')} />
       )}
 
-      {paywall && (
-        <Paywall
-          tier={paywall}
-          onClose={() => setPaywall(false)}
-          userId={userId}
-        />
+      {paywall && userId && (
+        <Paywall tier={paywall} onClose={() => setPaywall(false)} userId={userId} />
       )}
+      {registro && <AuthModal motivo={registro} onClose={cerrarRegistro} />}
       {toast && <div className="toast">{toast}</div>}
     </div>
   )

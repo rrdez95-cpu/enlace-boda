@@ -1,11 +1,14 @@
 import { createClient } from '@/lib/supabase-server'
-import { redirect } from 'next/navigation'
 import EnlaceApp from './enlace-app'
 
 export default async function AppPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+
+  // Sin cuenta: la app funciona igual y guarda en el navegador
+  if (!user) {
+    return <EnlaceApp userId={null} bodaId="" userName="" isPro={false} isPremium={false} />
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -17,13 +20,13 @@ export default async function AppPage() {
     .from('bodas')
     .select('id')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   return (
     <EnlaceApp
       userId={user.id}
       bodaId={boda?.id || ''}
-      userName={profile?.nombre || user.email?.split('@')[0] || 'Usuario'}
+      userName={profile?.nombre || user.email?.split('@')[0] || ''}
       isPro={profile?.is_pro || false}
       isPremium={profile?.is_premium || false}
     />
