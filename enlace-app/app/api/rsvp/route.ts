@@ -1,74 +1,74 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
+const texto = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
+
 export async function POST(request: Request) {
+  let body: Record<string, unknown>
   try {
-    const body = await request.json()
-    const { codigo, nombre, apellido, asiste, nombre_acomp, intolerancia, necesita_bus, ruta_bus } = body
-
-    if (!codigo || !nombre || asiste === undefined) {
-      return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
-    }
-
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    // Buscar la boda por código de invitación
-    const { data: boda, error: bodaError } = await supabase
-      .from('bodas')
-      .select('id')
-      .filter('datos->invitacion->>codigo', 'eq', codigo)
-      .filter('datos->invitacion->>activa', 'eq', 'true')
-      .single()
-
-    if (bodaError || !boda) {
-      return NextResponse.json({ error: 'Invitación no encontrada' }, { status: 404 })
-    }
-
-    const records = []
-
-    // Registro principal
-    records.push({
-      boda_id: boda.id,
-      nombre: nombre.trim(),
-      apellido: apellido?.trim() || null,
-      asiste,
-      num_acomp: nombre_acomp ? 1 : 0,
-      intolerancia: intolerancia?.trim() || null,
-      necesita_bus: necesita_bus || false,
-      ruta_bus: ruta_bus || null,
-      importado: false,
-    })
-
-    // Acompañante si existe
-    if (asiste && nombre_acomp?.trim()) {
-      records.push({
-        boda_id: boda.id,
-        nombre: nombre_acomp.trim(),
-        apellido: null,
-        asiste: true,
-        num_acomp: 0,
-        intolerancia: intolerancia?.trim() || null,
-        necesita_bus: necesita_bus || false,
-        ruta_bus: ruta_bus || null,
-        importado: false,
-      })
-    }
-
-    const { error: insertError } = await supabase
-      .from('rsvp_responses')
-      .insert(records)
-
-    if (insertError) {
-      console.error('[rsvp] Insert error:', insertError)
-      return NextResponse.json({ error: 'Error al guardar' }, { status: 500 })
-    }
-
-    return NextResponse.json({ ok: true })
-  } catch (err) {
-    console.error('[rsvp] Error:', err)
-    return NextResponse.json({ error: 'Error del servidor' }, { status: 500 })
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Formato no válido' }, { status: 400 })
   }
+
+  const codigo = texto(body.codigo, 120)
+  const nombreCompleto = texto(body.nombre, 120)
+  const asiste = body.asiste
+
+  if (!codigo || !nombreCompleto || typeof asiste !== 'boolean') {
+    return NextResponse.json({ error: 'Faltan el nombre o la respuesta' }, { status: 400 })
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  )
+
+  const { data: boda } = await supabase
+    .from('bodas')
+    .select('id, user_id, invitacion:datos->invitacion')
+    .filter('datos->invitacion->>codigo', 'eq', codigo)
+    .limit(1)
+    .maybeSingle()
+
+  const invitacion = (boda as { invitacion?: { activa?: boolean } } | null)?.invitacion
+  if (!boda || !invitacion?.activa) {
+    return NextResponse.json({ error: 'Esta invitación no está disponible' }, { status: 404 })
+  }
+
+  const { data: perfil } = await supabase
+    .from('profiles')
+    .select('is_premium')
+    .eq('id', boda.user_id)
+    .single()
+
+  if (!perfil?.is_premium) {
+    return NextResponse.json({ error: 'Esta invitación no está disponible' }, { status: 404 })
+  }
+
+  const [nombre, ...apellidos] = nombreCompleto.split(/\s+/)
+  const acompanante = asiste ? texto(body.nombre_acomp, 120) : ''
+  const ruta = asiste ? texto(body.ruta_bus, 120) : ''
+
+  const { error } = await supabase.from('rsvp_responses').insert({
+    boda_id: boda.id,
+    nombre,
+    apellido: apellidos.join(' ') || null,
+    asiste,
+    num_acomp: acompanante ? 1 : 0,
+    nombre_acomp: acompanante || null,
+    intolerancia: asiste ? texto(body.intolerancia, 200) || null : null,
+    necesita_bus: !!ruta,
+    ruta_bus: ruta || null,
+    mensaje: texto(body.mensaje, 600) || null,
+    importado: false,
+  })
+
+  if (error) {
+    console.error('[rsvp]', error.message)
+    return NextResponse.json({ error: 'No se ha podido guardar la respuesta' }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
 }

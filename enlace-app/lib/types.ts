@@ -82,28 +82,48 @@ export type Finca = {
 }
 
 /* ═══ INVITACIONES ═══ */
-export type InvitacionTema = 'marfil' | 'jardin' | 'marino' | 'rosa' | 'grafito'
+export type InvitacionTema = 'acuarela' | 'carta' | 'mediterraneo' | 'noche' | 'jardin'
+
+export type InvitacionLugar = {
+  lugar: string
+  hora: string
+  direccion: string
+  mapa: string
+  foto?: string
+}
+
+export type InvitacionContacto = {
+  nombre: string
+  telefono: string
+}
 
 export type InvitacionConfig = {
   activa: boolean
   codigo: string
   tema: InvitacionTema
+  saludo: string
   mensaje: string
-  fotoPortada?: string   // URL pública de Supabase Storage
-  foto2?: string
+  fotoPortada?: string
+  ceremonia: InvitacionLugar
+  celebracion: InvitacionLugar
+  mostrarPrograma: boolean
+  regalosTexto: string
+  iban: string
+  contactos: InvitacionContacto[]
   fechaLimiteRsvp?: string
 }
 
 export type RsvpResponse = {
   id: string
   nombre: string
-  apellido?: string
+  apellido?: string | null
   asiste: boolean
   num_acomp: number
-  nombre_acomp?: string
-  intolerancia?: string
+  nombre_acomp?: string | null
+  intolerancia?: string | null
   necesita_bus: boolean
-  ruta_bus?: string
+  ruta_bus?: string | null
+  mensaje?: string | null
   importado: boolean
   created_at: string
 }

@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { BodaData, InvitacionConfig, InvitacionTema, RsvpResponse } from '@/lib/types'
+import './tab-invitaciones.css'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { BodaData, Guest, InvitacionConfig, InvitacionLugar, RsvpResponse } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
+import { TEMAS, buildInvitacion, normalizeConfig, parseNames, slugCodigo } from '@/lib/invitacion'
+import InvitacionView from '../_components/invitacion/invitacion-view'
 
 type Props = {
   data: BodaData
@@ -14,359 +17,330 @@ type Props = {
   onPaywall: () => void
 }
 
-const TEMAS: { id: InvitacionTema; label: string; color: string; desc: string }[] = [
-  { id: 'marfil',  label: 'Marfil',  color: '#A0713A', desc: 'Clásico y elegante' },
-  { id: 'jardin',  label: 'Jardín',  color: '#5B7A52', desc: 'Natural y botánico' },
-  { id: 'marino',  label: 'Marino',  color: '#1B2A4A', desc: 'Formal y arquitectónico' },
-  { id: 'rosa',    label: 'Rosa',    color: '#B87060', desc: 'Moderno y editorial' },
-  { id: 'grafito', label: 'Grafito', color: '#222222', desc: 'Urbano y minimalista' },
-]
+type Hueco = 'portada' | 'ceremonia' | 'celebracion'
 
-const TEMA_VARS: Record<InvitacionTema, Record<string, string>> = {
-  marfil:  { '--bg': '#F7F3ED', '--bg2': '#EEE8DF', '--ink': '#1A1714', '--ink2': '#5C5249', '--accent': '#A0713A', '--accent2': '#C49256', '--btn': '#1A1714', '--btnfg': '#F7F3ED' },
-  jardin:  { '--bg': '#F0EBE2', '--bg2': '#E3DDD4', '--ink': '#263020', '--ink2': '#4E5E46', '--accent': '#5B7A52', '--accent2': '#8FAB85', '--btn': '#263020', '--btnfg': '#F0EBE2' },
-  marino:  { '--bg': '#F3EFE7', '--bg2': '#E8E2D8', '--ink': '#1B2A4A', '--ink2': '#3A4E6C', '--accent': '#C4A05A', '--accent2': '#D8B878', '--btn': '#1B2A4A', '--btnfg': '#F3EFE7' },
-  rosa:    { '--bg': '#FAF6F3', '--bg2': '#F2EAE5', '--ink': '#2E1F1C', '--ink2': '#7A5A54', '--accent': '#B87060', '--accent2': '#D49A8C', '--btn': '#2E1F1C', '--btnfg': '#FAF6F3' },
-  grafito: { '--bg': '#FFFFFF', '--bg2': '#F4F4F4', '--ink': '#111111', '--ink2': '#555555', '--accent': '#111111', '--accent2': '#777777', '--btn': '#111111', '--btnfg': '#FFFFFF' },
-}
-
-function generateCodigo(novios: string, fecha: string): string {
-  const year = fecha ? new Date(fecha).getFullYear() : new Date().getFullYear()
-  const slug = novios.toLowerCase().normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z\s]/g, '').trim().replace(/\s+/g, '-')
-  return `${slug}-${year}`
+// Reduce las fotos del móvil antes de subirlas (máx. 1800 px)
+async function reducirFoto(file: File, max = 1800): Promise<Blob> {
+  const url = URL.createObjectURL(file)
+  try {
+    const img = await new Promise<HTMLImageElement>((ok, ko) => {
+      const i = new Image()
+      i.onload = () => ok(i)
+      i.onerror = ko
+      i.src = url
+    })
+    const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight))
+    const c = document.createElement('canvas')
+    c.width = Math.round(img.naturalWidth * k)
+    c.height = Math.round(img.naturalHeight * k)
+    c.getContext('2d')?.drawImage(img, 0, 0, c.width, c.height)
+    return await new Promise<Blob>(ok => c.toBlob(b => ok(b || file), 'image/jpeg', 0.84))
+  } catch {
+    return file
+  } finally {
+    URL.revokeObjectURL(url)
+  }
 }
 
 export default function TabInvitaciones({ data, setData, showToast, userId, bodaId, isPremium, onPaywall }: Props) {
-  const supabase = createClient()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://enlaceboda.es'
-
-  // Config local (todos pueden tocar, premium guarda y publica)
-  const [tema, setTema] = useState<InvitacionTema>(data.invitacion?.tema || 'marfil')
-  const [mensaje, setMensaje] = useState(data.invitacion?.mensaje || 'Con mucha alegría os invitamos a celebrar nuestra boda.\nConfirmad vuestra asistencia antes del 1 de junio.')
-  const [fechaLimite, setFechaLimite] = useState(data.invitacion?.fechaLimiteRsvp || '')
+  const supabase = useMemo(() => createClient(), [])
+  const cfg = useMemo(() => normalizeConfig(data.invitacion, data), [data])
+  const [fotosLocales, setFotosLocales] = useState<Partial<Record<Hueco, string>>>({})
+  const [subiendo, setSubiendo] = useState<Hueco | null>(null)
+  const [panel, setPanel] = useState<'editar' | 'ver'>('editar')
+  const [dispositivo, setDispositivo] = useState<'movil' | 'ordenador'>('movil')
   const [rsvps, setRsvps] = useState<RsvpResponse[]>([])
-  const [loadingRsvp, setLoadingRsvp] = useState(false)
-  const [uploadingFoto, setUploadingFoto] = useState<'portada' | 'foto2' | null>(null)
-  const fileRef1 = useRef<HTMLInputElement | null>(null)
-  const fileRef2 = useRef<HTMLInputElement | null>(null)
+  const [cargandoRsvp, setCargandoRsvp] = useState(false)
+  const vistaRef = useRef<HTMLDivElement>(null)
 
-  const inv = data.invitacion
-  const activa = inv?.activa || false
-  const urlInvitacion = inv?.codigo ? `${siteUrl}/i/${inv.codigo}` : null
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://enlaceboda.es'
+  const url = cfg.codigo ? `${siteUrl}/i/${cfg.codigo}` : ''
+  const publicada = isPremium && cfg.activa && !!cfg.codigo
+  const [n1, n2] = parseNames(data.resumen?.novios)
 
-  // Sincronizar tema/mensaje al config real si es premium
-  useEffect(() => {
-    if (isPremium && data.invitacion) {
-      setTema(data.invitacion.tema)
-      setMensaje(data.invitacion.mensaje)
-      setFechaLimite(data.invitacion.fechaLimiteRsvp || '')
+  /* ─── guardar cambios ─── */
+  function upd(patch: Partial<InvitacionConfig>) {
+    setData(d => ({ ...d, invitacion: { ...normalizeConfig(d.invitacion, d), ...patch } }))
+  }
+  function updLugar(k: 'ceremonia' | 'celebracion', patch: Partial<InvitacionLugar>) {
+    setData(d => {
+      const c = normalizeConfig(d.invitacion, d)
+      return { ...d, invitacion: { ...c, [k]: { ...c[k], ...patch } } }
+    })
+  }
+  function updContacto(i: number, campo: 'nombre' | 'telefono', valor: string) {
+    const contactos = [...cfg.contactos]
+    while (contactos.length <= i) contactos.push({ nombre: '', telefono: '' })
+    contactos[i] = { ...contactos[i], [campo]: valor }
+    upd({ contactos })
+  }
+
+  /* ─── vista previa ─── */
+  const vista = useMemo(() => buildInvitacion(data, {
+    ...cfg,
+    fotoPortada: fotosLocales.portada || cfg.fotoPortada,
+    ceremonia: { ...cfg.ceremonia, foto: fotosLocales.ceremonia || cfg.ceremonia.foto },
+    celebracion: { ...cfg.celebracion, foto: fotosLocales.celebracion || cfg.celebracion.foto },
+  }), [data, cfg, fotosLocales])
+
+  useEffect(() => { vistaRef.current?.scrollTo({ top: 0 }) }, [cfg.tema])
+
+  /* ─── fotos ─── */
+  async function elegirFoto(hueco: Hueco, file?: File) {
+    if (!file) return
+    const blob = await reducirFoto(file)
+    if (!isPremium) {
+      setFotosLocales(f => ({ ...f, [hueco]: URL.createObjectURL(blob) }))
+      showToast('Así quedaría tu foto. Se guarda al publicar con el plan premium')
+      return
     }
-  }, [])
-
-  useEffect(() => {
-    if (isPremium && activa && bodaId) fetchRsvps()
-  }, [activa, bodaId, isPremium])
-
-  async function fetchRsvps() {
-    setLoadingRsvp(true)
-    const { data: rows } = await supabase
-      .from('rsvp_responses').select('*').eq('boda_id', bodaId)
-      .order('created_at', { ascending: false })
-    setRsvps(rows || [])
-    setLoadingRsvp(false)
+    setSubiendo(hueco)
+    try {
+      const path = `${userId}/${hueco}-${Date.now()}.jpg`
+      const { error } = await supabase.storage.from('invitaciones')
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+      if (error) throw error
+      const publicUrl = supabase.storage.from('invitaciones').getPublicUrl(path).data.publicUrl
+      if (hueco === 'portada') upd({ fotoPortada: publicUrl })
+      else updLugar(hueco, { foto: publicUrl })
+      setFotosLocales(f => ({ ...f, [hueco]: undefined }))
+      showToast('Foto guardada')
+    } catch {
+      showToast('No se ha podido subir la foto. Inténtalo de nuevo')
+    } finally {
+      setSubiendo(null)
+    }
   }
-
-  function updInv(patch: Partial<InvitacionConfig>) {
-    setData(d => ({ ...d, invitacion: { ...d.invitacion!, ...patch } }))
+  function quitarFoto(hueco: Hueco) {
+    setFotosLocales(f => ({ ...f, [hueco]: undefined }))
+    if (hueco === 'portada') upd({ fotoPortada: undefined })
+    else updLugar(hueco, { foto: undefined })
   }
+  const fotoActual = (h: Hueco) =>
+    fotosLocales[h] || (h === 'portada' ? cfg.fotoPortada : cfg[h].foto)
 
-  function aplicarYPublicar() {
+  /* ─── publicar ─── */
+  function publicar() {
     if (!isPremium) { onPaywall(); return }
-    const novios = data.resumen?.novios || 'mi-boda'
-    const fecha = data.resumen?.fecha || ''
-    const codigo = inv?.codigo || generateCodigo(novios, fecha)
-    const config: InvitacionConfig = {
-      activa: true, codigo, tema, mensaje, fechaLimiteRsvp: fechaLimite,
-      fotoPortada: inv?.fotoPortada, foto2: inv?.foto2,
+    if (!data.resumen?.novios || !data.resumen?.fecha) {
+      showToast('Antes de publicar, añade vuestros nombres y la fecha en Resumen general')
+      return
     }
-    setData(d => ({ ...d, invitacion: config }))
-    showToast('¡Invitación publicada!')
+    upd({ activa: true, codigo: cfg.codigo || slugCodigo(data.resumen.novios, data.resumen.fecha) })
+    showToast('Invitación publicada')
   }
-
   function pausar() {
-    if (!isPremium) return
-    updInv({ activa: false })
+    upd({ activa: false })
     showToast('Invitación pausada')
   }
-
-  async function uploadFoto(slot: 'portada' | 'foto2', file: File) {
-    if (!isPremium) { onPaywall(); return }
-    setUploadingFoto(slot)
+  async function copiarEnlace() {
     try {
-      const ext = file.name.split('.').pop()
-      const path = `${userId}/${slot}-${Date.now()}.${ext}`
-      const { error } = await supabase.storage.from('invitaciones').upload(path, file, { upsert: true })
-      if (error) throw error
-      const { data: urlData } = supabase.storage.from('invitaciones').getPublicUrl(path)
-      updInv(slot === 'portada' ? { fotoPortada: urlData.publicUrl } : { foto2: urlData.publicUrl })
-      showToast('Foto subida')
-    } catch { showToast('Error al subir la foto') }
-    setUploadingFoto(null)
+      await navigator.clipboard.writeText(url)
+      showToast('Enlace copiado')
+    } catch {
+      showToast(url)
+    }
   }
 
-  async function importarRsvp(rsvp: RsvpResponse) {
-    if (!rsvp.asiste) return
-    setData(d => ({ ...d, guests: [...d.guests, {
-      id: Date.now(), nombre: rsvp.nombre, apellido: rsvp.apellido || '',
-      relacion: 'Invitado', mesaId: null, paid: 'pendiente' as const,
-      importe: '', intolerancia: rsvp.intolerancia || '',
-    }]}))
-    await supabase.from('rsvp_responses').update({ importado: true }).eq('id', rsvp.id)
-    setRsvps(rs => rs.map(r => r.id === rsvp.id ? { ...r, importado: true } : r))
-    showToast(`${rsvp.nombre} añadido a la lista`)
+  /* ─── confirmaciones ─── */
+  const cargarRsvps = useCallback(async () => {
+    if (!bodaId) return
+    setCargandoRsvp(true)
+    const { data: filas } = await supabase
+      .from('rsvp_responses').select('*').eq('boda_id', bodaId)
+      .order('created_at', { ascending: false })
+    setRsvps((filas as RsvpResponse[]) || [])
+    setCargandoRsvp(false)
+  }, [bodaId, supabase])
+
+  useEffect(() => { if (isPremium) cargarRsvps() }, [isPremium, cargarRsvps])
+
+  async function pasarAMesas(r: RsvpResponse) {
+    if (!r.asiste) return
+    const completo = [r.nombre, r.apellido].filter(Boolean).join(' ')
+    setData(d => {
+      const nuevos: Guest[] = [{
+        id: d.gid, nombre: r.nombre, apellido: r.apellido || '', relacion: 'Invitación',
+        mesaId: null, paid: 'pendiente', importe: '', intolerancia: r.intolerancia || '',
+      }]
+      if (r.nombre_acomp) nuevos.push({
+        id: d.gid + 1, nombre: r.nombre_acomp, apellido: '', relacion: `Acompañante de ${completo}`,
+        mesaId: null, paid: 'pendiente', importe: '', intolerancia: '',
+      })
+      return { ...d, guests: [...d.guests, ...nuevos], gid: d.gid + nuevos.length }
+    })
+    await supabase.from('rsvp_responses').update({ importado: true }).eq('id', r.id)
+    setRsvps(rs => rs.map(x => (x.id === r.id ? { ...x, importado: true } : x)))
+    showToast(r.nombre_acomp ? `${r.nombre} y su acompañante están en Mesas` : `${r.nombre} está en Mesas`)
   }
 
-  const novios = data.resumen?.novios || 'Laura & Alejandro'
-  const fecha = data.resumen?.fecha
-  const fechaStr = fecha
-    ? new Date(fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
-    : '13 de Septiembre de 2027'
-  const finca = data.resumen?.finca || 'Finca La Heredad'
-  const vars = TEMA_VARS[tema]
+  const vienen = rsvps.filter(r => r.asiste).reduce((s, r) => s + 1 + (r.nombre_acomp ? 1 : 0), 0)
+  const noVienen = rsvps.filter(r => !r.asiste).length
+  const nMomentos = (data.eventos || []).length
+  const nBuses = vista.buses.length
 
   return (
-    <div className="inv-layout">
+    <div className={`screen ivt ivt-${panel}`}>
 
-      {/* ═══ PANEL IZQUIERDO: CONFIGURACIÓN ═══ */}
-      <div className="inv-side">
+      {/* Cambiar entre editar y ver en el móvil */}
+      <div className="ivt-mtabs" role="tablist">
+        <button role="tab" aria-selected={panel === 'editar'} onClick={() => setPanel('editar')}>Editar</button>
+        <button role="tab" aria-selected={panel === 'ver'} onClick={() => setPanel('ver')}>Vista previa</button>
+      </div>
 
-        {/* Estado (solo si está publicada) */}
-        {isPremium && activa && urlInvitacion && (
-          <div className="inv-url-card">
-            <div className="inv-url-head">
-              <div className="inv-status-dot on" />
-              <span className="inv-status-label">Publicada y activa</span>
-              <button className="inv-toggle-btn" onClick={pausar}>Pausar</button>
-            </div>
-            <div className="inv-url-text">{urlInvitacion}</div>
-            <div className="inv-url-actions">
-              <button className="inv-url-btn" onClick={() => {
-                navigator.clipboard.writeText(urlInvitacion)
-                showToast('URL copiada')
-              }}>Copiar enlace</button>
-              <a className="inv-url-btn" href={urlInvitacion} target="_blank" rel="noopener noreferrer">
-                Ver →
-              </a>
-            </div>
-          </div>
-        )}
+      {/* ═══ EDITOR ═══ */}
+      <div className="ivt-edit">
 
-        {/* Contador RSVP */}
-        {isPremium && rsvps.length > 0 && (
-          <div className="inv-counter">
-            <div className="inv-counter-item green">
-              <span className="inv-counter-num">{rsvps.filter(r => r.asiste).length}</span>
-              <span className="inv-counter-label">confirman</span>
-            </div>
-            <div className="inv-counter-sep" />
-            <div className="inv-counter-item red">
-              <span className="inv-counter-num">{rsvps.filter(r => !r.asiste).length}</span>
-              <span className="inv-counter-label">no pueden</span>
-            </div>
-            <div className="inv-counter-sep" />
-            <div className="inv-counter-item gold">
-              <span className="inv-counter-num">{rsvps.length}</span>
-              <span className="inv-counter-label">total</span>
-            </div>
-          </div>
-        )}
-
-        {/* Selector de tema */}
-        <div className="inv-block">
-          <div className="inv-block-title">Estilo de la invitación</div>
-          <div className="inv-temas">
-            {TEMAS.map(t => (
-              <div key={t.id}
-                className={`inv-tema ${tema === t.id ? 'active' : ''}`}
-                onClick={() => setTema(t.id)}>
-                <div className="inv-tema-dot" style={{ background: t.color }} />
-                <div>
-                  <div className="inv-tema-label">{t.label}</div>
-                  <div className="inv-tema-desc">{t.desc}</div>
-                </div>
+        <div className={`ivt-status ${publicada ? 'on' : ''}`}>
+          {publicada ? (
+            <>
+              <div className="ivt-status-h"><span className="ivt-dot-on" />Publicada</div>
+              <a className="ivt-url" href={url} target="_blank" rel="noopener noreferrer">{url.replace(/^https?:\/\//, '')}</a>
+              <div className="ivt-status-actions">
+                <button className="ivt-btn" onClick={copiarEnlace}>Copiar enlace</button>
+                <a className="ivt-btn ghost" href={url} target="_blank" rel="noopener noreferrer">Abrir</a>
+                <button className="ivt-btn ghost" onClick={pausar}>Pausar</button>
               </div>
+              <p className="ivt-note">Los cambios que hagas aquí se ven en la invitación al momento.</p>
+            </>
+          ) : (
+            <>
+              <div className="ivt-status-h">{isPremium ? 'Sin publicar' : 'Prueba tu invitación'}</div>
+              <p className="ivt-note">
+                {isPremium
+                  ? 'Cuando la publiques tendrá un enlace propio para enviar a tus invitados.'
+                  : 'Cambia el estilo, los textos y las fotos, y mira el resultado a la derecha. Para enviarla a tus invitados y recibir sus respuestas necesitas el plan premium.'}
+              </p>
+              <button className="ivt-btn primary" onClick={publicar}>
+                {isPremium ? 'Publicar invitación' : 'Publicar invitación · 9,99 €'}
+              </button>
+            </>
+          )}
+        </div>
+
+        <Grupo titulo="Estilo">
+          <div className="ivt-temas">
+            {TEMAS.map(t => (
+              <button key={t.id} type="button" className={`ivt-tema ${cfg.tema === t.id ? 'on' : ''}`}
+                onClick={() => upd({ tema: t.id })} aria-pressed={cfg.tema === t.id}>
+                <span className="ivt-swatch" style={{ background: t.color, boxShadow: t.ring ? `inset 0 0 0 2px ${t.ring}` : undefined }} />
+                <span><b>{t.label}</b><small>{t.desc}</small></span>
+              </button>
             ))}
           </div>
-        </div>
+        </Grupo>
 
-        {/* Mensaje */}
-        <div className="inv-block">
-          <div className="inv-block-title">Mensaje de bienvenida</div>
-          <textarea className="inv-textarea" value={mensaje}
-            placeholder="Con mucha alegría os invitamos..."
-            onChange={e => setMensaje(e.target.value)} />
-        </div>
+        <Grupo titulo="Portada">
+          <p className="ivt-note">
+            {n1 ? <>Nombres: <b>{n2 ? `${n1} y ${n2}` : n1}</b>. </> : <>Faltan vuestros nombres. </>}
+            {vista.fechaLarga ? <>Fecha: <b>{vista.fechaLarga}</b>.</> : <>Falta la fecha.</>}
+            {' '}Se cambian en Resumen general.
+          </p>
+          <Foto titulo="Foto de portada" url={fotoActual('portada')} subiendo={subiendo === 'portada'}
+            onFile={f => elegirFoto('portada', f)} onQuitar={() => quitarFoto('portada')} />
+        </Grupo>
 
-        {/* Fecha límite RSVP */}
-        <div className="inv-block">
-          <div className="inv-block-title">Fecha límite de confirmación</div>
-          <input className="inv-input" type="date" value={fechaLimite}
-            onChange={e => setFechaLimite(e.target.value)} />
-        </div>
+        <Grupo titulo="Vuestras palabras">
+          <Campo label="Saludo" value={cfg.saludo} onChange={v => upd({ saludo: v })} />
+          <Campo label="Texto" value={cfg.mensaje} onChange={v => upd({ mensaje: v })} area
+            ayuda="Deja una línea en blanco para separar párrafos." />
+        </Grupo>
 
-        {/* Fotos — solo premium puede subir */}
-        <div className="inv-block">
-          <div className="inv-block-title">
-            Fotos
-            {!isPremium && <span className="inv-block-lock"> · 🔒 requiere premium</span>}
-          </div>
-          <div className="inv-fotos">
-            <FotoSlot label="Foto de portada" hint="Recomendado: horizontal, mínimo 1200px"
-              url={inv?.fotoPortada} loading={uploadingFoto === 'portada'}
-              locked={!isPremium}
-              onFile={f => uploadFoto('portada', f)}
-              onClear={() => updInv({ fotoPortada: undefined })}
-              onLock={onPaywall} fileRef={fileRef1} />
-            <FotoSlot label="Segunda foto (opcional)" hint="Aparece antes del formulario RSVP"
-              url={inv?.foto2} loading={uploadingFoto === 'foto2'}
-              locked={!isPremium}
-              onFile={f => uploadFoto('foto2', f)}
-              onClear={() => updInv({ foto2: undefined })}
-              onLock={onPaywall} fileRef={fileRef2} />
-          </div>
-        </div>
+        <LugarEditor titulo="Ceremonia" l={cfg.ceremonia} onChange={p => updLugar('ceremonia', p)}
+          foto={fotoActual('ceremonia')} subiendo={subiendo === 'ceremonia'}
+          onFile={f => elegirFoto('ceremonia', f)} onQuitar={() => quitarFoto('ceremonia')} />
 
-        {/* BOTÓN PUBLICAR */}
-        <div className="inv-publish-area">
-          {!isPremium ? (
-            <button className="inv-publish-btn locked" onClick={onPaywall}>
-              🔒 Publicar invitación · 9,99 €
-            </button>
-          ) : activa ? (
-            <div className="inv-published-info">
-              <span>✓ Tu invitación está publicada</span>
-              <button className="inv-publish-btn" onClick={aplicarYPublicar}>
-                Guardar cambios
-              </button>
+        <LugarEditor titulo="Celebración" l={cfg.celebracion} onChange={p => updLugar('celebracion', p)}
+          foto={fotoActual('celebracion')} subiendo={subiendo === 'celebracion'}
+          onFile={f => elegirFoto('celebracion', f)} onQuitar={() => quitarFoto('celebracion')} />
+
+        <Grupo titulo="Programa y autobuses">
+          <label className="ivt-check">
+            <input type="checkbox" checked={cfg.mostrarPrograma} onChange={e => upd({ mostrarPrograma: e.target.checked })} />
+            Mostrar el programa del día
+          </label>
+          <p className="ivt-note">
+            {nMomentos > 0
+              ? `Se usan los ${nMomentos} momentos de tu Cronograma.`
+              : 'Añade momentos en el Cronograma para que aparezcan aquí.'}
+            {' '}
+            {nBuses > 0
+              ? `También se muestran ${nBuses === 1 ? 'el autobús' : `los ${nBuses} autobuses`} del Cronograma y tus invitados podrán pedir plaza.`
+              : 'Si añades autobuses en el Cronograma, tus invitados podrán pedir plaza al confirmar.'}
+          </p>
+        </Grupo>
+
+        <Grupo titulo="Regalo">
+          <Campo label="Texto" value={cfg.regalosTexto} onChange={v => upd({ regalosTexto: v })} area />
+          <Campo label="Número de cuenta (IBAN)" value={cfg.iban} onChange={v => upd({ iban: v.toUpperCase() })}
+            placeholder="ES00 0000 0000 0000 0000 0000" ayuda="Si lo dejas vacío, esta sección no aparece." />
+        </Grupo>
+
+        <Grupo titulo="Contacto">
+          {[0, 1].map(i => (
+            <div className="ivt-row" key={i}>
+              <Campo label="Nombre" value={cfg.contactos[i]?.nombre || ''} onChange={v => updContacto(i, 'nombre', v)} />
+              <Campo label="Teléfono" value={cfg.contactos[i]?.telefono || ''} onChange={v => updContacto(i, 'telefono', v)}
+                placeholder="600 00 00 00" type="tel" />
             </div>
-          ) : (
-            <button className="inv-publish-btn" onClick={aplicarYPublicar}>
-              Publicar invitación →
-            </button>
-          )}
-          {!isPremium && (
-            <p className="inv-publish-hint">
-              Pago único de 9,99 €. Sin suscripción.
-            </p>
-          )}
-        </div>
+          ))}
+          <p className="ivt-note">Solo se muestran los contactos con teléfono.</p>
+        </Grupo>
 
-        {/* Confirmaciones recibidas */}
+        <Grupo titulo="Confirmación">
+          <Campo label="Fecha límite para confirmar" type="date" value={cfg.fechaLimiteRsvp || ''}
+            onChange={v => upd({ fechaLimiteRsvp: v || undefined })} />
+        </Grupo>
+
         {isPremium && (
-          <div className="inv-block">
-            <div className="inv-block-head">
-              <div className="inv-block-title">Confirmaciones recibidas</div>
-              <button className="btn-ghost" onClick={fetchRsvps}>↻</button>
-            </div>
-            {loadingRsvp ? (
-              <div className="inv-loading">Cargando…</div>
-            ) : rsvps.length === 0 ? (
-              <div className="inv-no-rsvp">Aún no hay confirmaciones.</div>
-            ) : (
-              <div className="rsvp-list">
-                {rsvps.map(r => (
-                  <div key={r.id} className="rsvp-row">
-                    <div className={`rsvp-dot ${r.asiste ? 'green' : 'red'}`} />
-                    <div className="rsvp-info">
-                      <div className="rsvp-nombre">{r.nombre} {r.apellido}
-                        {r.nombre_acomp && <span className="rsvp-acomp"> + {r.nombre_acomp}</span>}
-                      </div>
-                      <div className="rsvp-meta">
-                        {r.asiste ? 'Confirma' : 'No puede'}
-                        {r.intolerancia && ` · ${r.intolerancia}`}
-                        {r.necesita_bus && ' · 🚌'}
-                      </div>
-                    </div>
-                    {r.asiste && !r.importado && (
-                      <button className="rsvp-import-btn" onClick={() => importarRsvp(r)}>+ Mesas</button>
-                    )}
-                    {r.importado && <span className="rsvp-imported">✓</span>}
-                  </div>
-                ))}
+          <Grupo titulo="Respuestas recibidas" accion={<button className="ivt-link" onClick={cargarRsvps}>Actualizar</button>}>
+            {rsvps.length > 0 && (
+              <div className="ivt-counts">
+                <span><b>{vienen}</b> vienen</span>
+                <span><b>{noVienen}</b> no pueden</span>
+                <span><b>{rsvps.length}</b> respuestas</span>
               </div>
             )}
-          </div>
+            {cargandoRsvp ? (
+              <p className="ivt-note">Cargando respuestas…</p>
+            ) : rsvps.length === 0 ? (
+              <p className="ivt-note">Aún no ha respondido nadie. Cuando alguien confirme, aparecerá aquí y podrás pasarlo a Mesas.</p>
+            ) : (
+              <ul className="ivt-rsvps">
+                {rsvps.map(r => (
+                  <li key={r.id}>
+                    <span className={`ivt-rdot ${r.asiste ? 'si' : 'no'}`} />
+                    <div className="ivt-rinfo">
+                      <b>{[r.nombre, r.apellido].filter(Boolean).join(' ')}{r.nombre_acomp ? ` y ${r.nombre_acomp}` : ''}</b>
+                      <small>
+                        {r.asiste ? 'Viene' : 'No puede venir'}
+                        {r.intolerancia ? `. ${r.intolerancia}` : ''}
+                        {r.ruta_bus ? `. Autobús: ${r.ruta_bus}` : ''}
+                      </small>
+                      {r.mensaje && <em>«{r.mensaje}»</em>}
+                    </div>
+                    {r.asiste && !r.importado && <button className="ivt-btn small" onClick={() => pasarAMesas(r)}>Pasar a Mesas</button>}
+                    {r.importado && <span className="ivt-done">En Mesas</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Grupo>
         )}
       </div>
 
-      {/* ═══ PANEL DERECHO: PREVIEW EN VIVO ═══ */}
-      <div className="inv-preview-panel">
-        <div className="inv-preview-label">
-          Vista previa en tiempo real
-          <span className="inv-preview-tema">{TEMAS.find(t => t.id === tema)?.label}</span>
+      {/* ═══ VISTA PREVIA ═══ */}
+      <div className="ivt-prev">
+        <div className="ivt-prev-bar">
+          <span>Vista previa</span>
+          <div className="ivt-seg" role="group" aria-label="Tamaño de la vista previa">
+            <button aria-pressed={dispositivo === 'movil'} onClick={() => setDispositivo('movil')}>Móvil</button>
+            <button aria-pressed={dispositivo === 'ordenador'} onClick={() => setDispositivo('ordenador')}>Ordenador</button>
+          </div>
         </div>
-
-        <div className="inv-preview-scroll">
-          <div className="inv-preview-page" style={vars as React.CSSProperties}>
-
-            {/* Hero preview */}
-            <div className="prev-hero">
-              <div className="prev-hero-bg" />
-              <div className="prev-pre">Con mucha alegría os invitamos a celebrar nuestra boda</div>
-              <div className="prev-names">{novios.split(' y ')[0]}</div>
-              <div className="prev-amp">&</div>
-              <div className="prev-names">{novios.split(' y ')[1] || novios.split(' & ')[1] || ''}</div>
-              <div className="prev-orn" />
-              <div className="prev-date">{fechaStr}</div>
-              <div className="prev-finca">{finca}</div>
-            </div>
-
-            {/* Mensaje preview */}
-            <div className="prev-section">
-              <div className="prev-eyebrow">Nuestra boda</div>
-              <div className="prev-mensaje">{mensaje}</div>
-            </div>
-
-            {/* Cronograma preview */}
-            {data.eventos && data.eventos.length > 0 && (
-              <div className="prev-section prev-bg2">
-                <div className="prev-eyebrow">El gran día</div>
-                <div className="prev-timeline">
-                  {data.eventos.slice(0, 4).map((e, i) => (
-                    <div key={i} className="prev-t-item">
-                      <span className="prev-t-time">{e.hora}</span>
-                      <div className="prev-t-dot" />
-                      <span className="prev-t-name">{e.nombre}</span>
-                    </div>
-                  ))}
-                  {data.eventos.length > 4 && (
-                    <div className="prev-t-more">+{data.eventos.length - 4} momentos más</div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* RSVP preview */}
-            <div className="prev-section">
-              <div className="prev-eyebrow">Confirmación</div>
-              <div className="prev-rsvp-title">¿Contamos contigo?</div>
-              {fechaLimite && (
-                <div className="prev-rsvp-hint">
-                  Confirma antes del {new Date(fechaLimite).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
-                </div>
-              )}
-              <div className="prev-rsvp-btns">
-                <div className="prev-rsvp-btn">Allí estaré</div>
-                <div className="prev-rsvp-btn">No podré ir</div>
-              </div>
-            </div>
-
-            <div className="prev-footer">
-              <div className="prev-footer-names">{novios}</div>
-              <div className="prev-footer-marca">Creado con Enlace</div>
-            </div>
-
+        <div className="ivt-prev-area">
+          <div ref={vistaRef} className={`ivt-device ${dispositivo}`}>
+            <InvitacionView data={vista} mode="preview" />
           </div>
         </div>
       </div>
@@ -374,32 +348,68 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
   )
 }
 
-function FotoSlot({ label, hint, url, loading, locked, onFile, onClear, onLock, fileRef }: {
-  label: string; hint: string; url?: string; loading: boolean; locked: boolean
-  onFile: (f: File) => void; onClear: () => void; onLock: () => void
-  fileRef: React.RefObject<HTMLInputElement | null>
+/* ═══ PIEZAS DEL EDITOR ═══ */
+
+function Grupo({ titulo, accion, children }: { titulo: string; accion?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="ivt-group">
+      <div className="ivt-group-h"><h3>{titulo}</h3>{accion}</div>
+      <div className="ivt-group-b">{children}</div>
+    </section>
+  )
+}
+
+function Campo({ label, value, onChange, area, placeholder, ayuda, type = 'text' }: {
+  label: string; value: string; onChange: (v: string) => void
+  area?: boolean; placeholder?: string; ayuda?: string; type?: string
 }) {
   return (
-    <div className="foto-slot">
-      <div className="foto-slot-label">{label}</div>
-      <div className="foto-slot-hint">{hint}</div>
-      {url ? (
-        <div className="foto-preview">
-          <img src={url} alt="Foto" className="foto-img" />
-          {!locked && <button className="foto-clear" onClick={onClear}>× Quitar</button>}
+    <label className="ivt-f">
+      <span>{label}</span>
+      {area
+        ? <textarea className="ivt-in" rows={3} value={value} placeholder={placeholder} onChange={e => onChange(e.target.value)} />
+        : <input className="ivt-in" type={type} value={value} placeholder={placeholder} onChange={e => onChange(e.target.value)} />}
+      {ayuda && <small>{ayuda}</small>}
+    </label>
+  )
+}
+
+function Foto({ titulo, url, subiendo, onFile, onQuitar }: {
+  titulo: string; url?: string; subiendo: boolean; onFile: (f?: File) => void; onQuitar: () => void
+}) {
+  return (
+    <div className="ivt-foto">
+      {url ? <img src={url} alt="" className="ivt-thumb" /> : <span className="ivt-thumb empty">Ilustración</span>}
+      <div className="ivt-foto-txt">
+        <b>{titulo}</b>
+        <div className="ivt-foto-actions">
+          <label className="ivt-link">
+            {subiendo ? 'Subiendo…' : url ? 'Cambiar' : 'Subir foto'}
+            <input type="file" accept="image/*" hidden disabled={subiendo}
+              onChange={e => { onFile(e.target.files?.[0]); e.target.value = '' }} />
+          </label>
+          {url && <button className="ivt-link muted" onClick={onQuitar}>Quitar</button>}
         </div>
-      ) : (
-        <div className="foto-upload" onClick={() => locked ? onLock() : fileRef.current?.click()}>
-          {loading ? <span>Subiendo…</span> : (
-            <><span className="foto-upload-icon">{locked ? '🔒' : '📸'}</span>
-            <span>{locked ? 'Requiere premium' : 'Subir foto'}</span></>
-          )}
-          {!locked && (
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
-              onChange={e => e.target.files?.[0] && onFile(e.target.files[0])} />
-          )}
-        </div>
-      )}
+      </div>
     </div>
+  )
+}
+
+function LugarEditor({ titulo, l, onChange, foto, subiendo, onFile, onQuitar }: {
+  titulo: string; l: InvitacionLugar; onChange: (p: Partial<InvitacionLugar>) => void
+  foto?: string; subiendo: boolean; onFile: (f?: File) => void; onQuitar: () => void
+}) {
+  return (
+    <Grupo titulo={titulo}>
+      <div className="ivt-row">
+        <Campo label="Lugar" value={l.lugar} onChange={v => onChange({ lugar: v })} />
+        <Campo label="Hora" type="time" value={l.hora} onChange={v => onChange({ hora: v })} />
+      </div>
+      <Campo label="Dirección" value={l.direccion} onChange={v => onChange({ direccion: v })} area
+        placeholder={'Calle, número\nCódigo postal y ciudad'} />
+      <Campo label="Enlace de Google Maps (opcional)" value={l.mapa} onChange={v => onChange({ mapa: v })}
+        placeholder="https://maps.app.goo.gl/…" ayuda="Si lo dejas vacío, se busca la dirección automáticamente." />
+      <Foto titulo={`Foto de la ${titulo.toLowerCase()}`} url={foto} subiendo={subiendo} onFile={onFile} onQuitar={onQuitar} />
+    </Grupo>
   )
 }
