@@ -69,9 +69,20 @@ export type FincaExtra = {
   nota: number | null
 }
 
+export type FincaVisita = {
+  fecha: string
+  hora: string
+  contacto: string
+  telefono: string
+  notas: string
+}
+
 export type Finca = {
   id: string
   nombre: string
+  /** Sin valor = visitada (fincas creadas antes de la agenda) */
+  estado?: 'pendiente' | 'visitada'
+  visita?: FincaVisita
   notaEsperada: number | null
   notaReal: number | null
   campos: Record<string, string>

@@ -1,0 +1,31 @@
+/* ═══ Fincas: agenda de visitas y ubicación ═══ */
+.fincas-group{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;color:var(--muted2);padding:12px 4px 6px}
+.fincas-group:first-child{padding-top:4px}
+
+.finca-item.pendiente{background:rgba(120,150,190,.08);border-color:rgba(140,170,210,.28);border-style:dashed}
+.finca-item.pendiente:hover{background:rgba(120,150,190,.16);border-color:rgba(160,190,230,.45)}
+.finca-item.pendiente.active{background:rgba(120,150,190,.2);border-style:solid;border-color:rgba(160,190,230,.55);border-left-color:#9DB8DC}
+.finca-item-cita{font-size:13px;color:#B9CDE8;margin-bottom:3px}
+.finca-item-cita.pasada{color:var(--gold2)}
+
+.finca-estado{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:-4px}
+.finca-estado-seg{display:inline-flex;background:var(--ivory2);border:1px solid var(--border);border-radius:9px;padding:3px}
+.finca-estado-seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:7px;cursor:pointer}
+.finca-estado-seg button[aria-pressed="true"]{background:var(--white);color:var(--charcoal);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.finca-estado-hint{font-size:12.5px;color:var(--muted);line-height:1.5;flex:1;min-width:200px}
+
+.fv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;margin-bottom:12px}
+.fv-cal{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.fv-btn{display:inline-flex;align-items:center;justify-content:center;font:inherit;font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;background:var(--charcoal);color:var(--ivory);border:1px solid var(--charcoal);cursor:pointer;text-decoration:none}
+.fv-btn:hover{opacity:.88}
+.fv-btn.ghost{background:transparent;color:var(--charcoal);border-color:var(--border)}
+.fv-hint{font-size:12.5px;color:var(--muted);margin:12px 0 0}
+.fv-expect{margin-top:18px;padding:14px 16px;background:var(--ivory);border:1px solid var(--border);border-radius:8px}
+.fv-links{display:flex;flex-wrap:wrap;gap:16px;padding-top:12px}
+.fv-links a{font-size:13px;color:var(--gold);text-decoration:underline;text-underline-offset:3px}
+
+@media (max-width:768px){
+  .fv-grid{grid-template-columns:1fr}
+  .finca-estado-seg{width:100%}
+  .finca-estado-seg button{flex:1}
+}

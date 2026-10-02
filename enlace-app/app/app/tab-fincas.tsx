@@ -1,7 +1,9 @@
 'use client'
 
+import './tab-fincas.css'
+
 import { useState } from 'react'
-import { BodaData, Finca, FincaExtra } from '@/lib/types'
+import { BodaData, Finca, FincaExtra, FincaVisita } from '@/lib/types'
 
 type Props = {
   data: BodaData
@@ -83,6 +85,14 @@ const GRUPOS: { id: string; icon: string; titulo: string; campos: Campo[] }[] = 
   },
 ]
 
+const UBICACION: Campo[] = [
+  { k: 'direccion', label: 'Dirección', ph: 'Carretera M-600, km 8, San Lorenzo de El Escorial' },
+  { k: 'distancia', label: 'Distancia desde casa (km)', ph: '45', tipo: 'numero' },
+  { k: 'tiempo', label: 'Tiempo en coche (min)', ph: '30', tipo: 'numero' },
+]
+
+const VISITA_VACIA: FincaVisita = { fecha: '', hora: '', contacto: '', telefono: '', notas: '' }
+
 const CONTRATO: Campo[] = [
   { k: 'formaReserva', label: 'Forma de reserva', ph: 'Señal de 2.000 € no reembolsable' },
   { k: 'formaPago', label: 'Calendario de pagos', ph: '50% a 6 meses, resto 15 días antes' },
@@ -96,6 +106,8 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
   const invitados = parseInt(data.resumen?.totalInv || '0') || 0
 
   const sel = fincas.find(f => f.id === selId) || null
+  const pendientes = fincas.filter(esPendiente).sort((a, b) => claveVisita(a).localeCompare(claveVisita(b)))
+  const visitadas = fincas.filter(f => !esPendiente(f))
 
   function addFinca() {
     const id = 'f' + Date.now()
@@ -104,6 +116,7 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
       notaEsperada: null, notaReal: null,
       campos: {}, notas: {},
       exclusividades: [], cornersExtra: [], sonidoExtras: [],
+      estado: 'pendiente', visita: { ...VISITA_VACIA },
     }
     setData(d => ({ ...d, fincas: [...(d.fincas || []), nueva] }))
     setSelId(id)
@@ -112,6 +125,21 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
 
   function updFinca(id: string, patch: Partial<Finca>) {
     setData(d => ({ ...d, fincas: (d.fincas || []).map(f => f.id === id ? { ...f, ...patch } : f) }))
+  }
+
+  function setVisita(id: string, patch: Partial<FincaVisita>) {
+    setData(d => ({
+      ...d,
+      fincas: (d.fincas || []).map(f =>
+        f.id === id ? { ...f, visita: { ...VISITA_VACIA, ...(f.visita || {}), ...patch } } : f),
+    }))
+  }
+
+  function setEstado(id: string, estado: 'pendiente' | 'visitada') {
+    updFinca(id, { estado })
+    showToast(estado === 'visitada'
+      ? 'Marcada como visitada. Ya puedes apuntar precios y puntuarla'
+      : 'Marcada como pendiente de visitar')
   }
 
   function delFinca(id: string) {
@@ -191,33 +219,52 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
 
         <div className="fincas-list">
           {fincas.length === 0 ? (
-            <div className="fincas-empty">Añade la primera finca<br />para empezar a comparar</div>
-          ) : fincas.map(f => {
-            const total = calcTotal(f, invitados)
-            const porInv = invitados > 0 ? total / invitados : 0
-            const media = notaMedia(f)
-            return (
-              <div key={f.id}
-                className={`finca-item ${selId === f.id ? 'active' : ''}`}
-                onClick={() => setSelId(f.id)}>
-                <div className="finca-item-name">{f.nombre || 'Sin nombre'}</div>
-                <div className="finca-item-row">
-                  <span className="finca-item-price">
-                    {porInv > 0 ? `${Math.round(porInv).toLocaleString('es-ES')} €` : '— €'}
-                    <span className="finca-item-unit">/inv</span>
-                  </span>
-                  {isPro && (
-                    <span className={`finca-item-score ${scoreClass(media)}`}>
-                      {media !== null ? media.toFixed(1) : '—'}
-                    </span>
-                  )}
-                </div>
-                <div className="finca-item-total">
-                  Total {total > 0 ? `${Math.round(total).toLocaleString('es-ES')} €` : '—'}
-                </div>
-              </div>
-            )
-          })}
+            <div className="fincas-empty">Añade la primera finca<br />que queráis ver</div>
+          ) : (
+            <>
+              {pendientes.length > 0 && <div className="fincas-group">Por visitar</div>}
+              {pendientes.map(f => {
+                const cita = textoVisita(f.visita)
+                return (
+                  <div key={f.id}
+                    className={`finca-item pendiente ${selId === f.id ? 'active' : ''}`}
+                    onClick={() => setSelId(f.id)}>
+                    <div className="finca-item-name">{f.nombre || 'Sin nombre'}</div>
+                    <div className={`finca-item-cita ${cita.pasada ? 'pasada' : ''}`}>{cita.texto}</div>
+                    {distanciaTexto(f) && <div className="finca-item-total">{distanciaTexto(f)}</div>}
+                  </div>
+                )
+              })}
+              {pendientes.length > 0 && visitadas.length > 0 && <div className="fincas-group">Visitadas</div>}
+              {visitadas.map(f => {
+                const total = calcTotal(f, invitados)
+                const porInv = invitados > 0 ? total / invitados : 0
+                const media = notaMedia(f)
+                return (
+                  <div key={f.id}
+                    className={`finca-item ${selId === f.id ? 'active' : ''}`}
+                    onClick={() => setSelId(f.id)}>
+                    <div className="finca-item-name">{f.nombre || 'Sin nombre'}</div>
+                    <div className="finca-item-row">
+                      <span className="finca-item-price">
+                        {porInv > 0 ? `${Math.round(porInv).toLocaleString('es-ES')} €` : '— €'}
+                        <span className="finca-item-unit">/inv</span>
+                      </span>
+                      {isPro && (
+                        <span className={`finca-item-score ${scoreClass(media)}`}>
+                          {media !== null ? media.toFixed(1) : '—'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="finca-item-total">
+                      Total {total > 0 ? `${Math.round(total).toLocaleString('es-ES')} €` : '—'}
+                      {distanciaTexto(f) && <> · {distanciaTexto(f)}</>}
+                    </div>
+                  </div>
+                )
+              })}
+            </>
+          )}
         </div>
       </aside>
 
@@ -228,9 +275,9 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
             <div className="fincas-none-icon">🌿</div>
             <div className="fincas-none-title">Compara tus fincas sin Excel</div>
             <p className="fincas-none-text">
-              Añade cada finca que visites, rellena lo que te cuenten y puntúa
-              cada apartado del 1 al 10. Enlace calcula el coste real por invitado
-              y te dice cuál sale mejor.
+              Apunta las fincas que queréis ver y organiza las visitas en tu calendario.
+              Después de cada una, rellena lo que os cuenten y puntúa cada apartado:
+              Enlace calcula el coste real por invitado y te dice cuál sale mejor.
             </p>
             <button className="btn-new-finca big" onClick={addFinca}>
               + Añadir primera finca
@@ -243,6 +290,8 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
             isPro={isPro}
             onPaywall={onPaywall}
             onNombre={v => updFinca(sel.id, { nombre: v })}
+            onEstado={e => setEstado(sel.id, e)}
+            onVisita={p => setVisita(sel.id, p)}
             onDel={() => { delFinca(sel.id); showToast('Finca eliminada') }}
             onCampo={(k, v) => setCampo(sel.id, k, v)}
             onNota={(k, n) => setNota(sel.id, k, n)}
@@ -260,7 +309,7 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
 /* ═══ DETALLE ═══ */
 
 function FincaDetalle({
-  finca, invitados, isPro, onPaywall, onNombre, onDel, onCampo, onNota,
+  finca, invitados, isPro, onPaywall, onNombre, onEstado, onVisita, onDel, onCampo, onNota,
   onNotaGlobal, onAddExtra, onUpdExtra, onDelExtra,
 }: {
   finca: Finca
@@ -268,6 +317,8 @@ function FincaDetalle({
   isPro: boolean
   onPaywall: () => void
   onNombre: (v: string) => void
+  onEstado: (e: 'pendiente' | 'visitada') => void
+  onVisita: (p: Partial<FincaVisita>) => void
   onDel: () => void
   onCampo: (k: string, v: string) => void
   onNota: (k: string, n: number) => void
@@ -283,13 +334,67 @@ function FincaDetalle({
   const real = finca.notaReal
   const dif = esp !== null && real !== null ? +(real - esp).toFixed(1) : null
 
-  return (
+  const pendiente = esPendiente(finca)
+
+  const cabecera = (
     <>
       <div className="finca-head">
         <input className="finca-name-input" value={finca.nombre}
           placeholder="Nombre de la finca" onChange={e => onNombre(e.target.value)} />
         <button className="finca-del" onClick={onDel}>Eliminar</button>
       </div>
+      <div className="finca-estado">
+        <div className="finca-estado-seg" role="group" aria-label="Estado de la visita">
+          <button type="button" aria-pressed={pendiente} onClick={() => onEstado('pendiente')}>Por visitar</button>
+          <button type="button" aria-pressed={!pendiente} onClick={() => onEstado('visitada')}>Visitada</button>
+        </div>
+        {pendiente && <span className="finca-estado-hint">Cuando la visitéis, márcala como visitada para apuntar precios y puntuarla.</span>}
+      </div>
+    </>
+  )
+
+  const ubicacion = (
+    <div className="finca-block">
+      <div className="finca-block-head">
+        <span className="fb-icon">📍</span>
+        <span className="fb-title">Ubicación</span>
+        {isPro && !pendiente && <span className="fb-score">{grupoNota(finca, UBICACION.map(c => c.k))}</span>}
+      </div>
+      <div className="finca-block-body">
+        {UBICACION.map(c => (
+          <CampoRow key={c.k}
+            campo={c}
+            valor={finca.campos[c.k] || ''}
+            nota={finca.notas[c.k] ?? null}
+            isPro={isPro && !pendiente}
+            onValor={v => onCampo(c.k, v)}
+            onNota={n => onNota(c.k, n)}
+          />
+        ))}
+        {(finca.campos.direccion || finca.nombre) && (
+          <div className="fv-links">
+            <a href={mapaFinca(finca, false)} target="_blank" rel="noopener noreferrer">Ver en el mapa</a>
+            <a href={mapaFinca(finca, true)} target="_blank" rel="noopener noreferrer">Cómo llegar desde donde estoy</a>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  if (pendiente) {
+    return (
+      <>
+        {cabecera}
+        <VisitaBlock finca={finca} isPro={isPro} onVisita={onVisita}
+          onNotaEsperada={n => onNotaGlobal('notaEsperada', n)} />
+        {ubicacion}
+      </>
+    )
+  }
+
+  return (
+    <>
+      {cabecera}
 
       {/* Resumen de costes */}
       <div className="finca-summary">
@@ -361,6 +466,8 @@ function FincaDetalle({
           <div className="pro-lock-cta">Desbloquear por 3,99 € →</div>
         </div>
       )}
+
+      {ubicacion}
 
       {/* Grupos */}
       {GRUPOS.map(g => (
@@ -442,6 +549,149 @@ function FincaDetalle({
       ))}
     </>
   )
+}
+
+/* ═══ VISITA (agenda) ═══ */
+
+function VisitaBlock({ finca, isPro, onVisita, onNotaEsperada }: {
+  finca: Finca
+  isPro: boolean
+  onVisita: (p: Partial<FincaVisita>) => void
+  onNotaEsperada: (n: number) => void
+}) {
+  const v = { ...VISITA_VACIA, ...(finca.visita || {}) }
+  const lista = !!(v.fecha && v.hora)
+  return (
+    <div className="finca-block">
+      <div className="finca-block-head">
+        <span className="fb-icon">📅</span>
+        <span className="fb-title">Visita</span>
+      </div>
+      <div className="finca-block-body">
+        <div className="fv-grid">
+          <div className="fg"><label className="fl">Día</label>
+            <input className="fi2" type="date" value={v.fecha} onChange={e => onVisita({ fecha: e.target.value })} /></div>
+          <div className="fg"><label className="fl">Hora</label>
+            <input className="fi2" type="time" value={v.hora} onChange={e => onVisita({ hora: e.target.value })} /></div>
+          <div className="fg"><label className="fl">Persona de contacto</label>
+            <input className="fi2" type="text" value={v.contacto} placeholder="Marta, coordinadora"
+              onChange={e => onVisita({ contacto: e.target.value })} /></div>
+          <div className="fg"><label className="fl">Teléfono</label>
+            <input className="fi2" type="tel" value={v.telefono} placeholder="600 00 00 00"
+              onChange={e => onVisita({ telefono: e.target.value })} /></div>
+        </div>
+        <div className="fg">
+          <label className="fl">Qué queréis preguntar o ver</label>
+          <textarea className="ft2" value={v.notas}
+            placeholder="Hora de cierre, plan B si llueve, exclusividades, si se puede ver montada…"
+            onChange={e => onVisita({ notas: e.target.value })} />
+        </div>
+
+        {lista ? (
+          <div className="fv-cal">
+            <a className="fv-btn" href={enlaceGoogleCalendar(finca, v)} target="_blank" rel="noopener noreferrer">
+              Añadir a Google Calendar
+            </a>
+            <button type="button" className="fv-btn ghost" onClick={() => descargarIcs(finca, v)}>
+              Añadir a otro calendario
+            </button>
+          </div>
+        ) : (
+          <p className="fv-hint">Elige día y hora para añadir la visita a tu calendario.</p>
+        )}
+
+        {isPro && (
+          <div className="fv-expect">
+            <div className="expect-label">Primera impresión</div>
+            <div className="expect-hint">Según fotos, web y dosier. Después de la visita podrás compararla con lo que visteis.</div>
+            <Score value={finca.notaEsperada} onChange={onNotaEsperada} />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function esPendiente(f: Finca): boolean {
+  return f.estado === 'pendiente'
+}
+
+function claveVisita(f: Finca): string {
+  const v = f.visita
+  return v?.fecha ? `${v.fecha}T${v.hora || '00:00'}` : '9999'
+}
+
+function textoVisita(v?: FincaVisita): { texto: string; pasada: boolean } {
+  if (!v?.fecha) return { texto: 'Sin fecha de visita', pasada: false }
+  const d = new Date(`${v.fecha}T${v.hora || '12:00'}:00`)
+  if (isNaN(d.getTime())) return { texto: 'Sin fecha de visita', pasada: false }
+  const dia = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
+  const pasada = d.getTime() < Date.now()
+  const base = `${dia}${v.hora ? ` a las ${v.hora}` : ''}`
+  return { texto: pasada ? `${base}. ¿Ya la visitasteis?` : base, pasada }
+}
+
+function distanciaTexto(f: Finca): string {
+  const km = (f.campos.distancia || '').trim()
+  const min = (f.campos.tiempo || '').trim()
+  return [km && `${km} km`, min && `${min} min`].filter(Boolean).join(' · ')
+}
+
+function mapaFinca(f: Finca, ruta: boolean): string {
+  const destino = encodeURIComponent((f.campos.direccion || f.nombre || '').trim())
+  return ruta
+    ? `https://www.google.com/maps/dir/?api=1&destination=${destino}`
+    : `https://www.google.com/maps/search/?api=1&query=${destino}`
+}
+
+// Fecha para calendarios (hora local, sin zona): 20271012T110000
+function fechaCalendario(fecha: string, hora: string, sumarMin = 0): string {
+  const [y, m, d] = fecha.split('-').map(Number)
+  const [hh, mm] = hora.split(':').map(Number)
+  const t = new Date(Date.UTC(y, m - 1, d, hh, mm + sumarMin))
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${t.getUTCFullYear()}${p(t.getUTCMonth() + 1)}${p(t.getUTCDate())}T${p(t.getUTCHours())}${p(t.getUTCMinutes())}00`
+}
+
+function detallesVisita(v: FincaVisita): string {
+  return [
+    v.contacto && `Contacto: ${v.contacto}`,
+    v.telefono && `Teléfono: ${v.telefono}`,
+    v.notas && `\n${v.notas}`,
+    '\nOrganizado con Enlace · enlaceboda.es',
+  ].filter(Boolean).join('\n')
+}
+
+function enlaceGoogleCalendar(f: Finca, v: FincaVisita): string {
+  const q = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `Visita a ${f.nombre || 'la finca'}`,
+    dates: `${fechaCalendario(v.fecha, v.hora)}/${fechaCalendario(v.fecha, v.hora, 90)}`,
+    ctz: 'Europe/Madrid',
+    details: detallesVisita(v),
+    location: f.campos.direccion || f.nombre || '',
+  })
+  return `https://calendar.google.com/calendar/render?${q.toString()}`
+}
+
+function descargarIcs(f: Finca, v: FincaVisita) {
+  const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/[,;]/g, m => '\\' + m).replace(/\n/g, '\\n')
+  const ahora = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z'
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Enlace//Visitas//ES', 'BEGIN:VEVENT',
+    `UID:${f.id}@enlaceboda.es`, `DTSTAMP:${ahora}`,
+    `DTSTART:${fechaCalendario(v.fecha, v.hora)}`, `DTEND:${fechaCalendario(v.fecha, v.hora, 90)}`,
+    `SUMMARY:${esc(`Visita a ${f.nombre || 'la finca'}`)}`,
+    `LOCATION:${esc(f.campos.direccion || f.nombre || '')}`,
+    `DESCRIPTION:${esc(detallesVisita(v))}`,
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n')
+  const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `visita-${(f.nombre || 'finca').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')}.ics`
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 /* ═══ FILA DE CAMPO ═══ */
