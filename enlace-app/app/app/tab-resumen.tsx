@@ -5,7 +5,10 @@ import './tab-resumen.css'
 import { useState, useEffect } from 'react'
 import { BodaData, Proveedor } from '@/lib/types'
 import { DEFAULT_CHECKLIST } from './checklist-data'
-import { MOMENTOS_RESUMEN, sincronizarMomentos, momentosSinPasar } from '@/lib/momentos'
+import {
+  MOMENTOS_RESUMEN, HORAS_AUTOMATICAS, LIMITE_MOMENTOS_GRATIS,
+  sincronizarMomentos, momentosSinPasar, anadirMomento, momentoEnCronograma, horaMomento, hayCoche, hayBus,
+} from '@/lib/momentos'
 
 type Props = {
   data: BodaData
@@ -52,9 +55,28 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
 
   const R = data.resumen || {}
   const pendientesCrono = momentosSinPasar(data)
+  const conCoche = hayCoche(R)
+  const conBus = hayBus(R)
+
+  // Momentos que solo pasan al Cronograma si se pide (respeta el límite del plan gratuito)
+  function anadirAlCrono(id: string) {
+    if (!isPro && data.eventos.length >= LIMITE_MOMENTOS_GRATIS) {
+      onPaywall()
+      showToast(`El plan gratuito permite ${LIMITE_MOMENTOS_GRATIS} momentos en el Cronograma`)
+      return
+    }
+    setData(d => anadirMomento(d, id))
+    showToast('Añadido al Cronograma')
+  }
+
+  function botonCrono(id: string, ayuda: string) {
+    if (momentoEnCronograma(data, id)) return <span className="crono-ok">✓ En el Cronograma</span>
+    if (!horaMomento(data, id)) return <span className="crono-hint">{ayuda}</span>
+    return <button type="button" className="crono-btn" onClick={() => anadirAlCrono(id)}>Añadir al Cronograma</button>
+  }
   // Las horas de cada apartado se pasan solas al Cronograma
   function setR(k: string, v: string) {
-    const creaMomento = MOMENTOS_RESUMEN.some(m => m.hora === k && /^\d{2}:\d{2}$/.test(v)
+    const creaMomento = MOMENTOS_RESUMEN.some(m => !m.manual && m.hora === k && /^\d{2}:\d{2}$/.test(v)
       && !data.eventos.some(e => e.origen === `resumen:${m.id}`))
     setData(d => sincronizarMomentos({ ...d, resumen: { ...d.resumen, [k]: v } }, [k]))
     if (creaMomento) showToast('Añadido al Cronograma')
@@ -93,7 +115,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
     barra: parseFloat(R.costeBarra || '0'),
     musica: parseFloat(R.costeDJ || '0') + parseFloat(R.costeBanda || '0'),
     foto: parseFloat(R.costeFoto || '0') + parseFloat(R.costeVideo || '0'),
-    transporte: parseFloat(R.costeCoche || '0'),
+    transporte: (hayCoche(R) ? parseFloat(R.costeCoche || '0') : 0) + (hayBus(R) ? parseFloat(R.costeBus || '0') : 0),
     alojamiento: parseFloat(R.costeHotel || '0'),
   }
   const totalGastado = Object.values(costes).reduce((a, b) => a + (b || 0), 0)
@@ -153,7 +175,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
             <span>Las horas que pongas en cada apartado se añaden solas al Cronograma.</span>
             {pendientesCrono > 0 && (
               <button className="res-sync-btn" onClick={() => {
-                setData(d => sincronizarMomentos(d, MOMENTOS_RESUMEN.map(m => m.hora)))
+                setData(d => sincronizarMomentos(d, HORAS_AUTOMATICAS))
                 showToast(pendientesCrono === 1 ? '1 momento añadido al Cronograma' : `${pendientesCrono} momentos añadidos al Cronograma`)
               }}>
                 Añadir {pendientesCrono === 1 ? 'la hora que falta' : `las ${pendientesCrono} horas que faltan`}
@@ -203,6 +225,8 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
             <div>
               <Field label="Fecha de la boda" type="date" value={R.fecha || ''} onChange={v => setR('fecha', v)} />
               <Field label="Hora de inicio" type="time" value={R.horaInicio || ''} onChange={v => setR('horaInicio', v)} />
+              <Field label="Fin de fiesta" type="time" value={R.horaFin || ''} onChange={v => setR('horaFin', v)} />
+              <div className="crono-row">{botonCrono('fin', 'Pon la hora para poder añadirla al Cronograma')}</div>
             </div>
             <div>
               <Field label="Nombre de los novios" value={R.novios || ''} placeholder="Laura y Alejandro" onChange={v => setR('novios', v)} />
@@ -419,24 +443,60 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
               </div>
             </Section>
 
-            <Section id="sec-transporte" icon="🚌" title="Transporte" sub="Coches y traslados" cost={costes.transporte}>
+            <Section id="sec-transporte" icon="🚌" title="Transporte" sub="Coche nupcial, autobuses y salida de los novios" cost={costes.transporte}>
               <div className="sec-body">
-                <div style={{ padding: 14, background: 'var(--ivory2)', borderRadius: 6, marginBottom: 14, fontSize: 13, color: 'var(--muted)' }}>
-                  💡 Los autobuses de invitados se gestionan en el <strong>Cronograma</strong>, añadiendo un momento de tipo Autobús.
-                </div>
                 <SubSec title="Coche nupcial">
-                  <div className="fr">
-                    <Field label="Hora de recogida" type="time" value={R.horaCoche || ''} onChange={v => setR('horaCoche', v)} />
-                    <Field label="Empresa / modelo" value={R.cocheNupcial || ''} placeholder="Rolls Royce" onChange={v => setR('cocheNupcial', v)} />
-                    <Field label="Trayecto" value={R.trayecto || ''} placeholder="Casa - Ceremonia - Finca" onChange={v => setR('trayecto', v)} />
-                    <Field label="Coste (€)" type="number" value={R.costeCoche || ''} onChange={v => setR('costeCoche', v)} />
-                  </div>
+                  <Toggle label="¿Tenéis coche nupcial?" checked={conCoche} onChange={v => setR('tCoche', v ? '1' : '0')} />
+                  {conCoche && (
+                    <div className="fr" style={{ marginTop: 12 }}>
+                      <Field label="Hora de recogida" type="time" value={R.horaCoche || ''} onChange={v => setR('horaCoche', v)} />
+                      <Field label="Empresa / modelo" value={R.cocheNupcial || ''} placeholder="Rolls Royce" onChange={v => setR('cocheNupcial', v)} />
+                      <Field label="Trayecto" value={R.trayecto || ''} placeholder="Casa - Ceremonia - Finca" onChange={v => setR('trayecto', v)} />
+                      <Field label="Coste (€)" type="number" value={R.costeCoche || ''} onChange={v => setR('costeCoche', v)} />
+                    </div>
+                  )}
                 </SubSec>
-                <SubSec title="Traslado post-boda">
+
+                <SubSec title="Autobuses para invitados">
+                  <Toggle label="¿Ponéis autobús para los invitados?" checked={conBus} onChange={v => setR('tBus', v ? '1' : '0')} />
+                  {conBus && (
+                    <>
+                      <div className="fr" style={{ marginTop: 12 }}>
+                        <Field label="Empresa" value={R.empresaBus || ''} placeholder="Autocares García" onChange={v => setR('empresaBus', v)} />
+                        <Field label="Plazas" type="number" value={R.plazasBus || ''} placeholder="55" onChange={v => setR('plazasBus', v)} />
+                        <Field label="Coste (€)" type="number" value={R.costeBus || ''} onChange={v => setR('costeBus', v)} />
+                      </div>
+                      <div className="bus-tramos">
+                        <div className="bus-tramo">
+                          <div className="bus-tramo-t">Recogida de invitados</div>
+                          <div className="fr">
+                            <Field label="Hora" type="time" value={R.horaBusIda || ''} onChange={v => setR('horaBusIda', v)} />
+                            <Field label="Punto de recogida" value={R.puntoBusIda || ''} placeholder="Plaza de Castilla" onChange={v => setR('puntoBusIda', v)} />
+                          </div>
+                          <div className="crono-row">{botonCrono('bus-ida', 'Pon la hora de recogida para añadirla al Cronograma')}</div>
+                        </div>
+                        <div className="bus-tramo">
+                          <div className="bus-tramo-t">Vuelta</div>
+                          <div className="fr">
+                            <Field label="Hora" type="time" value={R.horaBusVuelta || ''} onChange={v => setR('horaBusVuelta', v)} />
+                            <Field label="Sale desde" value={R.puntoBusVuelta || ''} placeholder={R.finca || 'La finca'} onChange={v => setR('puntoBusVuelta', v)} />
+                          </div>
+                          <div className="crono-row">{botonCrono('bus-vuelta', 'Pon la hora de vuelta para añadirla al Cronograma')}</div>
+                        </div>
+                      </div>
+                      <p className="res-hint">
+                        La vuelta no hace falta tenerla en el Cronograma, pero apúntala: es la que necesitas para reservar los autobuses.
+                        Al añadir la recogida, el autobús aparece en el Cronograma para asignarle pasajeros y en la invitación para que tus invitados pidan plaza.
+                      </p>
+                    </>
+                  )}
+                </SubSec>
+
+                <SubSec title="Salida de los novios">
                   <div className="fr">
-                    <Field label="Empresa" value={R.traslado || ''} placeholder="Taxi, VTC..." onChange={v => setR('traslado', v)} />
                     <Field label="Hora estimada" type="time" value={R.horaTraslado || ''} onChange={v => setR('horaTraslado', v)} />
-                    <Field label="Destino" value={R.destinoTraslado || ''} onChange={v => setR('destinoTraslado', v)} />
+                    <Field label="Cómo" value={R.traslado || ''} placeholder="Taxi, VTC, coche de un amigo…" onChange={v => setR('traslado', v)} />
+                    <Field label="Destino" value={R.destinoTraslado || ''} placeholder="Hotel" onChange={v => setR('destinoTraslado', v)} />
                   </div>
                 </SubSec>
               </div>

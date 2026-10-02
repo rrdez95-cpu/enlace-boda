@@ -1,5 +1,16 @@
-/* ═══ Resumen: aviso de horas que pasan al Cronograma ═══ */
+/* ═══ Resumen: horas que pasan al Cronograma ═══ */
 .res-sync{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:rgba(184,150,90,.08);border:1px solid rgba(184,150,90,.25);border-radius:8px;font-size:13px;line-height:1.5;color:var(--charcoal2);flex-shrink:0}
 .res-sync span{flex:1;min-width:200px}
 .res-sync-btn{font:inherit;font-size:12.5px;font-weight:600;color:var(--charcoal);background:var(--gold);border:0;border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap}
 .res-sync-btn:hover{background:var(--gold2)}
+
+.crono-row{margin:2px 0 10px}
+.crono-btn{font:inherit;font-size:12.5px;font-weight:600;color:var(--charcoal);background:transparent;border:1px solid var(--gold);border-radius:6px;padding:6px 12px;cursor:pointer}
+.crono-btn:hover{background:rgba(184,150,90,.12)}
+.crono-ok{font-size:12.5px;color:var(--paid);font-weight:500}
+.crono-hint{font-size:12px;color:var(--muted)}
+
+.bus-tramos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:6px}
+.bus-tramo{background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:12px 14px 4px}
+.bus-tramo-t{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--charcoal2);margin-bottom:8px}
+.res-hint{font-size:12.5px;line-height:1.55;color:var(--muted);margin:12px 0 0}
