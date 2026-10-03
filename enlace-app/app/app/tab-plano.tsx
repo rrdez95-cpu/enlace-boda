@@ -16,17 +16,17 @@ type Props = {
   onPaywall: () => void
 }
 
-// Mesas de ejemplo para quien entra sin mesas y sin plan completo
+// Sin plan completo el plano se prueba con 2 mesas como máximo
+const MESAS_PRUEBA = 2
+
 function ejemplo(): { mesas: Mesa[]; guests: Guest[] } {
-  const formas: Mesa['shape'][] = ['rect', 'round', 'round', 'square', 'round', 'round']
-  const mesas: Mesa[] = formas.map((shape, i) => ({
-    id: -(i + 1), nombre: i === 0 ? 'Presidencial' : `Mesa ${i + 1}`, cap: i === 0 ? 8 : 10, shape,
-    x: i === 0 ? 1050 : 520 + ((i - 1) % 3) * 420, y: i === 0 ? 260 : 620 + Math.floor((i - 1) / 3) * 380,
-  }))
+  const mesas: Mesa[] = [
+    { id: -1, nombre: 'Presidencial', cap: 8, shape: 'rect', x: 860, y: 600 },
+    { id: -2, nombre: 'Mesa 2', cap: 10, shape: 'round', x: 1300, y: 560 },
+  ]
   const guests: Guest[] = []
   mesas.forEach((m, i) => {
-    const n = i === 0 ? 8 : 6 + (i % 4)
-    for (let j = 0; j < n; j++) {
+    for (let j = 0; j < (i === 0 ? 8 : 7); j++) {
       guests.push({ id: -(i * 100 + j + 1), nombre: '', apellido: '', relacion: '', mesaId: m.id, paid: 'pendiente', importe: '', intolerancia: '' })
     }
   })
@@ -44,8 +44,9 @@ const FORMAS: { id: Forma; label: string }[] = [
 export default function TabPlano({ data: real, setData: setReal, showToast, isPro, isPremium, onPaywallPro, onPaywall }: Props) {
   // Sin plan completo se puede probar todo, pero los cambios no se guardan
   const [prueba, setPrueba] = useState<BodaData>(() => (
-    real.mesas.length ? real : { ...real, ...ejemplo() }
+    real.mesas.length ? { ...real, mesas: real.mesas.slice(0, MESAS_PRUEBA) } : { ...real, ...ejemplo() }
   ))
+  const ocultas = Math.max(0, real.mesas.length - MESAS_PRUEBA)
   const data = isPro ? real : prueba
   const setData = isPro ? setReal : setPrueba
   const conEjemplo = !isPro && !real.mesas.length
@@ -166,8 +167,10 @@ export default function TabPlano({ data: real, setData: setReal, showToast, isPr
           <span className="plano-demo-txt">
             <b>Estás probando el plano.</b>{' '}
             {conEjemplo
-              ? 'Son mesas de ejemplo: mueve, gira y cambia formas para ver cómo funciona.'
-              : 'Mueve tus mesas y cambia sus formas libremente; con el plan completo tu distribución se guarda.'}
+              ? 'Son 2 mesas de ejemplo: muévelas, gíralas y combina formas para ver cómo funciona.'
+              : ocultas > 0
+                ? `Ves 2 de tus ${real.mesas.length} mesas para probar cómo se mueven y se combinan formas. Con el plan completo tendrás todas y tu distribución se guardará.`
+                : 'Mueve tus mesas y combina formas; con el plan completo tu distribución se guarda.'}
           </span>
           <button className="plano-demo-btn" onClick={onPaywallPro}>Desbloquear por 3,99 €</button>
         </div>
