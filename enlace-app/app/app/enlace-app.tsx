@@ -111,8 +111,8 @@ export default function EnlaceApp({
     return () => clearInterval(timer)
   }, [userId])
 
+  // Todas las pestañas se pueden abrir: lo de pago se prueba dentro y se desbloquea desde allí
   function goTab(t: Tab) {
-    if (!isPro && t === 'plano') { abrirPago('pro'); return }
     setTab(t)
   }
 
@@ -195,7 +195,8 @@ export default function EnlaceApp({
       )}
       {tab === 'plano' && (
         <TabPlano data={data} setData={setData} showToast={showToast}
-          isPremium={isPremium} onPaywall={() => abrirPago('premium')} />
+          isPro={isPro} isPremium={isPremium}
+          onPaywallPro={() => abrirPago('pro')} onPaywall={() => abrirPago('premium')} />
       )}
       {tab === 'crono' && (
         <TabCrono data={data} setData={setData} isPro={isPro}

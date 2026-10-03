@@ -28,3 +28,10 @@
 }
 
 .tool-btn-gold{border-color:var(--gold)!important;color:var(--gold3)!important}
+
+/* Plano en modo prueba */
+.plano-demo{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 18px;background:#2a2620;border-bottom:1px solid rgba(184,150,90,.35);color:var(--gold3);font-size:13px;line-height:1.45;flex-shrink:0}
+.plano-demo-txt{flex:1;min-width:220px}
+.plano-demo-txt b{color:var(--ivory);font-weight:600}
+.plano-demo-btn{font:inherit;font-size:13px;font-weight:600;color:var(--charcoal);background:var(--gold);border:0;border-radius:7px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+.plano-demo-btn:hover{background:var(--gold2)}

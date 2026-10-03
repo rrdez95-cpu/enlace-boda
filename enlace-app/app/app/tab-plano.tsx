@@ -2,7 +2,7 @@
 
 import './tab-plano.css'
 import { useRef, useState, useEffect, useCallback } from 'react'
-import { BodaData, Mesa } from '@/lib/types'
+import { BodaData, Guest, Mesa } from '@/lib/types'
 import { geometria, SEAT_R } from '@/lib/plano-geometria'
 import DescargaSitting from '../_components/sitting/descarga-sitting'
 
@@ -10,8 +10,27 @@ type Props = {
   data: BodaData
   setData: React.Dispatch<React.SetStateAction<BodaData>>
   showToast: (m: string) => void
+  isPro: boolean
   isPremium: boolean
+  onPaywallPro: () => void
   onPaywall: () => void
+}
+
+// Mesas de ejemplo para quien entra sin mesas y sin plan completo
+function ejemplo(): { mesas: Mesa[]; guests: Guest[] } {
+  const formas: Mesa['shape'][] = ['rect', 'round', 'round', 'square', 'round', 'round']
+  const mesas: Mesa[] = formas.map((shape, i) => ({
+    id: -(i + 1), nombre: i === 0 ? 'Presidencial' : `Mesa ${i + 1}`, cap: i === 0 ? 8 : 10, shape,
+    x: i === 0 ? 1050 : 520 + ((i - 1) % 3) * 420, y: i === 0 ? 260 : 620 + Math.floor((i - 1) / 3) * 380,
+  }))
+  const guests: Guest[] = []
+  mesas.forEach((m, i) => {
+    const n = i === 0 ? 8 : 6 + (i % 4)
+    for (let j = 0; j < n; j++) {
+      guests.push({ id: -(i * 100 + j + 1), nombre: '', apellido: '', relacion: '', mesaId: m.id, paid: 'pendiente', importe: '', intolerancia: '' })
+    }
+  })
+  return { mesas, guests }
 }
 
 type Forma = Mesa['shape']
@@ -22,7 +41,14 @@ const FORMAS: { id: Forma; label: string }[] = [
   { id: 'rect', label: 'Rectangular' },
 ]
 
-export default function TabPlano({ data, setData, showToast, isPremium, onPaywall }: Props) {
+export default function TabPlano({ data: real, setData: setReal, showToast, isPro, isPremium, onPaywallPro, onPaywall }: Props) {
+  // Sin plan completo se puede probar todo, pero los cambios no se guardan
+  const [prueba, setPrueba] = useState<BodaData>(() => (
+    real.mesas.length ? real : { ...real, ...ejemplo() }
+  ))
+  const data = isPro ? real : prueba
+  const setData = isPro ? setReal : setPrueba
+  const conEjemplo = !isPro && !real.mesas.length
   const vpRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(0.45)
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -135,6 +161,18 @@ export default function TabPlano({ data, setData, showToast, isPremium, onPaywal
         </button>
       </div>
 
+      {!isPro && (
+        <div className="plano-demo">
+          <span className="plano-demo-txt">
+            <b>Estás probando el plano.</b>{' '}
+            {conEjemplo
+              ? 'Son mesas de ejemplo: mueve, gira y cambia formas para ver cómo funciona.'
+              : 'Mueve tus mesas y cambia sus formas libremente; con el plan completo tu distribución se guarda.'}
+          </span>
+          <button className="plano-demo-btn" onClick={onPaywallPro}>Desbloquear por 3,99 €</button>
+        </div>
+      )}
+
       <div className="plano-viewport" ref={vpRef}
         style={{ touchAction: 'none' }}
         onWheel={onWheel}
@@ -228,7 +266,7 @@ export default function TabPlano({ data, setData, showToast, isPremium, onPaywal
       </div>
 
       {descarga && (
-        <DescargaSitting data={data} isPremium={isPremium} onPaywall={() => { setDescarga(false); onPaywall() }} onClose={() => setDescarga(false)} />
+        <DescargaSitting data={real} isPremium={isPremium} onPaywall={() => { setDescarga(false); onPaywall() }} onClose={() => setDescarga(false)} />
       )}
     </div>
   )

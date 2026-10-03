@@ -133,7 +133,7 @@ export default function TabInicio({ data, userName, isPro, isPremium, isGuest, o
           ]}
           isPro={isPro}
           locked={!isPro}
-          onClick={() => isPro ? onGoTab('plano') : onPaywall('pro')}
+          onClick={() => onGoTab('plano')}
         />
 
         <StepCard
@@ -254,7 +254,7 @@ function StepCard({ num, icon, title, badge, badgeType, desc, perks, perksPro, i
           ))}
         </ul>
         <div className="step-go">
-          {locked ? 'Desbloquear →' : 'Entrar →'}
+          {locked ? 'Probar →' : 'Entrar →'}
         </div>
       </div>
     </div>
