@@ -27,6 +27,7 @@ export default async function AppPage() {
       userId={user.id}
       bodaId={boda?.id || ''}
       userName={profile?.nombre || user.email?.split('@')[0] || ''}
+      userEmail={user.email || ''}
       isPro={profile?.is_pro || false}
       isPremium={profile?.is_premium || false}
     />

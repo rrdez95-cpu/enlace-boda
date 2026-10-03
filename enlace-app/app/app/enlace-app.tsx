@@ -22,10 +22,11 @@ const CAMBIOS_PARA_AVISAR = 15
 type Tab = 'inicio' | 'fincas' | 'mesas' | 'plano' | 'crono' | 'resumen' | 'invitaciones'
 
 export default function EnlaceApp({
-  userId, userName, isPro: initialIsPro, isPremium: initialIsPremium, bodaId: bodaIdServidor,
+  userId, userName, userEmail, isPro: initialIsPro, isPremium: initialIsPremium, bodaId: bodaIdServidor,
 }: {
   userId: string | null
   userName: string
+  userEmail?: string
   isPro: boolean
   isPremium: boolean
   bodaId: string
@@ -84,7 +85,7 @@ export default function EnlaceApp({
   useEffect(() => {
     if (!userId) return
     const params = new URLSearchParams(window.location.search)
-    if (!params.get('paid')) return
+    if (!params.get('paid') && !params.get('premium')) return
     window.history.replaceState({}, '', window.location.pathname)
     showToast('Verificando tu pago…')
     let attempts = 0
@@ -182,6 +183,7 @@ export default function EnlaceApp({
       {tab === 'inicio' && (
         <TabInicio data={data} userName={userName} isPro={isPro} isPremium={isPremium}
           isGuest={invitado} onRegistro={() => setRegistro('guardar')}
+          userId={userId} userEmail={userEmail}
           onPaywall={t => abrirPago(t)} onGoTab={goTab} />
       )}
       {tab === 'fincas' && (
@@ -213,7 +215,7 @@ export default function EnlaceApp({
       )}
 
       {paywall && userId && (
-        <Paywall tier={paywall} onClose={() => setPaywall(false)} userId={userId} />
+        <Paywall tier={paywall} onClose={() => setPaywall(false)} userId={userId} userEmail={userEmail} />
       )}
       {registro && <AuthModal motivo={registro} onClose={cerrarRegistro} />}
       {toast && <div className="toast">{toast}</div>}

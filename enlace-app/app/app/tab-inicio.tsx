@@ -1,6 +1,7 @@
 'use client'
 
 import { BodaData } from '@/lib/types'
+import { PLANES, enlacePago, type PlanId } from '@/lib/planes'
 
 type Tab = 'inicio' | 'fincas' | 'mesas' | 'plano' | 'crono' | 'resumen' | 'invitaciones'
 
@@ -13,9 +14,11 @@ type Props = {
   onRegistro?: () => void
   onPaywall: (t: 'pro' | 'premium') => void
   onGoTab: (t: Tab) => void
+  userId?: string | null
+  userEmail?: string
 }
 
-export default function TabInicio({ data, userName, isPro, isPremium, isGuest, onRegistro, onPaywall, onGoTab }: Props) {
+export default function TabInicio({ data, userName, isPro, isPremium, isGuest, onRegistro, onPaywall, onGoTab, userId, userEmail }: Props) {
   const nombres = data.resumen?.novios
   const fecha = data.resumen?.fecha
 
@@ -114,7 +117,8 @@ export default function TabInicio({ data, userName, isPro, isPremium, isGuest, o
             'Aviso automático si una mesa se llena',
             'Las intolerancias se recopilan solas',
           ]}
-          isPro={isPro}
+          perksPro={['Tarjetas de mesa para imprimir, con 8 diseños (plan premium)']}
+          isPro={isPremium}
           locked={false}
           onClick={() => onGoTab('mesas')}
         />
@@ -180,7 +184,7 @@ export default function TabInicio({ data, userName, isPro, isPremium, isGuest, o
           perks={[
             '5 estilos visuales distintos',
             'Fotos propias en la invitación',
-            'Descarga del plano de mesas en PDF',
+            'Incluye las tarjetas de mesa para imprimir, con 8 diseños',
           ]}
           perksPro={['Confirmaciones automáticas en la lista de invitados', 'URL personalizada con vuestros nombres']}
           isPro={isPremium}
@@ -189,24 +193,15 @@ export default function TabInicio({ data, userName, isPro, isPremium, isGuest, o
         />
       </section>
 
-      {/* CTA */}
+      {/* PLANES */}
       {!isPremium && (
-        <section className="home-cta">
-          <div className="home-cta-box">
-            <div className="home-cta-rings">💍</div>
-            <h3 className="home-cta-title">Desbloquea <em>Enlace</em> al completo</h3>
-            <p className="home-cta-text">
-              Desde 3,99€ de pago único. Sin suscripción, sin renovaciones.
-              Todo lo que necesitas para organizar vuestra boda perfecta.
-            </p>
-            <div className="home-cta-price">
-              <span className="home-cta-cur">€</span>
-              <span className="home-cta-amount">3<span className="home-cta-cents">,99</span></span>
-            </div>
-            <div className="home-cta-once">Pago único · Para siempre · Sin suscripción</div>
-            <button className="home-cta-btn" onClick={() => onPaywall('pro')}>
-              Ver planes →
-            </button>
+        <section className="home-planes" id="planes">
+          <div className="home-eyebrow">Planes</div>
+          <h2 className="home-h2">Pago único, para siempre</h2>
+          <p className="home-planes-sub">Sin suscripción ni renovaciones. Elige el tuyo y te llevamos directamente al pago.</p>
+          <div className="home-planes-grid">
+            <PlanCard plan="pro" tienes={isPro} isGuest={!!isGuest} userId={userId} userEmail={userEmail} onPaywall={onPaywall} />
+            <PlanCard plan="premium" tienes={false} isGuest={!!isGuest} userId={userId} userEmail={userEmail} onPaywall={onPaywall} />
           </div>
         </section>
       )}
@@ -257,6 +252,38 @@ function StepCard({ num, icon, title, badge, badgeType, desc, perks, perksPro, i
           {locked ? 'Probar →' : 'Entrar →'}
         </div>
       </div>
+    </div>
+  )
+}
+
+function PlanCard({ plan, tienes, isGuest, userId, userEmail, onPaywall }: {
+  plan: PlanId
+  tienes: boolean
+  isGuest: boolean
+  userId?: string | null
+  userEmail?: string
+  onPaywall: (t: PlanId) => void
+}) {
+  const p = PLANES[plan]
+  const premium = plan === 'premium'
+  const [euros, cents] = p.precio.split(',')
+  return (
+    <div className={`home-plan ${premium ? 'premium' : ''} ${tienes ? 'tienes' : ''}`}>
+      {premium && <span className="home-plan-tag">El más completo</span>}
+      <div className="home-plan-name">{p.nombre}</div>
+      <div className="home-plan-price"><span className="hp-cur">€</span>{euros}<span className="hp-cents">,{cents}</span></div>
+      <div className="home-plan-once">Pago único</div>
+      <ul className="home-plan-list">
+        {premium && <li className="todo"><span>✓</span>Todo lo del plan completo, y además:</li>}
+        {p.incluye.map(t => <li key={t}><span>{premium ? '✦' : '✓'}</span>{t}</li>)}
+      </ul>
+      {tienes ? (
+        <div className="home-plan-ok">✓ Ya lo tienes</div>
+      ) : isGuest || !userId ? (
+        <button className="home-plan-btn" onClick={() => onPaywall(plan)}>Comprar por {p.precio} €</button>
+      ) : (
+        <a className="home-plan-btn" href={enlacePago(plan, userId, userEmail)}>Comprar por {p.precio} €</a>
+      )}
     </div>
   )
 }

@@ -23,3 +23,28 @@
   .btn-entrar{display:none}
   .home-guest-box{flex-direction:column;align-items:stretch;text-align:left}
 }
+
+/* ═══ Planes en Inicio ═══ */
+.home-planes{max-width:820px;margin:0 auto;padding:36px 20px 8px;text-align:center}
+.home-planes-sub{font-size:14px;color:var(--muted);margin:6px auto 22px;max-width:46ch;line-height:1.6}
+.home-planes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;text-align:left}
+.home-plan{position:relative;display:flex;flex-direction:column;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:26px 24px 22px}
+.home-plan.premium{background:linear-gradient(180deg,#1f1b17,#2a241d);border-color:var(--gold);color:var(--ivory)}
+.home-plan-tag{position:absolute;top:-11px;right:20px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--charcoal);background:var(--gold);border-radius:20px;padding:3px 10px}
+.home-plan-name{font-family:'Playfair Display',serif;font-size:19px;font-style:italic;font-weight:600;color:var(--charcoal)}
+.home-plan.premium .home-plan-name{color:var(--gold3)}
+.home-plan-price{font-family:'Playfair Display',serif;font-size:46px;font-weight:700;line-height:1.1;color:var(--gold);margin-top:6px;letter-spacing:-1px}
+.hp-cur{font-size:20px;margin-right:2px;vertical-align:14px}
+.hp-cents{font-size:26px}
+.home-plan-once{font-size:12px;color:var(--muted);margin-bottom:16px}
+.home-plan.premium .home-plan-once{color:#a99d8c}
+.home-plan-list{list-style:none;margin:0 0 20px;padding:0;display:flex;flex-direction:column;gap:9px;flex:1}
+.home-plan-list li{display:flex;gap:9px;font-size:14px;line-height:1.45;color:var(--charcoal2)}
+.home-plan.premium .home-plan-list li{color:#e8dfcf}
+.home-plan-list li span{color:var(--paid);font-weight:700;flex-shrink:0}
+.home-plan.premium .home-plan-list li span{color:var(--gold2)}
+.home-plan-list li.todo{font-weight:600}
+.home-plan-btn{display:block;text-align:center;text-decoration:none;font:inherit;font-size:15px;font-weight:700;padding:14px;border-radius:10px;border:0;cursor:pointer;background:var(--charcoal);color:var(--ivory);transition:opacity .2s}
+.home-plan-btn:hover{opacity:.88}
+.home-plan.premium .home-plan-btn{background:var(--gold);color:var(--charcoal)}
+.home-plan-ok{text-align:center;font-size:14px;font-weight:600;color:var(--paid);padding:13px;border:1px dashed rgba(74,124,89,.4);border-radius:10px}
