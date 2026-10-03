@@ -1,0 +1,28 @@
+/* ═══ Plano: formas de mesa por separado ═══ */
+.plano-toolbar-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted2)}
+.forma-ico{display:inline-block;width:11px;height:11px;border:1.5px solid currentColor;margin-right:6px;vertical-align:-1px}
+.forma-ico.round{border-radius:50%}
+.forma-ico.square{border-radius:2px}
+.forma-ico.rect{width:16px;height:9px;border-radius:2px;vertical-align:0}
+
+.canvas-mesa.sel .cm-body{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,150,90,.35),0 6px 18px rgba(0,0,0,.15)}
+.legend-swatch.square{width:13px;height:13px;border-radius:2px}
+.legend-hint{margin-top:8px;padding-top:7px;border-top:1px solid var(--border);font-size:10px;letter-spacing:.5px;color:var(--muted2)}
+
+.mesa-panel{position:absolute;top:16px;left:16px;z-index:5;width:min(300px,calc(100% - 32px));background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.14)}
+.mesa-panel-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.mesa-panel-h b{display:block;font-family:'Playfair Display',serif;font-size:15px;font-style:italic;font-weight:600;color:var(--charcoal)}
+.mesa-panel-h span{font-size:12px;color:var(--muted)}
+.mesa-panel-x{font-size:20px;line-height:1;color:var(--muted);background:none;border:0;cursor:pointer;padding:0 4px}
+.mesa-formas{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mesa-formas button{display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;font-size:12px;color:var(--charcoal2);background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:10px 4px;cursor:pointer}
+.mesa-formas button .forma-ico{margin:0;width:18px;height:18px}
+.mesa-formas button .forma-ico.rect{width:26px;height:14px;margin:2px 0}
+.mesa-formas button[aria-pressed="true"]{border-color:var(--gold);background:rgba(184,150,90,.1);color:var(--charcoal);font-weight:600}
+.mesa-girar{margin-top:10px;width:100%;font:inherit;font-size:12.5px;color:var(--charcoal);background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer}
+.mesa-girar:hover{border-color:var(--gold)}
+
+@media (max-width:768px){
+  .plano-toolbar-label{display:none}
+  .mesa-panel{top:10px;left:10px}
+}

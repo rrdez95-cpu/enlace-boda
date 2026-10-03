@@ -13,7 +13,9 @@ export type Mesa = {
   id: number
   nombre: string
   cap: number
-  shape: 'round' | 'rect'
+  shape: 'round' | 'square' | 'rect'
+  /** Solo rectangulares: 90 = en vertical */
+  rot?: 0 | 90
   x: number
   y: number
 }
