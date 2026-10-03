@@ -190,10 +190,12 @@ export default function EnlaceApp({
       )}
       {tab === 'mesas' && (
         <TabMesas data={data} setData={setData} isPro={isPro}
-          freeLimit={FREE_GUESTS} onPaywall={() => abrirPago('pro')} showToast={showToast} />
+          freeLimit={FREE_GUESTS} onPaywall={() => abrirPago('pro')} showToast={showToast}
+          isPremium={isPremium} onPaywallPremium={() => abrirPago('premium')} />
       )}
       {tab === 'plano' && (
-        <TabPlano data={data} setData={setData} showToast={showToast} />
+        <TabPlano data={data} setData={setData} showToast={showToast}
+          isPremium={isPremium} onPaywall={() => abrirPago('premium')} />
       )}
       {tab === 'crono' && (
         <TabCrono data={data} setData={setData} isPro={isPro}

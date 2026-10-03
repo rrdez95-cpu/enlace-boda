@@ -26,3 +26,5 @@
   .plano-toolbar-label{display:none}
   .mesa-panel{top:10px;left:10px}
 }
+
+.tool-btn-gold{border-color:var(--gold)!important;color:var(--gold3)!important}

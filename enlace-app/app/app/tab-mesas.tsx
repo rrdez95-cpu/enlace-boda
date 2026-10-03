@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { BodaData, Guest, Mesa } from '@/lib/types'
+import DescargaSitting from '../_components/sitting/descarga-sitting'
 
 type Props = {
   data: BodaData
@@ -10,9 +11,11 @@ type Props = {
   freeLimit: number
   onPaywall: () => void
   showToast: (m: string) => void
+  isPremium?: boolean
+  onPaywallPremium?: () => void
 }
 
-export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, showToast }: Props) {
+export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, showToast, isPremium = false, onPaywallPremium }: Props) {
   const [nombre, setNombre] = useState('')
   const [apellido, setApellido] = useState('')
   const [relacion, setRelacion] = useState('')
@@ -20,6 +23,7 @@ export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, s
   const [dragId, setDragId] = useState<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
   const [modal, setModal] = useState(false)
+  const [tarjetas, setTarjetas] = useState(false)
   const [mNombre, setMNombre] = useState('')
   const [mCap, setMCap] = useState(10)
   const [mShape, setMShape] = useState<Mesa['shape']>('round')
@@ -168,7 +172,13 @@ export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, s
       <main className="mesas-main">
         <div className="mesas-topbar">
           <div className="mesas-topbar-title">Distribución de mesas</div>
-          <button className="btn-new-mesa" onClick={() => setModal(true)}>+ Nueva mesa</button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn-new-mesa" style={{ background: 'transparent', color: 'var(--charcoal)', border: '1px solid var(--gold)' }}
+              onClick={() => setTarjetas(true)}>
+              ⬇ Tarjetas de mesa{!isPremium ? ' 🔒' : ''}
+            </button>
+            <button className="btn-new-mesa" onClick={() => setModal(true)}>+ Nueva mesa</button>
+          </div>
         </div>
 
         <div className="mesas-grid">
@@ -257,6 +267,12 @@ export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, s
           })}
         </div>
       </main>
+
+      {tarjetas && (
+        <DescargaSitting data={data} isPremium={isPremium}
+          onPaywall={() => { setTarjetas(false); (onPaywallPremium || onPaywall)() }}
+          onClose={() => setTarjetas(false)} />
+      )}
 
       {/* MODAL NUEVA MESA */}
       {modal && (
