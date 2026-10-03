@@ -126,8 +126,8 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
   }
   const totalGastado = Object.values(costes).reduce((a, b) => a + (b || 0), 0)
   const presupuesto = parseFloat(R.presupuesto || '0')
-  const recaudado = data.guests.filter(g => g.paid === 'si')
-    .reduce((s, g) => s + (parseFloat(g.importe) || 0), 0)
+  // Regalos apuntados en Mesas: solo para saber cuánto ha costado la boda al final
+  const regalos = data.guests.reduce((s, g) => s + (parseFloat(g.importe) || 0), 0)
 
   let ckList = data.checklist
   if (ckFilter === 'pendiente') ckList = ckList.filter(c => !c.done)
@@ -569,7 +569,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                   <BovItem val={presupuesto} label="Previsto" />
                   <BovItem val={totalGastado} label="Gastado" />
                   <BovItem val={Math.max(0, presupuesto - totalGastado)} label="Disponible" />
-                  <BovItem val={recaudado} label="En sobres" />
+                  <BovItem val={regalos} label="Regalos" />
                 </div>
 
                 {fincaElegida && (
@@ -603,14 +603,15 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                     <span className="balance-neg">− {totalGastado.toLocaleString('es-ES')} €</span>
                   </div>
                   <div className="balance-row">
-                    <span>Regalos recibidos en sobres</span>
-                    <span className="balance-pos">+ {recaudado.toLocaleString('es-ES')} €</span>
+                    <span>Regalos</span>
+                    <span className="balance-pos">+ {regalos.toLocaleString('es-ES')} €</span>
                   </div>
                   <div className="balance-total">
                     <span>Os ha costado</span>
-                    <span className={totalGastado - recaudado > 0 ? 'balance-final' : 'balance-final ok'}>
-                      {Math.abs(totalGastado - recaudado).toLocaleString('es-ES')} €
-                      {totalGastado - recaudado < 0 && ' a favor'}
+                    <span className={totalGastado - regalos > 0 ? 'balance-final' : 'balance-final ok'}>
+                      {totalGastado - regalos > 0
+                        ? `${(totalGastado - regalos).toLocaleString('es-ES')} €`
+                        : 'Los regalos lo cubren todo'}
                     </span>
                   </div>
                 </div>

@@ -22,7 +22,7 @@ export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, s
   const [modal, setModal] = useState(false)
   const [mNombre, setMNombre] = useState('')
   const [mCap, setMCap] = useState(10)
-  const [mShape, setMShape] = useState<'round' | 'rect'>('round')
+  const [mShape, setMShape] = useState<Mesa['shape']>('round')
 
   const pool = data.guests.filter(g => g.mesaId === null)
 
@@ -183,8 +183,6 @@ export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, s
             const guests = data.guests.filter(g => g.mesaId === m.id)
             const pct = Math.min(guests.length / m.cap, 1) * 100
             const fc = guests.length > m.cap ? 'over' : guests.length === m.cap ? 'full' : ''
-            const paid = guests.filter(g => g.paid === 'si').length
-            const unpaid = guests.filter(g => g.paid === 'no').length
 
             return (
               <div key={m.id} className="mesa-card">
@@ -219,7 +217,6 @@ export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, s
                         <span className="gr-handle">⠿</span>
                         <span className="gr-name">{g.nombre} {g.apellido}</span>
                         <span className="gr-rel">{g.relacion}</span>
-                        <span className={`gr-paid ${g.paid === 'si' ? 'yes' : g.paid === 'no' ? 'no' : 'pending'}`} />
                         <button
                           className={`gr-expand ${openDetail === g.id ? 'open' : ''}`}
                           onClick={() => setOpenDetail(openDetail === g.id ? null : g.id)}>
@@ -230,18 +227,10 @@ export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, s
                       {openDetail === g.id && (
                         <div className="guest-detail">
                           <div className="detail-grid">
-                            <div className="detail-field">
-                              <label className="detail-label">¿Ha pagado?</label>
-                              <select className="detail-select" value={g.paid}
-                                onChange={e => updateGuest(g.id, { paid: e.target.value as Guest['paid'] })}>
-                                <option value="pendiente">Pendiente</option>
-                                <option value="si">Sí</option>
-                                <option value="no">No</option>
-                              </select>
-                            </div>
-                            <div className="detail-field">
-                              <label className="detail-label">Importe sobre</label>
-                              <input className="detail-input" type="number" value={g.importe}
+                            <div className="detail-field full">
+                              <label className="detail-label">Regalo (€, opcional)</label>
+                              <input className="detail-input" type="number" min={0} value={g.importe}
+                                placeholder="Solo para saber al final cuánto os ha costado la boda"
                                 onChange={e => updateGuest(g.id, { importe: e.target.value })} />
                             </div>
                             <div className="detail-field full">
@@ -262,10 +251,6 @@ export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, s
 
                 <div className="mesa-footer">
                   <div className="mesa-count"><strong>{guests.length}</strong> / {m.cap} personas</div>
-                  <div className="mesa-paid-summary">
-                    {paid > 0 && <span className="ps-paid">{paid} pagado</span>}
-                    {unpaid > 0 && <span className="ps-unpaid">{unpaid} pendiente</span>}
-                  </div>
                 </div>
               </div>
             )
@@ -297,8 +282,9 @@ export default function TabMesas({ data, setData, isPro, freeLimit, onPaywall, s
               <div className="modal-field">
                 <label className="modal-label">Forma</label>
                 <select className="modal-select" value={mShape}
-                  onChange={e => setMShape(e.target.value as 'round' | 'rect')}>
+                  onChange={e => setMShape(e.target.value as Mesa['shape'])}>
                   <option value="round">Redonda</option>
+                  <option value="square">Cuadrada</option>
                   <option value="rect">Rectangular</option>
                 </select>
               </div>

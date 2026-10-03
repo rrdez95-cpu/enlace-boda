@@ -108,7 +108,7 @@ export default function TabInicio({ data, userName, isPro, isPremium, isGuest, o
           title="Mesas e invitados"
           badge="Incluido"
           badgeType="free"
-          desc="Añade a tus invitados y colócalos en las mesas arrastrando con el dedo. Controla quién ha entregado el sobre y recoge intolerancias para el catering."
+          desc="Añade a tus invitados y colócalos en las mesas arrastrando con el dedo. Apunta sus alergias para el catering y, si queréis, sus regalos para saber al final cuánto os ha costado la boda."
           perks={[
             'Arrastra y suelta para mover invitados entre mesas',
             'Aviso automático si una mesa se llena',
