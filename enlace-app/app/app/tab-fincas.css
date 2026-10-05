@@ -44,3 +44,37 @@
 .fe-btn.ghost{background:transparent}
 .fe-btn.ghost:hover{background:rgba(184,150,90,.12)}
 .fe-link{font:inherit;font-size:13px;color:var(--muted);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* ═══ Comparador de fincas ═══ */
+.fincas-side-actions{display:flex;gap:6px;align-items:center}
+.btn-comparar{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold2);background:transparent;border:1px solid rgba(184,150,90,.5);border-radius:4px;padding:5px 9px;cursor:pointer;white-space:nowrap}
+.btn-comparar:hover,.btn-comparar.on{background:rgba(184,150,90,.18);color:var(--gold3)}
+.fc{display:flex;flex-direction:column;gap:14px;min-width:0}
+.fc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fc-title{font-family:'Playfair Display',serif;font-size:24px;font-style:italic;font-weight:600;color:var(--charcoal)}
+.fc-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.fc-cerrar{font:inherit;font-size:13px;color:var(--charcoal);background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 14px;cursor:pointer}
+.fc-cerrar:hover{border-color:var(--gold)}
+.fc-chips{display:flex;flex-wrap:wrap;gap:8px}
+.fc-chip{font:inherit;font-size:13px;color:var(--charcoal2);background:var(--white);border:1px solid var(--border);border-radius:20px;padding:7px 14px;cursor:pointer}
+.fc-chip.on{background:rgba(184,150,90,.12);border-color:var(--gold);color:var(--charcoal);font-weight:600}
+.fc-chip:disabled{opacity:.45;cursor:default}
+.fc-vacio{font-size:14px;color:var(--muted);padding:30px 0;text-align:center}
+.fc-scroll{overflow-x:auto;background:var(--white);border:1px solid var(--border);border-radius:12px}
+.fc-tabla{width:100%;min-width:calc(170px + var(--cols) * 190px);border-collapse:separate;border-spacing:0;font-size:13.5px}
+.fc-tabla th,.fc-tabla td{padding:10px 14px;border-bottom:1px solid var(--ivory2);vertical-align:top;text-align:left}
+.fc-tabla .fc-label{position:sticky;left:0;z-index:1;background:var(--white);width:170px;min-width:170px;font-size:12.5px;color:var(--muted);font-weight:500}
+.fc-col{background:var(--charcoal);border-bottom:1px solid var(--gold)!important}
+.fc-tabla thead .fc-label{background:var(--charcoal)}
+.fc-nombre{font-family:'Playfair Display',serif;font-size:16px;font-style:italic;font-weight:600;color:var(--gold3);margin-bottom:8px}
+.fc-elegir,.fc-ver{font:inherit;font-size:11.5px;font-weight:600;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:6px}
+.fc-elegir{background:var(--gold);border:1px solid var(--gold);color:var(--charcoal)}
+.fc-ver{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--ivory)}
+.fc-elegida{display:inline-block;font-size:11.5px;font-weight:600;color:#9fd8ad;margin-right:6px}
+.fc-sec td{background:var(--ivory)!important;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--charcoal2);padding:8px 14px}
+.fc-tabla td{color:var(--charcoal);line-height:1.45}
+.fc-tabla td.fc-mejor{background:rgba(74,124,89,.1);color:#2f5b3b;font-weight:600}
+.fc-nota{display:inline-block;margin-left:8px;min-width:22px;text-align:center;font-size:11px;font-weight:700;color:#fff;border-radius:5px;padding:1px 5px;background:var(--muted2)}
+.fc-nota.good{background:var(--paid)}
+.fc-nota.mid{background:var(--gold)}
+.fc-nota.bad{background:var(--unpaid)}

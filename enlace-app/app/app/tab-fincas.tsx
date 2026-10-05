@@ -111,6 +111,18 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
   const pendientes = fincas.filter(esPendiente).sort((a, b) => claveVisita(a).localeCompare(claveVisita(b)))
   const visitadas = fincas.filter(f => !esPendiente(f))
 
+  // Comparador de hasta 3 fincas visitadas (plan completo)
+  const [comparando, setComparando] = useState(false)
+  const [compIds, setCompIds] = useState<string[]>([])
+  function abrirComparador() {
+    if (!isPro) { onPaywall(); return }
+    const validas = compIds.filter(id => visitadas.some(f => f.id === id))
+    const base = validas.length >= 2 ? validas
+      : [...new Set([elegidaId, ...visitadas.map(f => f.id)].filter(id => id && visitadas.some(f => f.id === id)))].slice(0, 3)
+    setCompIds(base)
+    setComparando(true)
+  }
+
   function addFinca() {
     const id = 'f' + Date.now()
     const nueva: Finca = {
@@ -222,7 +234,14 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
       <aside className="fincas-side">
         <div className="fincas-side-head">
           <div className="fincas-side-title">Fincas</div>
-          <button className="btn-new-finca" onClick={addFinca}>+ Añadir</button>
+          <div className="fincas-side-actions">
+            {visitadas.length >= 2 && (
+              <button className={`btn-comparar ${comparando ? 'on' : ''}`} onClick={abrirComparador}>
+                ⚖ Comparar{!isPro && ' 🔒'}
+              </button>
+            )}
+            <button className="btn-new-finca" onClick={addFinca}>+ Añadir</button>
+          </div>
         </div>
 
         {invitados === 0 && (
@@ -248,7 +267,7 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
                 return (
                   <div key={f.id}
                     className={`finca-item pendiente ${selId === f.id ? 'active' : ''}`}
-                    onClick={() => setSelId(f.id)}>
+                    onClick={() => { setSelId(f.id); setComparando(false) }}>
                     <div className="finca-item-name">{f.nombre || 'Sin nombre'}</div>
                     <div className={`finca-item-cita ${cita.pasada ? 'pasada' : ''}`}>{cita.texto}</div>
                     {distanciaTexto(f) && <div className="finca-item-total">{distanciaTexto(f)}</div>}
@@ -263,7 +282,7 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
                 return (
                   <div key={f.id}
                     className={`finca-item ${selId === f.id ? 'active' : ''} ${elegidaId === f.id ? 'elegida' : ''}`}
-                    onClick={() => setSelId(f.id)}>
+                    onClick={() => { setSelId(f.id); setComparando(false) }}>
                     <div className="finca-item-name">
                       {f.nombre || 'Sin nombre'}
                       {elegidaId === f.id && <span className="finca-item-tag">Elegida</span>}
@@ -293,7 +312,18 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
 
       {/* DETALLE */}
       <div className="fincas-main">
-        {!sel ? (
+        {comparando ? (
+          <Comparador
+            fincas={visitadas}
+            ids={compIds}
+            setIds={setCompIds}
+            invitados={invitados}
+            elegidaId={elegidaId}
+            onElegir={elegir}
+            onVer={id => { setSelId(id); setComparando(false) }}
+            onCerrar={() => setComparando(false)}
+          />
+        ) : !sel ? (
           <div className="fincas-none">
             <div className="fincas-none-icon">🌿</div>
             <div className="fincas-none-title">Compara tus fincas sin Excel</div>
@@ -328,6 +358,197 @@ export default function TabFincas({ data, setData, showToast, isPro, onPaywall }
           />
         )}
       </div>
+    </div>
+  )
+}
+
+/* ═══ COMPARADOR ═══ */
+
+type FilaComp = {
+  label: string
+  valor: (f: Finca) => string
+  num?: (f: Finca) => number | null
+  mejor?: 'min' | 'max'
+  nota?: (f: Finca) => number | null
+}
+
+const euros = (n: number) => (n > 0 ? `${Math.round(n).toLocaleString('es-ES')} €` : '—')
+const texto = (f: Finca, k: string) => (f.campos[k] || '').trim() || '—'
+const numero = (f: Finca, k: string) => parseFloat(f.campos[k] || '') || 0
+const notaDe = (k: string) => (f: Finca) => {
+  const n = f.notas[k]
+  return n && n > 0 ? n : null
+}
+const sumaExtras = (lista: FincaExtra[] | undefined, invitados: number) =>
+  (lista || []).reduce((s, x) => s + (parseFloat(x.coste) || 0) * (x.tipoPrecio === 'porPersona' ? invitados : 1), 0)
+
+function seccionesComparador(invitados: number): { titulo: string; filas: FilaComp[] }[] {
+  const PLANES_B = ['planBHorario', 'planBHabitacion', 'planBParking', 'planBCeremonia']
+  return [
+    {
+      titulo: 'De un vistazo',
+      filas: [
+        { label: 'Coste por invitado', num: f => (invitados ? calcTotal(f, invitados) / invitados : null), valor: f => (invitados ? euros(calcTotal(f, invitados) / invitados) : '—'), mejor: 'min' },
+        { label: 'Coste total', num: f => calcTotal(f, invitados), valor: f => euros(calcTotal(f, invitados)), mejor: 'min' },
+        { label: 'Puntuación media', num: f => notaMedia(f), valor: f => { const m = notaMedia(f); return m !== null ? m.toFixed(1) : '—' }, mejor: 'max' },
+        { label: 'Primera impresión → al visitarla', valor: f => (f.notaEsperada || f.notaReal ? `${f.notaEsperada ?? '—'} → ${f.notaReal ?? '—'}` : '—') },
+        { label: 'Distancia', num: f => numero(f, 'distancia') || null, valor: f => distanciaTexto(f) || '—', mejor: 'min', nota: notaDe('distancia') },
+      ],
+    },
+    {
+      titulo: 'Puntuación por apartado',
+      filas: [
+        { label: 'Ubicación', keys: UBICACION.map(c => c.k) },
+        ...GRUPOS.map(g => ({ label: g.titulo, keys: g.campos.map(c => c.k) })),
+      ].map(({ label, keys }) => ({
+        label,
+        num: (f: Finca) => { const v = grupoNota(f, keys); return v ? parseFloat(v) : null },
+        valor: (f: Finca) => grupoNota(f, keys) || '—',
+        mejor: 'max' as const,
+      })),
+    },
+    {
+      titulo: 'Finca',
+      filas: [
+        { label: 'Alquiler', num: f => numero(f, 'alquiler') || null, valor: f => euros(numero(f, 'alquiler')), mejor: 'min', nota: notaDe('alquiler') },
+        { label: 'Mínimo de personas', valor: f => texto(f, 'minPersonas'), nota: notaDe('minPersonas') },
+        { label: 'Horario', valor: f => texto(f, 'horarios'), nota: notaDe('horarios') },
+        { label: 'Ampliación de horario', valor: f => [texto(f, 'ampliacionHoras'), numero(f, 'ampliacionCoste') ? euros(numero(f, 'ampliacionCoste')) : ''].filter(x => x && x !== '—').join(' · ') || '—', nota: notaDe('ampliacionHoras') },
+        { label: 'Habitación para los novios', valor: f => texto(f, 'habitacionNovios'), nota: notaDe('habitacionNovios') },
+        { label: 'Coordinación', valor: f => texto(f, 'coordinacion'), nota: notaDe('coordinacion') },
+        { label: 'Parking', valor: f => texto(f, 'parking'), nota: notaDe('parking') },
+        { label: 'Plan B si llueve', valor: f => { const n = PLANES_B.filter(k => (f.campos[k] || '').trim()).length; return n ? `Sí, en ${n} ${n === 1 ? 'espacio' : 'espacios'}` : '—' } },
+        { label: 'Exclusividades', num: f => sumaExtras(f.exclusividades, invitados) || null, valor: f => { const l = f.exclusividades || []; return l.length ? `${l.length} · ${euros(sumaExtras(l, invitados))}` : 'Ninguna' }, mejor: 'min' },
+      ],
+    },
+    {
+      titulo: 'Menú y catering',
+      filas: [
+        { label: 'Menú por persona', num: f => numero(f, 'costeMenu') || null, valor: f => euros(numero(f, 'costeMenu')), mejor: 'min', nota: notaDe('costeMenu') },
+        { label: 'Barra libre', valor: f => [texto(f, 'barraLibre'), texto(f, 'horasBarra')].filter(x => x !== '—').join(' · ') || '—', nota: notaDe('barraLibre') },
+        { label: 'Estación de bienvenida', valor: f => texto(f, 'estacionBienvenida'), nota: notaDe('estacionBienvenida') },
+        { label: 'Cóctel', valor: f => [texto(f, 'coctelFrios'), texto(f, 'coctelCalientes')].filter(x => x !== '—').join(' · ') || '—', nota: notaDe('coctelFrios') },
+        { label: 'Corners incluidos', valor: f => texto(f, 'cornersIncluidos'), nota: notaDe('cornersIncluidos') },
+        { label: 'Corners extra', num: f => sumaExtras(f.cornersExtra, invitados) || null, valor: f => euros(sumaExtras(f.cornersExtra, invitados)), mejor: 'min' },
+        { label: 'Degustación', valor: f => texto(f, 'degustacion'), nota: notaDe('degustacion') },
+      ],
+    },
+    {
+      titulo: 'Sonido y ceremonia',
+      filas: [
+        { label: 'Sonido / DJ', num: f => numero(f, 'costeSonido') || null, valor: f => euros(numero(f, 'costeSonido')), mejor: 'min', nota: notaDe('costeSonido') },
+        { label: 'Limitador de sonido', valor: f => texto(f, 'limitador'), nota: notaDe('limitador') },
+        { label: 'Coste de la ceremonia', num: f => (numero(f, 'costeCeremoniaF') + numero(f, 'tasasCeremonia') + numero(f, 'costeSillaExtra') * numero(f, 'numSillaExtra')) || null, valor: f => euros(numero(f, 'costeCeremoniaF') + numero(f, 'tasasCeremonia') + numero(f, 'costeSillaExtra') * numero(f, 'numSillaExtra')), mejor: 'min', nota: notaDe('costeCeremoniaF') },
+        { label: 'Espacio de la ceremonia', valor: f => texto(f, 'espacioCeremonia'), nota: notaDe('espacioCeremonia') },
+      ],
+    },
+    {
+      titulo: 'Contrato',
+      filas: [
+        { label: 'Reserva', valor: f => texto(f, 'formaReserva'), nota: notaDe('formaReserva') },
+        { label: 'Pagos', valor: f => texto(f, 'formaPago'), nota: notaDe('formaPago') },
+      ],
+    },
+  ]
+}
+
+function Comparador({ fincas, ids, setIds, invitados, elegidaId, onElegir, onVer, onCerrar }: {
+  fincas: Finca[]
+  ids: string[]
+  setIds: (ids: string[]) => void
+  invitados: number
+  elegidaId: string
+  onElegir: (f: Finca) => void
+  onVer: (id: string) => void
+  onCerrar: () => void
+}) {
+  const sel = ids.map(id => fincas.find(f => f.id === id)).filter(Boolean) as Finca[]
+  const secciones = seccionesComparador(invitados)
+
+  function alternar(id: string) {
+    if (ids.includes(id)) setIds(ids.filter(x => x !== id))
+    else if (ids.length < 3) setIds([...ids, id])
+  }
+
+  function mejores(fila: FilaComp): Set<string> {
+    if (!fila.num || !fila.mejor) return new Set()
+    const vals = sel.map(f => ({ id: f.id, v: fila.num!(f) })).filter(x => x.v !== null && x.v > 0) as { id: string; v: number }[]
+    if (vals.length < 2) return new Set()
+    const objetivo = fila.mejor === 'min' ? Math.min(...vals.map(x => x.v)) : Math.max(...vals.map(x => x.v))
+    if (vals.every(x => x.v === objetivo)) return new Set()
+    return new Set(vals.filter(x => x.v === objetivo).map(x => x.id))
+  }
+
+  return (
+    <div className="fc">
+      <div className="fc-head">
+        <div>
+          <div className="fc-title">Comparador de fincas</div>
+          <div className="fc-sub">Elige hasta 3. En verde, la que sale mejor en cada fila.</div>
+        </div>
+        <button className="fc-cerrar" onClick={onCerrar}>Volver a las fincas</button>
+      </div>
+
+      <div className="fc-chips">
+        {fincas.map(f => {
+          const on = ids.includes(f.id)
+          return (
+            <button key={f.id} className={`fc-chip ${on ? 'on' : ''}`} onClick={() => alternar(f.id)}
+              disabled={!on && ids.length >= 3} aria-pressed={on}>
+              {on ? '✓ ' : ''}{f.nombre || 'Sin nombre'}
+            </button>
+          )
+        })}
+      </div>
+
+      {sel.length < 2 ? (
+        <p className="fc-vacio">Elige al menos dos fincas para compararlas.</p>
+      ) : (
+        <div className="fc-scroll">
+          <table className="fc-tabla" style={{ ['--cols' as string]: sel.length }}>
+            <thead>
+              <tr>
+                <th className="fc-label" />
+                {sel.map(f => (
+                  <th key={f.id} className="fc-col">
+                    <div className="fc-nombre">{f.nombre || 'Sin nombre'}</div>
+                    {elegidaId === f.id
+                      ? <span className="fc-elegida">✓ Vuestra finca</span>
+                      : <button className="fc-elegir" onClick={() => onElegir(f)}>Elegir esta</button>}
+                    <button className="fc-ver" onClick={() => onVer(f.id)}>Ver ficha</button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {secciones.map(sec => {
+                const filas = sec.filas.filter(fila => sel.some(f => fila.valor(f) !== '—'))
+                if (!filas.length) return null
+                return [
+                  <tr key={sec.titulo} className="fc-sec"><td colSpan={sel.length + 1}>{sec.titulo}</td></tr>,
+                  ...filas.map(fila => {
+                    const best = mejores(fila)
+                    return (
+                      <tr key={sec.titulo + fila.label}>
+                        <td className="fc-label">{fila.label}</td>
+                        {sel.map(f => {
+                          const n = fila.nota?.(f) ?? null
+                          return (
+                            <td key={f.id} className={best.has(f.id) ? 'fc-mejor' : ''}>
+                              <span>{fila.valor(f)}</span>
+                              {n !== null && <span className={`fc-nota ${scoreClass(n)}`}>{n}</span>}
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    )
+                  }),
+                ]
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
