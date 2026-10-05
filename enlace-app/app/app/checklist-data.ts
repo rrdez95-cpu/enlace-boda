@@ -1,55 +1,105 @@
-export const DEFAULT_CHECKLIST = [
-  { g: '18+ meses antes', c: '18 meses antes', n: 'Fijar fecha de la boda', p: 'urgente' as const, nota: 'Consultar disponibilidad con familia' },
-  { g: '18+ meses antes', c: '18 meses antes', n: 'Definir presupuesto total', p: 'urgente' as const, nota: 'Incluir anillos, luna de miel, vestido' },
-  { g: '18+ meses antes', c: '18 meses antes', n: 'Hacer lista inicial de invitados', p: 'urgente' as const, nota: 'Lista A (seguros) y lista B' },
-  { g: '18+ meses antes', c: '16 meses antes', n: 'Visitar y reservar la finca', p: 'urgente' as const, nota: 'Pedir contrato y política de cancelación' },
-  { g: '18+ meses antes', c: '16 meses antes', n: 'Contratar al fotógrafo', p: 'urgente' as const, nota: 'Los buenos se reservan con antelación' },
-  { g: '18+ meses antes', c: '15 meses antes', n: 'Contratar al videógrafo', p: 'urgente' as const, nota: 'Pedir vídeos de referencia' },
-  { g: '18+ meses antes', c: '14 meses antes', n: 'Buscar y reservar catering', p: 'urgente' as const, nota: 'Pedir al menos 3 presupuestos' },
-  { g: '12 meses antes', c: '12 meses antes', n: 'Empezar búsqueda del vestido', p: 'urgente' as const, nota: 'Fabricación de 6-9 meses' },
-  { g: '12 meses antes', c: '12 meses antes', n: 'Buscar y reservar DJ o banda', p: 'urgente' as const, nota: 'Compartir lista de canciones vetadas' },
-  { g: '12 meses antes', c: '12 meses antes', n: 'Contratar al oficiante', p: 'urgente' as const, nota: 'Reunión inicial de estilo' },
-  { g: '12 meses antes', c: '12 meses antes', n: 'Definir estilo y paleta de colores', p: 'pronto' as const, nota: 'Influye en flores y papelería' },
-  { g: '12 meses antes', c: '11 meses antes', n: 'Enviar save-the-date', p: 'pronto' as const, nota: 'Importante si hay invitados de fuera' },
-  { g: '12 meses antes', c: '10 meses antes', n: 'Buscar y reservar florista', p: 'pronto' as const, nota: 'Pedir bocetos del ramo' },
-  { g: '12 meses antes', c: '10 meses antes', n: 'Buscar traje del novio', p: 'pronto' as const, nota: 'Alquiler o compra con antelación' },
-  { g: '9 meses antes', c: '9 meses antes', n: 'Diseñar y encargar invitaciones', p: 'pronto' as const, nota: 'Incluir RSVP y mapa' },
-  { g: '9 meses antes', c: '9 meses antes', n: 'Reservar hotel noche de bodas', p: 'pronto' as const, nota: 'Suite nupcial con extras' },
-  { g: '9 meses antes', c: '9 meses antes', n: 'Gestionar alojamiento invitados', p: 'pronto' as const, nota: 'Negociar precio grupal' },
-  { g: '9 meses antes', c: '8 meses antes', n: 'Contratar empresa de autobuses', p: 'pronto' as const, nota: 'Definir rutas y horarios' },
-  { g: '9 meses antes', c: '8 meses antes', n: 'Reservar coche nupcial', p: 'pronto' as const, nota: 'Confirmar trayecto completo' },
-  { g: '9 meses antes', c: '8 meses antes', n: 'Contratar empresa de decoración', p: 'pronto' as const, nota: 'Centros de mesa, arco floral' },
-  { g: '6 meses antes', c: '6 meses antes', n: 'Enviar invitaciones formales', p: 'pronto' as const, nota: 'Con fecha límite de RSVP' },
-  { g: '6 meses antes', c: '6 meses antes', n: 'Organizar lista de bodas', p: 'normal' as const, nota: 'Tienda, plataforma o viaje' },
-  { g: '6 meses antes', c: '6 meses antes', n: 'Primera prueba del vestido', p: 'urgente' as const, nota: 'Llevar zapatos definitivos' },
-  { g: '6 meses antes', c: '6 meses antes', n: 'Prueba de menú con el catering', p: 'urgente' as const, nota: 'Asistir los dos novios' },
-  { g: '6 meses antes', c: '5 meses antes', n: 'Contratar maquilladora y peluquería', p: 'pronto' as const, nota: 'Hacer prueba antes del día' },
-  { g: '6 meses antes', c: '5 meses antes', n: 'Confirmar padrinos y testigos', p: 'pronto' as const, nota: 'Comunicarles sus roles' },
-  { g: '6 meses antes', c: '5 meses antes', n: 'Trabajar los votos', p: 'pronto' as const, nota: 'Escribir el discurso' },
-  { g: '6 meses antes', c: '5 meses antes', n: 'Contratar animación infantil', p: 'normal' as const, nota: 'Si hay niños en la boda' },
-  { g: '3 meses antes', c: '3 meses antes', n: 'Confirmar número definitivo de invitados', p: 'urgente' as const, nota: 'Comunicar al catering y finca' },
-  { g: '3 meses antes', c: '3 meses antes', n: 'Distribución definitiva de mesas', p: 'urgente' as const, nota: 'Comunicar intolerancias' },
-  { g: '3 meses antes', c: '3 meses antes', n: 'Comprar detalles para invitados', p: 'pronto' as const, nota: 'Personalizar si es posible' },
-  { g: '3 meses antes', c: '3 meses antes', n: 'Tramitar certificado de matrimonio', p: 'urgente' as const, nota: 'Cita en juzgado o registro' },
-  { g: '3 meses antes', c: '2 meses antes', n: 'Reunión final con el catering', p: 'urgente' as const, nota: 'Menú definitivo e intolerancias' },
-  { g: '3 meses antes', c: '2 meses antes', n: 'Reunión final con la finca', p: 'urgente' as const, nota: 'Plano, horarios y accesos' },
-  { g: '3 meses antes', c: '2 meses antes', n: 'Briefing con fotógrafo y videógrafo', p: 'pronto' as const, nota: 'Lista de fotos obligatorias' },
-  { g: '3 meses antes', c: '2 meses antes', n: 'Contratar seguro de boda', p: 'pronto' as const, nota: 'Cubre cancelaciones y lluvia' },
-  { g: '1 mes antes', c: '1 mes antes', n: 'Segunda prueba del vestido', p: 'urgente' as const, nota: 'Ajuste final con accesorios' },
-  { g: '1 mes antes', c: '1 mes antes', n: 'Confirmar todos los proveedores', p: 'urgente' as const, nota: 'Llamada para confirmar hora' },
-  { g: '1 mes antes', c: '1 mes antes', n: 'Preparar sobres de propinas', p: 'pronto' as const, nota: 'Efectivo listo para el día' },
-  { g: '1 mes antes', c: '3 semanas antes', n: 'Ensayo de la ceremonia', p: 'urgente' as const, nota: 'Con oficiante y participantes' },
-  { g: '1 mes antes', c: '2 semanas antes', n: 'Hacer el guión definitivo del día', p: 'urgente' as const, nota: 'Compartir con proveedores' },
-  { g: '1 mes antes', c: '2 semanas antes', n: 'Preparar maleta de luna de miel', p: 'normal' as const, nota: 'Pasaportes y reservas' },
-  { g: '1 mes antes', c: '1 semana antes', n: 'Manicura y pedicura', p: 'normal' as const, nota: 'Coordinar con el ramo' },
-  { g: '1 mes antes', c: '3 días antes', n: 'Recoger el vestido definitivo', p: 'urgente' as const, nota: 'Colgar en lugar fresco' },
-  { g: '1 mes antes', c: '1 día antes', n: 'Preparar detalles para el día B', p: 'urgente' as const, nota: 'Anillos, arras, discursos' },
-  { g: 'El día de la boda', c: 'El día', n: 'Kit de emergencia de la novia', p: 'urgente' as const, nota: 'Imperdibles, quitamanchas, aguja' },
-  { g: 'El día de la boda', c: 'El día', n: 'Designar contacto con proveedores', p: 'urgente' as const, nota: 'Familiar de confianza' },
-  { g: 'El día de la boda', c: 'El día', n: 'Entregar sobres de propinas', p: 'urgente' as const, nota: 'Al final de cada servicio' },
-  { g: 'El día de la boda', c: 'El día', n: 'Guardar el ramo si se conserva', p: 'normal' as const, nota: 'Preservación floral' },
-  { g: 'Después de la boda', c: '1 semana después', n: 'Enviar notas de agradecimiento', p: 'pronto' as const, nota: 'A quienes ayudaron' },
-  { g: 'Después de la boda', c: '1 mes después', n: 'Cambio de apellidos', p: 'pronto' as const, nota: 'DNI, pasaporte, banco' },
-  { g: 'Después de la boda', c: '1 mes después', n: 'Recibir y revisar fotos y vídeo', p: 'normal' as const, nota: 'Copia de seguridad doble' },
-  { g: 'Después de la boda', c: '2 meses después', n: 'Elegir álbum de fotos', p: 'normal' as const, nota: 'Varias opciones del fotógrafo' },
+import type { ChecklistItem } from '@/lib/types'
+
+/* Checklist de boda adaptada a España (trámites civiles y religiosos, costumbres y plazos habituales).
+   Si se cambia la lista, subir CHECKLIST_VERSION: las bodas guardadas se actualizan conservando lo marcado. */
+
+export const CHECKLIST_VERSION = 2
+
+type Tarea = Omit<ChecklistItem, 'id' | 'done'>
+const t = (g: string, c: string, n: string, p: Tarea['p'], nota: string): Tarea => ({ g, c, n, p, nota })
+
+export const DEFAULT_CHECKLIST: Tarea[] = [
+  // 12-18 meses antes
+  t('12-18 meses antes', '18 meses antes', 'Fijar la fecha de la boda', 'urgente', 'Mirad puentes, festivos y otras bodas de la familia'),
+  t('12-18 meses antes', '18 meses antes', 'Decidir el presupuesto total', 'urgente', 'Contad alianzas, vestido, traje y viaje de novios'),
+  t('12-18 meses antes', '17 meses antes', 'Hacer la primera lista de invitados', 'urgente', 'Repartid cupos entre las dos familias'),
+  t('12-18 meses antes', '16 meses antes', 'Decidir el tipo de ceremonia: civil, religiosa o simbólica', 'urgente', 'Cambia los papeles que necesitáis y sus plazos'),
+  t('12-18 meses antes', '15 meses antes', 'Visitar fincas y reservar la vuestra', 'urgente', 'Pedid el contrato y las condiciones de cancelación y de pago'),
+  t('12-18 meses antes', '15 meses antes', 'Reservar la iglesia o el lugar de la ceremonia', 'urgente', 'Parroquias y ayuntamientos se llenan pronto en primavera y otoño'),
+  t('12-18 meses antes', '14 meses antes', 'Contratar fotógrafo y vídeo', 'urgente', 'Los buenos se reservan con más de un año'),
+  t('12-18 meses antes', '14 meses antes', 'Reservar el catering si la finca no lo incluye', 'pronto', 'Pedid al menos tres presupuestos'),
+
+  // 9-12 meses antes
+  t('9-12 meses antes', '12 meses antes', 'Elegir padrino y madrina', 'pronto', 'Lo tradicional es la madre del novio y el padre de la novia, pero vale cualquiera'),
+  t('9-12 meses antes', '12 meses antes', 'Elegir a los dos testigos', 'pronto', 'Mayores de edad. Si os casáis por lo civil, los necesitáis para el expediente y para firmar el día de la boda'),
+  t('9-12 meses antes', '12 meses antes', 'Empezar a buscar el vestido de novia', 'urgente', 'La confección suele tardar de 6 a 9 meses'),
+  t('9-12 meses antes', '11 meses antes', 'Contratar la música: DJ, banda o coro para la ceremonia', 'pronto', 'Preguntad por el limitador de sonido de la finca'),
+  t('9-12 meses antes', '11 meses antes', 'Reservar el viaje de novios', 'pronto', 'Contad con los 15 días de permiso por matrimonio'),
+  t('9-12 meses antes', '10 meses antes', 'Avisar de la fecha a los invitados (save the date)', 'normal', 'Sobre todo a quien viene de fuera'),
+  t('9-12 meses antes', '10 meses antes', 'Definir el estilo y los colores de la boda', 'normal', 'Ayuda con flores, papelería y decoración'),
+  t('9-12 meses antes', '9 meses antes', 'Reservar autobús para los invitados', 'pronto', 'Casi imprescindible si la finca está a las afueras'),
+
+  // 6-9 meses antes
+  t('6-9 meses antes', '8 meses antes', 'Boda civil: iniciar el expediente matrimonial', 'urgente', 'En el Registro Civil de vuestro domicilio o ante notario. DNI, certificado literal de nacimiento, empadronamiento y dos testigos. La autorización vale un año, así que no lo empecéis antes de tiempo'),
+  t('6-9 meses antes', '8 meses antes', 'Boda religiosa: abrir el expediente en la parroquia', 'urgente', 'Partida de bautismo de cada uno, expedida hace menos de 6 meses'),
+  t('6-9 meses antes', '7 meses antes', 'Boda religiosa: apuntaros al cursillo prematrimonial', 'pronto', 'Las plazas se agotan; consultad fechas en vuestra parroquia'),
+  t('6-9 meses antes', '7 meses antes', 'Si la ceremonia civil es en la finca, confirmar quién la oficia', 'pronto', 'Para que tenga validez legal: notario o concejal. Si no, firmad en el juzgado y haced en la finca una ceremonia simbólica'),
+  t('6-9 meses antes', '7 meses antes', 'Buscar el traje del novio', 'pronto', 'A medida tarda varios meses'),
+  t('6-9 meses antes', '7 meses antes', 'Reservar maquillaje y peluquería', 'pronto', 'Preguntad si se desplazan a casa o a la finca'),
+  t('6-9 meses antes', '6 meses antes', 'Elegir floristería: ramo, prendidos y decoración', 'pronto', 'Prendidos para el novio, el padrino y los testigos'),
+  t('6-9 meses antes', '6 meses antes', 'Buscar alojamiento para los invitados de fuera', 'normal', 'Pedid precio de grupo en algún hotel cercano'),
+  t('6-9 meses antes', '6 meses antes', 'Reservar el coche nupcial, si lo vais a llevar', 'normal', 'Confirmad todo el trayecto y las esperas'),
+
+  // 4-6 meses antes
+  t('4-6 meses antes', '5 meses antes', 'Encargar las invitaciones', 'pronto', 'Impresas, digitales o las dos'),
+  t('4-6 meses antes', '5 meses antes', 'Prueba de menú con la finca o el catering', 'urgente', 'Id los dos y decidid vinos, tarta y recena'),
+  t('4-6 meses antes', '5 meses antes', 'Elegir las alianzas y encargar el grabado', 'pronto', 'El grabado suele tardar unas semanas'),
+  t('4-6 meses antes', '5 meses antes', 'Conseguir las arras', 'normal', 'Trece monedas; muchas familias las heredan'),
+  t('4-6 meses antes', '4 meses antes', 'Decidir número de cuenta o lista de bodas', 'normal', 'Lo más habitual en España es incluir el número de cuenta con la invitación'),
+  t('4-6 meses antes', '4 meses antes', 'Comprar zapatos y complementos', 'pronto', 'Llevadlos a la primera prueba del vestido'),
+  t('4-6 meses antes', '4 meses antes', 'Primera prueba del vestido', 'urgente', 'Con los zapatos definitivos'),
+  t('4-6 meses antes', '4 meses antes', 'Elegir las lecturas y quién las hará', 'normal', 'Familiares o amigos cercanos'),
+
+  // 2-3 meses antes
+  t('2-3 meses antes', '3 meses antes', 'Enviar las invitaciones', 'urgente', 'Con una fecha límite para confirmar asistencia'),
+  t('2-3 meses antes', '3 meses antes', 'Avisar en el trabajo y pedir los 15 días de permiso por matrimonio', 'pronto', 'Son días naturales y retribuidos; mirad vuestro convenio por si os da alguno más'),
+  t('2-3 meses antes', '3 meses antes', 'Encargar los detalles para los invitados', 'pronto', 'Abanicos en verano, alpargatas para el baile, algo personal…'),
+  t('2-3 meses antes', '2 meses antes', 'Prueba de peinado y maquillaje', 'pronto', 'Llevad fotos de lo que os gusta'),
+  t('2-3 meses antes', '2 meses antes', 'Revisar pasaportes, visados y vacunas del viaje', 'pronto', 'Algunos destinos piden pasaporte con 6 meses de validez'),
+  t('2-3 meses antes', '2 meses antes', 'Cerrar barra libre, recena y hora de fin de fiesta', 'pronto', 'Y las horas extra, si las vais a querer'),
+  t('2-3 meses antes', '2 meses antes', 'Organizar las despedidas de soltero', 'normal', 'Mejor que no caigan la semana de la boda'),
+  t('2-3 meses antes', '2 meses antes', 'Contratar animación para los niños', 'normal', 'Si va a haber muchos peques'),
+  t('2-3 meses antes', '2 meses antes', 'Elegir la música de la ceremonia, la entrada y el primer baile', 'normal', 'Pasad la lista al DJ y al coro'),
+
+  // El último mes
+  t('El último mes', '4 semanas antes', 'Confirmar el número final de invitados', 'urgente', 'La finca suele pedirlo con 2 o 3 semanas de antelación'),
+  t('El último mes', '3 semanas antes', 'Hacer el seating y las tarjetas de mesa', 'urgente', 'Y pasar las alergias e intolerancias al catering'),
+  t('El último mes', '3 semanas antes', 'Reunión final con la finca y el catering', 'urgente', 'Horarios, plano, menús especiales y forma de pago'),
+  t('El último mes', '3 semanas antes', 'Segunda prueba del vestido', 'urgente', 'Con todos los complementos'),
+  t('El último mes', '2 semanas antes', 'Pasar al fotógrafo las fotos imprescindibles', 'pronto', 'Familias, amigos y momentos que no os queréis perder'),
+  t('El último mes', '2 semanas antes', 'Preparar los pagos pendientes a proveedores', 'urgente', 'Muchas fincas cobran el resto la semana antes'),
+  t('El último mes', '2 semanas antes', 'Confirmar horarios con todos los proveedores', 'urgente', 'Una llamada a cada uno'),
+  t('El último mes', '2 semanas antes', 'Cerrar el cronograma del día y compartirlo', 'urgente', 'Con proveedores, padrinos y quien coordine'),
+  t('El último mes', '2 semanas antes', 'Preparar los detalles para padrinos y familia', 'normal', 'Ramos para las madres, un recuerdo para los padrinos…'),
+
+  // La semana de la boda
+  t('La semana de la boda', '3 días antes', 'Recoger el vestido y el traje', 'urgente', 'Colgadlos en un sitio fresco y sin luz directa'),
+  t('La semana de la boda', '2 días antes', 'Dejar las alianzas y las arras con quien las lleva', 'urgente', 'Normalmente el padrino o los niños de arras'),
+  t('La semana de la boda', '2 días antes', 'Llevar a la finca los detalles, las tarjetas de mesa y vuestra decoración', 'pronto', 'Dejadlo todo etiquetado'),
+  t('La semana de la boda', '2 días antes', 'Manicura y tratamientos de belleza', 'normal', 'Nada nuevo para la piel a última hora'),
+  t('La semana de la boda', '1 día antes', 'Preparar la maleta del viaje de novios', 'normal', 'Documentación, reservas y cargadores'),
+
+  // El día de la boda
+  t('El día de la boda', 'El día', 'Kit de emergencia', 'urgente', 'Imperdibles, aguja e hilo, analgésicos, quitamanchas'),
+  t('El día de la boda', 'El día', 'Que alguien de confianza hable con los proveedores', 'urgente', 'Así vosotros no tenéis que coger el móvil'),
+  t('El día de la boda', 'El día', 'Decidir a quién regaláis el ramo', 'normal', 'En muchas bodas se dedica a alguien especial en lugar de lanzarlo'),
+
+  // Después de la boda
+  t('Después de la boda', '1-2 semanas después', 'Pedir el certificado de matrimonio', 'pronto', 'Lo necesitaréis para el trabajo, el banco o la Seguridad Social'),
+  t('Después de la boda', '1-2 semanas después', 'Entregar en el trabajo el justificante del permiso', 'pronto', 'Vale el certificado de matrimonio'),
+  t('Después de la boda', '1-2 semanas después', 'Agradecer los regalos y la ayuda', 'pronto', 'Un mensaje personal o un vídeo de agradecimiento'),
+  t('Después de la boda', '1-2 semanas después', 'Devolver lo alquilado', 'pronto', 'Trajes, decoración, menaje…'),
+  t('Después de la boda', 'Cuando os mudéis', 'Actualizar el empadronamiento si cambiáis de casa', 'normal', 'En vuestro ayuntamiento'),
+  t('Después de la boda', 'En la próxima renta', 'Comparar declaración conjunta e individual', 'normal', 'Elegid la que os salga mejor'),
+  t('Después de la boda', '1-3 meses después', 'Recibir las fotos y el vídeo y hacer copia de seguridad', 'normal', 'Guardadlas en dos sitios distintos'),
+  t('Después de la boda', '1-3 meses después', 'Elegir el álbum', 'normal', 'Con calma, que es para toda la vida'),
 ]
+
+/** Actualiza una checklist guardada a la versión actual conservando las tareas ya marcadas */
+export function actualizarChecklist(anterior: ChecklistItem[]): ChecklistItem[] {
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
+  const hechas = new Set(anterior.filter(c => c.done).map(c => norm(c.n)))
+  return DEFAULT_CHECKLIST.map((c, i) => ({ ...c, id: 1000 + i, done: hechas.has(norm(c.n)) }))
+}
+
+export const TOTAL_TAREAS = DEFAULT_CHECKLIST.length

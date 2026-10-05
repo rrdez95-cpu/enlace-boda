@@ -4,7 +4,7 @@ import './tab-resumen.css'
 
 import { useState, useEffect } from 'react'
 import { BodaData, Proveedor } from '@/lib/types'
-import { DEFAULT_CHECKLIST } from './checklist-data'
+import { CHECKLIST_VERSION, TOTAL_TAREAS, actualizarChecklist } from './checklist-data'
 import {
   MOMENTOS_RESUMEN, HORAS_AUTOMATICAS, LIMITE_MOMENTOS_GRATIS,
   sincronizarMomentos, momentosSinPasar, anadirMomento, momentoEnCronograma, horaMomento, hayCoche, hayBus,
@@ -45,11 +45,13 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
   const [ckFilter, setCkFilter] = useState<'all' | 'pendiente' | 'hecho' | 'urgente'>('all')
   const [provModal, setProvModal] = useState(false)
 
+  // Checklist adaptada a España: se crea la primera vez y se actualiza si cambia la versión
   useEffect(() => {
-    if (data.checklist.length === 0) {
+    if (data.checklist.length === 0 || data.resumen?.checklistVersion !== String(CHECKLIST_VERSION)) {
       setData(d => ({
         ...d,
-        checklist: DEFAULT_CHECKLIST.map((c, i) => ({ ...c, id: 1000 + i, done: false })),
+        checklist: actualizarChecklist(d.checklist || []),
+        resumen: { ...d.resumen, checklistVersion: String(CHECKLIST_VERSION) },
       }))
     }
   }, [])
@@ -252,7 +254,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
             <span className="lb-text" style={{ fontSize: 13 }}>
               <strong>Desbloquea el resumen completo</strong><br />
               Ceremonia, cóctel, banquete, barra libre, música, foto y vídeo,
-              transporte, alojamiento, proveedores, presupuesto y checklist de 52 tareas.
+              transporte, alojamiento, proveedores, presupuesto y checklist de {TOTAL_TAREAS} tareas pensada para bodas en España.
             </span>
             <span className="lb-cta">3,99 € →</span>
           </div>

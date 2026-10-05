@@ -165,7 +165,7 @@ export default function TabInicio({ data, userName, isPro, isPremium, isGuest, o
           badgeType={isPro ? 'pro' : 'partial'}
           desc="El cuaderno de una wedding planner profesional. Ceremonia, cóctel, banquete, música, foto, transporte, alojamiento, proveedores y presupuesto."
           perks={[
-            'Checklist de 52 tareas ordenadas en el tiempo',
+            'Checklist con los trámites y costumbres de una boda en España',
             'Presupuesto que se calcula solo por sección',
             'Balance final: lo que os ha costado la boda de verdad',
           ]}

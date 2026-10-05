@@ -11,7 +11,7 @@ export const PLANES: Record<PlanId, { nombre: string; precio: string; url: strin
       'Invitados y mesas sin límite',
       'Plano del salón con todas tus mesas',
       'Cronograma sin límite de momentos',
-      'Resumen completo con presupuesto y checklist de 52 tareas',
+      'Resumen completo con presupuesto y checklist para bodas en España',
       'Puntuaciones en el comparador de fincas',
     ],
   },
