@@ -113,12 +113,14 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
 
   // Extras de la finca elegida en Fincas (se calculan en directo)
   const fincaElegida = (data.fincas || []).find(f => f.id === R.fincaElegida) || null
-  const extrasFinca = fincaElegida ? lineasExtrasFinca(fincaElegida, parseInt(R.totalInv || '') || 0) : []
+  // Un único número de invitados para toda la app: el de Fecha y datos
+  const invitados = parseInt(R.totalInv || '') || parseInt(R.numPax || '') || 0
+  const extrasFinca = fincaElegida ? lineasExtrasFinca(fincaElegida, invitados) : []
 
   const costes = {
     ceremonia: parseFloat(R.costeCeremonia || '0'),
     coctel: parseFloat(R.costeCoctel || '0'),
-    banquete: (parseFloat(R.precioPax || '0') * parseFloat(R.numPax || '0')),
+    banquete: parseFloat(R.precioPax || '0') * invitados,
     barra: parseFloat(R.costeBarra || '0'),
     musica: parseFloat(R.costeDJ || '0') + parseFloat(R.costeBanda || '0'),
     foto: parseFloat(R.costeFoto || '0') + parseFloat(R.costeVideo || '0'),
@@ -335,7 +337,11 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                 <div className="fr" style={{ marginBottom: 14 }}>
                   <Field label="Catering" value={R.catering || ''} placeholder="Nombre empresa" onChange={v => setR('catering', v)} />
                   <Field label="€/persona" type="number" value={R.precioPax || ''} placeholder="95" onChange={v => setR('precioPax', v)} />
-                  <Field label="Nº comensales" type="number" value={R.numPax || ''} placeholder="150" onChange={v => setR('numPax', v)} />
+                  <div className="fg">
+                    <label className="fl">Nº comensales</label>
+                    <input className="fi2" readOnly value={invitados ? String(invitados) : 'Pon los invitados en Fecha y datos'}
+                      title="Se toma del nº total de invitados de Fecha y datos" />
+                  </div>
                   <div className="fg">
                     <label className="fl">Total banquete</label>
                     <input className="fi2" readOnly value={`${costes.banquete.toLocaleString('es-ES')} €`}
