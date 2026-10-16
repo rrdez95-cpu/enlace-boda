@@ -3,11 +3,12 @@
 import './tab-resumen.css'
 
 import { useState, useEffect } from 'react'
-import { BodaData, Proveedor } from '@/lib/types'
+import { AutobusResumen, BodaData, GastoExtra, Proveedor } from '@/lib/types'
 import { CHECKLIST_VERSION, TOTAL_TAREAS, actualizarChecklist } from './checklist-data'
 import {
   MOMENTOS_RESUMEN, HORAS_AUTOMATICAS, LIMITE_MOMENTOS_GRATIS,
   sincronizarMomentos, momentosSinPasar, anadirMomento, momentoEnCronograma, horaMomento, hayCoche, hayBus,
+  migrarAutobuses, sincronizarBuses, anadirBus, busEnCronograma, nuevoAutobus, nombreBus, costeAutobuses, type Tramo,
 } from '@/lib/momentos'
 import { lineasExtrasFinca } from '@/lib/finca-elegida'
 
@@ -28,6 +29,7 @@ const SECCIONES = [
     { id: 'sec-barra', icon: '🍸', label: 'Barra libre' },
     { id: 'sec-musica', icon: '🎶', label: 'Música' },
     { id: 'sec-foto', icon: '📷', label: 'Foto y vídeo' },
+    { id: 'sec-detalles', icon: '🎁', label: 'Alianzas y detalles' },
   ]},
   { grupo: 'Logística', items: [
     { id: 'sec-transporte', icon: '🚌', label: 'Transporte' },
@@ -56,6 +58,11 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
     }
   }, [])
 
+  // El autobús único de versiones anteriores pasa a la lista de autobuses
+  useEffect(() => {
+    if (!data.autobuses) setData(d => migrarAutobuses(d))
+  }, [data.autobuses])
+
   const R = data.resumen || {}
   const pendientesCrono = momentosSinPasar(data)
   const conCoche = hayCoche(R)
@@ -77,6 +84,43 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
     if (!horaMomento(data, id)) return <span className="crono-hint">{ayuda}</span>
     return <button type="button" className="crono-btn" onClick={() => anadirAlCrono(id)}>Añadir al Cronograma</button>
   }
+  /* ─── autobuses ─── */
+  const autobuses = data.autobuses || []
+  function cambiarBuses(f: (l: AutobusResumen[]) => AutobusResumen[]) {
+    setData(d => sincronizarBuses({ ...d, autobuses: f(d.autobuses || []) }))
+  }
+  const updBus = (id: string, patch: Partial<AutobusResumen>) =>
+    cambiarBuses(l => l.map(b => (b.id === id ? { ...b, ...patch } : b)))
+  function anadirBusCrono(id: string, tramo: Tramo) {
+    if (!isPro && data.eventos.length >= LIMITE_MOMENTOS_GRATIS) {
+      onPaywall()
+      showToast(`El plan gratuito permite ${LIMITE_MOMENTOS_GRATIS} momentos en el Cronograma`)
+      return
+    }
+    setData(d => anadirBus(d, id, tramo))
+    showToast('Añadido al Cronograma')
+  }
+  function botonBus(b: AutobusResumen, tramo: Tramo) {
+    if (busEnCronograma(data, b.id, tramo)) return <span className="crono-ok">✓ En el Cronograma</span>
+    const hora = tramo === 'ida' ? b.horaIda : b.horaVuelta
+    if (!hora) return <span className="crono-hint">Pon la hora para poder añadirla al Cronograma</span>
+    return <button type="button" className="crono-btn" onClick={() => anadirBusCrono(b.id, tramo)}>Añadir al Cronograma</button>
+  }
+
+  /* ─── detalles y otros gastos ─── */
+  const detalles = data.detalles || []
+  function cambiarDetalles(f: (l: GastoExtra[]) => GastoExtra[]) {
+    setData(d => ({ ...d, detalles: f(d.detalles || []) }))
+  }
+  const addDetalle = (nombre = '') => cambiarDetalles(l => [...l, {
+    id: 'g' + Date.now().toString(36) + l.length, nombre, coste: '',
+    tipoPrecio: /marcasitio|para ell|regalo invitad|detalle invitad/i.test(nombre) ? 'porInvitado' : 'total',
+  }])
+  const updDetalle = (id: string, patch: Partial<GastoExtra>) =>
+    cambiarDetalles(l => l.map(x => (x.id === id ? { ...x, ...patch } : x)))
+  const importeDetalle = (x: GastoExtra) =>
+    (parseFloat(x.coste) || 0) * (x.tipoPrecio === 'porInvitado' ? invitados : 1)
+
   // Las horas de cada apartado se pasan solas al Cronograma
   function setR(k: string, v: string) {
     const creaMomento = MOMENTOS_RESUMEN.some(m => !m.manual && m.hora === k && /^\d{2}:\d{2}$/.test(v)
@@ -118,14 +162,15 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
   const extrasFinca = fincaElegida ? lineasExtrasFinca(fincaElegida, invitados) : []
 
   const costes = {
-    ceremonia: parseFloat(R.costeCeremonia || '0'),
+    ceremonia: parseFloat(R.costeCeremonia || '0') + parseFloat(R.costeOficiante || '0'),
     coctel: parseFloat(R.costeCoctel || '0'),
     banquete: parseFloat(R.precioPax || '0') * invitados,
     barra: parseFloat(R.costeBarra || '0'),
     musica: parseFloat(R.costeDJ || '0') + parseFloat(R.costeBanda || '0'),
     foto: parseFloat(R.costeFoto || '0') + parseFloat(R.costeVideo || '0'),
-    transporte: (hayCoche(R) ? parseFloat(R.costeCoche || '0') : 0) + (hayBus(R) ? parseFloat(R.costeBus || '0') : 0),
+    transporte: (hayCoche(R) ? parseFloat(R.costeCoche || '0') : 0) + costeAutobuses(data),
     alojamiento: parseFloat(R.costeHotel || '0'),
+    detalles: parseFloat(R.costeAlianzas || '0') + detalles.reduce((s, x) => s + importeDetalle(x), 0),
     fincaExtras: extrasFinca.reduce((s, l) => s + l.importe, 0),
   }
   const totalGastado = Object.values(costes).reduce((a, b) => a + (b || 0), 0)
@@ -283,6 +328,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                   <div className="fr">
                     <Field label="Nombre del oficiante" value={R.oficiante || ''} onChange={v => setR('oficiante', v)} />
                     <Field label="Contacto" value={R.oficianteTel || ''} onChange={v => setR('oficianteTel', v)} />
+                    <Field label="Coste del oficiante (€)" type="number" value={R.costeOficiante || ''} onChange={v => setR('costeOficiante', v)} />
                   </div>
                   <TextArea label="Notas sobre el oficiante" value={R.oficianteNotas || ''} onChange={v => setR('oficianteNotas', v)} />
                 </SubSec>
@@ -457,6 +503,49 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
               </div>
             </Section>
 
+            <Section id="sec-detalles" icon="🎁" title="Alianzas y detalles" sub="Anillos, detalles para invitados y otros gastos" cost={costes.detalles}>
+              <div className="sec-body">
+                <SubSec title="Alianzas">
+                  <div className="fr">
+                    <Field label="Joyería" value={R.joyeria || ''} placeholder="Nombre de la joyería" onChange={v => setR('joyeria', v)} />
+                    <Field label="Grabado" value={R.grabado || ''} placeholder="Fecha e iniciales" onChange={v => setR('grabado', v)} />
+                    <Field label="Coste de las alianzas (€)" type="number" value={R.costeAlianzas || ''} onChange={v => setR('costeAlianzas', v)} />
+                  </div>
+                </SubSec>
+
+                <SubSec title="Detalles y otros gastos">
+                  {detalles.length === 0 && (
+                    <p className="res-hint" style={{ marginTop: 0 }}>Añade cada cosa con su coste. Si es por invitado (marcasitios, detalle para cada uno…), elige «€ por invitado» y se multiplica sola.</p>
+                  )}
+                  {detalles.map(x => (
+                    <div className="gasto-row" key={x.id}>
+                      <input className="fi2 gasto-nombre" value={x.nombre} placeholder="Concepto"
+                        onChange={e => updDetalle(x.id, { nombre: e.target.value })} />
+                      <input className="fi2 gasto-coste" type="number" min={0} value={x.coste} placeholder="0"
+                        onChange={e => updDetalle(x.id, { coste: e.target.value })} />
+                      <select className="fs2 gasto-tipo" value={x.tipoPrecio}
+                        onChange={e => updDetalle(x.id, { tipoPrecio: e.target.value as GastoExtra['tipoPrecio'] })}>
+                        <option value="total">€ total</option>
+                        <option value="porInvitado">€ por invitado</option>
+                      </select>
+                      <span className="gasto-total">{Math.round(importeDetalle(x)).toLocaleString('es-ES')} €</span>
+                      <button type="button" className="gasto-del" aria-label="Quitar" onClick={() => cambiarDetalles(l => l.filter(y => y.id !== x.id))}>×</button>
+                    </div>
+                  ))}
+                  <div className="gasto-sugerencias">
+                    {['Marcasitios', 'Regalo para ellos', 'Regalo para ellas', 'Detalle para los niños', 'Ramos para las madres',
+                      'Regalo para los padrinos', 'Cartel de bienvenida', 'Libro de firmas', 'Arras']
+                      .filter(n => !detalles.some(x => x.nombre.toLowerCase() === n.toLowerCase()))
+                      .map(n => <button type="button" key={n} className="gasto-chip" onClick={() => addDetalle(n)}>+ {n}</button>)}
+                    <button type="button" className="gasto-chip otro" onClick={() => addDetalle('')}>+ Otro</button>
+                  </div>
+                  {detalles.some(x => x.tipoPrecio === 'porInvitado') && !invitados && (
+                    <p className="res-hint">Pon el nº de invitados en Fecha y datos para calcular los gastos por invitado.</p>
+                  )}
+                </SubSec>
+              </div>
+            </Section>
+
             <Section id="sec-transporte" icon="🚌" title="Transporte" sub="Coche nupcial, autobuses y salida de los novios" cost={costes.transporte}>
               <div className="sec-body">
                 <SubSec title="Coche nupcial">
@@ -472,35 +561,52 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                 </SubSec>
 
                 <SubSec title="Autobuses para invitados">
-                  <Toggle label="¿Ponéis autobús para los invitados?" checked={conBus} onChange={v => setR('tBus', v ? '1' : '0')} />
+                  <Toggle label="¿Ponéis autobús para los invitados?" checked={conBus} onChange={v => {
+                    setR('tBus', v ? '1' : '0')
+                    if (v && !autobuses.length) cambiarBuses(l => [...l, nuevoAutobus()])
+                  }} />
                   {conBus && (
                     <>
-                      <div className="fr" style={{ marginTop: 12 }}>
-                        <Field label="Empresa" value={R.empresaBus || ''} placeholder="Autocares García" onChange={v => setR('empresaBus', v)} />
-                        <Field label="Plazas" type="number" value={R.plazasBus || ''} placeholder="55" onChange={v => setR('plazasBus', v)} />
-                        <Field label="Coste (€)" type="number" value={R.costeBus || ''} onChange={v => setR('costeBus', v)} />
-                      </div>
-                      <div className="bus-tramos">
-                        <div className="bus-tramo">
-                          <div className="bus-tramo-t">Recogida de invitados</div>
-                          <div className="fr">
-                            <Field label="Hora" type="time" value={R.horaBusIda || ''} onChange={v => setR('horaBusIda', v)} />
-                            <Field label="Punto de recogida" value={R.puntoBusIda || ''} placeholder="Plaza de Castilla" onChange={v => setR('puntoBusIda', v)} />
+                      {autobuses.length === 0 && (
+                        <p className="res-hint">Añade un autobús por cada punto de recogida.</p>
+                      )}
+                      {autobuses.map((b, i) => (
+                        <div className="bus-card" key={b.id}>
+                          <div className="bus-card-h">
+                            <span>{nombreBus(b, i)}</span>
+                            <button type="button" className="bus-del" onClick={() => cambiarBuses(l => l.filter(x => x.id !== b.id))}>Quitar</button>
                           </div>
-                          <div className="crono-row">{botonCrono('bus-ida', 'Pon la hora de recogida para añadirla al Cronograma')}</div>
-                        </div>
-                        <div className="bus-tramo">
-                          <div className="bus-tramo-t">Vuelta</div>
                           <div className="fr">
-                            <Field label="Hora" type="time" value={R.horaBusVuelta || ''} onChange={v => setR('horaBusVuelta', v)} />
-                            <Field label="Sale desde" value={R.puntoBusVuelta || ''} placeholder={R.finca || 'La finca'} onChange={v => setR('puntoBusVuelta', v)} />
+                            <Field label="Empresa" value={b.empresa} placeholder="Autocares García" onChange={v => updBus(b.id, { empresa: v })} />
+                            <Field label="Plazas" type="number" value={b.plazas} placeholder="55" onChange={v => updBus(b.id, { plazas: v })} />
+                            <Field label="Coste (€)" type="number" value={b.coste} onChange={v => updBus(b.id, { coste: v })} />
                           </div>
-                          <div className="crono-row">{botonCrono('bus-vuelta', 'Pon la hora de vuelta para añadirla al Cronograma')}</div>
+                          <div className="bus-tramos">
+                            <div className="bus-tramo">
+                              <div className="bus-tramo-t">Recogida de invitados</div>
+                              <div className="fr">
+                                <Field label="Hora" type="time" value={b.horaIda} onChange={v => updBus(b.id, { horaIda: v })} />
+                                <Field label="Punto de recogida" value={b.punto} placeholder="Plaza de Castilla" onChange={v => updBus(b.id, { punto: v })} />
+                              </div>
+                              <div className="crono-row">{botonBus(b, 'ida')}</div>
+                            </div>
+                            <div className="bus-tramo">
+                              <div className="bus-tramo-t">Vuelta</div>
+                              <div className="fr">
+                                <Field label="Hora" type="time" value={b.horaVuelta} onChange={v => updBus(b.id, { horaVuelta: v })} />
+                                <Field label="Sale desde" value={b.puntoVuelta} placeholder={R.finca || 'La finca'} onChange={v => updBus(b.id, { puntoVuelta: v })} />
+                              </div>
+                              <div className="crono-row">{botonBus(b, 'vuelta')}</div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      ))}
+                      <button type="button" className="add-line-btn" onClick={() => cambiarBuses(l => [...l, nuevoAutobus()])}>
+                        + Añadir autobús
+                      </button>
                       <p className="res-hint">
                         La vuelta no hace falta tenerla en el Cronograma, pero apúntala: es la que necesitas para reservar los autobuses.
-                        Al añadir la recogida, el autobús aparece en el Cronograma para asignarle pasajeros y en la invitación para que tus invitados pidan plaza.
+                        Al añadir una recogida, ese autobús aparece en el Cronograma para asignarle pasajeros y en la invitación para que tus invitados pidan plaza.
                       </p>
                     </>
                   )}

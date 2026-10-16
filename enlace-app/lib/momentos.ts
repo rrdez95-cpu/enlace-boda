@@ -1,4 +1,4 @@
-import type { Bus, BodaData, Evento } from './types'
+import type { AutobusResumen, Bus, BodaData, Evento } from './types'
 
 /* Momentos del día que se rellenan en el Resumen y pasan al Cronograma.
    - Automáticos: se crean solos al poner la hora (los propios de la boda).
@@ -39,11 +39,6 @@ export const MOMENTOS_RESUMEN: Momento[] = [
     nombre: () => 'Recogida en coche nupcial', desc: r => r.trayecto || '',
   },
   {
-    id: 'bus-ida', hora: 'horaBusIda', claves: ['puntoBusIda', 'horaBusVuelta', 'empresaBus', 'plazasBus', 'puntoBusVuelta'],
-    cat: 'autobus', emoji: '🚌', manual: true, activo: hayBus, activoClave: 'tBus',
-    nombre: () => 'Autobús de invitados', desc: r => (r.puntoBusIda ? `Recogida en ${r.puntoBusIda}` : ''),
-  },
-  {
     id: 'ceremonia', hora: 'horaCeremonia', claves: ['tipoCeremonia', 'durCeremonia', 'lugarCeremonia'],
     cat: 'ceremonia', emoji: '⛪',
     nombre: r => {
@@ -77,19 +72,9 @@ export const MOMENTOS_RESUMEN: Momento[] = [
     id: 'traslado', hora: 'horaTraslado', claves: ['destinoTraslado'], cat: 'otro', emoji: '🚕',
     nombre: () => 'Salida de los novios', desc: r => r.destinoTraslado || '',
   },
-  {
-    id: 'bus-vuelta', hora: 'horaBusVuelta', claves: ['puntoBusVuelta', 'finca'], cat: 'otro', emoji: '🚌',
-    manual: true, activo: hayBus, activoClave: 'tBus',
-    nombre: () => 'Autobús de vuelta',
-    desc: r => {
-      const desde = r.puntoBusVuelta || r.finca
-      return desde ? `Sale desde ${desde}` : ''
-    },
-  },
 ]
 
 const HORA = /^\d{2}:\d{2}$/
-const BUS_ID = 'resumen-bus'
 
 // Las horas de madrugada van al final del día
 function minutos(h: string): number {
@@ -104,20 +89,6 @@ function datosEvento(m: Momento, r: R, hora: string) {
   return {
     nombre: m.nombre(r), hora, duracion: m.duracion?.(r) ?? '', cat: m.cat,
     desc: m.desc?.(r) ?? '', emoji: m.emoji, origen: `resumen:${m.id}`,
-  }
-}
-
-function busDesdeResumen(r: R, anterior?: Bus): Bus {
-  return {
-    id: BUS_ID,
-    nombre: r.empresaBus ? `Autobús ${r.empresaBus}` : 'Autobús de invitados',
-    cap: parseInt(r.plazasBus || '') || anterior?.cap || 50,
-    horaIda: r.horaBusIda || '',
-    horaVuelta: r.horaBusVuelta || '',
-    punto: r.puntoBusIda || '',
-    empresa: r.empresaBus || '',
-    passengerIds: anterior?.passengerIds || [],
-    activeDir: anterior?.activeDir || 'ida',
   }
 }
 
@@ -157,14 +128,6 @@ export function sincronizarMomentos(d: BodaData, cambiados: string[]): BodaData 
 
     if (idx >= 0) {
       eventos[idx] = { ...eventos[idx], ...datosEvento(m, r, hora) }
-      if (m.id === 'bus-ida') {
-        const key = String(eventos[idx].id)
-        const lista = eventosBuses[key] || []
-        const ant = lista.find(b => b.id === BUS_ID)
-        eventosBuses[key] = ant
-          ? lista.map(b => (b.id === BUS_ID ? busDesdeResumen(r, b) : b))
-          : [...lista, busDesdeResumen(r)]
-      }
     } else {
       eventos.push({ id: eid, ...datosEvento(m, r, hora) })
       eid++
@@ -172,9 +135,12 @@ export function sincronizarMomentos(d: BodaData, cambiados: string[]): BodaData 
     cambio = true
   }
 
-  if (!cambio) return d
-  eventos = eventos.sort((a, b) => minutos(a.hora) - minutos(b.hora))
-  return { ...d, eventos, eventosBuses, eid }
+  let res = cambio
+    ? { ...d, eventos: eventos.sort((a, b) => minutos(a.hora) - minutos(b.hora)), eventosBuses, eid }
+    : d
+  // Activar o quitar los autobuses, o cambiar la finca, afecta a los autobuses del Cronograma
+  if (cambiados.includes('tBus') || cambiados.includes('finca')) res = sincronizarBuses(res)
+  return res
 }
 
 /** Botón "Añadir al Cronograma" de los momentos manuales */
@@ -187,10 +153,8 @@ export function anadirMomento(d: BodaData, id: string): BodaData {
   if (momentoEnCronograma(d, id)) return sincronizarMomentos(d, [m.hora])
 
   const nuevo: Evento = { id: d.eid, ...datosEvento(m, r, hora) }
-  const eventosBuses = { ...(d.eventosBuses || {}) }
-  if (id === 'bus-ida') eventosBuses[String(d.eid)] = [busDesdeResumen(r)]
   const eventos = [...(d.eventos || []), nuevo].sort((a, b) => minutos(a.hora) - minutos(b.hora))
-  return { ...d, eventos, eventosBuses, eid: d.eid + 1 }
+  return { ...d, eventos, eid: d.eid + 1 }
 }
 
 export function momentoEnCronograma(d: BodaData, id: string): boolean {
@@ -210,3 +174,127 @@ export function momentosSinPasar(d: BodaData): number {
 
 /** Campos de hora de los momentos automáticos (para el botón "Añadir las que faltan") */
 export const HORAS_AUTOMATICAS = MOMENTOS_RESUMEN.filter(m => !m.manual).map(m => m.hora)
+
+/* ═══ AUTOBUSES (varios puntos de recogida) ═══
+   Cada autobús del Resumen puede pasar al Cronograma con dos momentos manuales:
+   "resumen:bus-ida:<id>" (con el autobús para asignar pasajeros) y "resumen:bus-vuelta:<id>". */
+
+export type Tramo = 'ida' | 'vuelta'
+
+export function nuevoAutobus(): AutobusResumen {
+  return { id: 'b' + Date.now().toString(36), punto: '', horaIda: '', horaVuelta: '', puntoVuelta: '', empresa: '', plazas: '', coste: '' }
+}
+
+/** Pasa el autobús único de versiones anteriores a la lista de autobuses */
+export function migrarAutobuses(d: BodaData): BodaData {
+  if (d.autobuses) return d
+  const r = d.resumen || {}
+  const habia = r.tBus === '1' || r.horaBusIda || r.puntoBusIda || r.horaBusVuelta || r.costeBus
+  if (!habia) return { ...d, autobuses: [] }
+  const b: AutobusResumen = {
+    id: 'b1', punto: r.puntoBusIda || '', horaIda: r.horaBusIda || '', horaVuelta: r.horaBusVuelta || '',
+    puntoVuelta: r.puntoBusVuelta || '', empresa: r.empresaBus || '', plazas: r.plazasBus || '', coste: r.costeBus || '',
+  }
+  const eventos = (d.eventos || []).map(e =>
+    e.origen === 'resumen:bus-ida' ? { ...e, origen: 'resumen:bus-ida:b1' }
+    : e.origen === 'resumen:bus-vuelta' ? { ...e, origen: 'resumen:bus-vuelta:b1' } : e)
+  const eventosBuses: Record<string, Bus[]> = {}
+  for (const [k, lista] of Object.entries(d.eventosBuses || {})) {
+    eventosBuses[k] = lista.map(x => (x.id === 'resumen-bus' ? { ...x, id: 'resumen-bus-b1' } : x))
+  }
+  return { ...d, autobuses: [b], eventos, eventosBuses }
+}
+
+const origenBus = (id: string, tramo: Tramo) => `resumen:bus-${tramo}:${id}`
+
+export function nombreBus(b: AutobusResumen, i: number): string {
+  return b.punto.trim() ? `Autobús desde ${b.punto.trim()}` : `Autobús ${i + 1}`
+}
+
+function datosEventoBus(b: AutobusResumen, i: number, tramo: Tramo, r: R) {
+  if (tramo === 'ida') {
+    return {
+      nombre: nombreBus(b, i), hora: b.horaIda, duracion: '', cat: 'autobus', emoji: '🚌',
+      desc: b.punto.trim() ? `Recogida en ${b.punto.trim()}` : '', origen: origenBus(b.id, 'ida'),
+    }
+  }
+  const desde = b.puntoVuelta.trim() || r.finca || ''
+  const hasta = b.punto.trim()
+  return {
+    nombre: hasta ? `Autobús de vuelta a ${hasta}` : 'Autobús de vuelta', hora: b.horaVuelta, duracion: '', cat: 'otro', emoji: '🚌',
+    desc: desde ? `Sale desde ${desde}` : '', origen: origenBus(b.id, 'vuelta'),
+  }
+}
+
+function busCronograma(b: AutobusResumen, i: number, anterior?: Bus): Bus {
+  return {
+    id: `resumen-bus-${b.id}`,
+    nombre: b.empresa.trim() ? `${nombreBus(b, i)} · ${b.empresa.trim()}` : nombreBus(b, i),
+    cap: parseInt(b.plazas) || anterior?.cap || 50,
+    horaIda: b.horaIda, horaVuelta: b.horaVuelta, punto: b.punto, empresa: b.empresa,
+    passengerIds: anterior?.passengerIds || [],
+    activeDir: anterior?.activeDir || 'ida',
+  }
+}
+
+export function busEnCronograma(d: BodaData, id: string, tramo: Tramo): boolean {
+  return (d.eventos || []).some(e => e.origen === origenBus(id, tramo))
+}
+
+/** Actualiza o quita del Cronograma los autobuses que ya estaban añadidos */
+export function sincronizarBuses(d: BodaData): BodaData {
+  const r = d.resumen || {}
+  const lista = d.autobuses || []
+  const activos = hayBus(r)
+  let eventos = [...(d.eventos || [])]
+  const eventosBuses = { ...(d.eventosBuses || {}) }
+  let cambio = false
+
+  eventos = eventos.flatMap(e => {
+    const mm = /^resumen:bus-(ida|vuelta):(.+)$/.exec(e.origen || '')
+    if (!mm) return [e]
+    const tramo = mm[1] as Tramo
+    const i = lista.findIndex(b => b.id === mm[2])
+    const b = lista[i]
+    const hora = b ? (tramo === 'ida' ? b.horaIda : b.horaVuelta) : ''
+    if (!activos || !b || !HORA.test(hora)) {
+      delete eventosBuses[String(e.id)]
+      cambio = true
+      return []
+    }
+    const nuevo = { ...e, ...datosEventoBus(b, i, tramo, r) }
+    if (tramo === 'ida') {
+      const key = String(e.id)
+      const previos = eventosBuses[key] || []
+      const ant = previos.find(x => x.id === `resumen-bus-${b.id}`)
+      eventosBuses[key] = ant
+        ? previos.map(x => (x.id === ant.id ? busCronograma(b, i, x) : x))
+        : [...previos, busCronograma(b, i)]
+    }
+    cambio = true
+    return [nuevo]
+  })
+
+  if (!cambio) return d
+  return { ...d, eventos: eventos.sort((a, b) => minutos(a.hora) - minutos(b.hora)), eventosBuses }
+}
+
+/** Botón "Añadir al Cronograma" de la recogida o la vuelta de un autobús */
+export function anadirBus(d: BodaData, id: string, tramo: Tramo): BodaData {
+  const lista = d.autobuses || []
+  const i = lista.findIndex(b => b.id === id)
+  const b = lista[i]
+  if (!b || busEnCronograma(d, id, tramo)) return d
+  const hora = tramo === 'ida' ? b.horaIda : b.horaVuelta
+  if (!HORA.test(hora)) return d
+  const nuevo: Evento = { id: d.eid, ...datosEventoBus(b, i, tramo, d.resumen || {}) }
+  const eventosBuses = { ...(d.eventosBuses || {}) }
+  if (tramo === 'ida') eventosBuses[String(d.eid)] = [busCronograma(b, i)]
+  const eventos = [...(d.eventos || []), nuevo].sort((a, c) => minutos(a.hora) - minutos(c.hora))
+  return { ...d, eventos, eventosBuses, eid: d.eid + 1 }
+}
+
+export function costeAutobuses(d: BodaData): number {
+  if (!hayBus(d.resumen || {})) return 0
+  return (d.autobuses || []).reduce((s, b) => s + (parseFloat(b.coste) || 0), 0)
+}

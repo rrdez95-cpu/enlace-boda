@@ -143,6 +143,25 @@ export type RsvpResponse = {
   created_at: string
 }
 
+/* ═══ RESUMEN: AUTOBUSES Y GASTOS ═══ */
+export type AutobusResumen = {
+  id: string
+  punto: string        // dónde recoge a los invitados
+  horaIda: string
+  horaVuelta: string
+  puntoVuelta: string  // desde dónde sale de vuelta (vacío = la finca)
+  empresa: string
+  plazas: string
+  coste: string
+}
+
+export type GastoExtra = {
+  id: string
+  nombre: string
+  coste: string
+  tipoPrecio: 'total' | 'porInvitado'
+}
+
 /* ═══ BODA DATA ═══ */
 export type BodaData = {
   guests: Guest[]
@@ -155,6 +174,8 @@ export type BodaData = {
   resumen: Record<string, string>
   fincas: Finca[]
   invitacion?: InvitacionConfig
+  autobuses?: AutobusResumen[]
+  detalles?: GastoExtra[]
   gid: number
   mid: number
   eid: number
