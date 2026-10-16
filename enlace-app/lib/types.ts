@@ -176,6 +176,7 @@ export type BodaData = {
   invitacion?: InvitacionConfig
   autobuses?: AutobusResumen[]
   detalles?: GastoExtra[]
+  horaLoca?: GastoExtra[]
   gid: number
   mid: number
   eid: number

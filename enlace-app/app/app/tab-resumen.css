@@ -50,3 +50,6 @@
   .gasto-row{grid-template-columns:1fr 1fr;grid-template-areas:"n n" "c t" "s x"}
   .gasto-nombre{grid-area:n}.gasto-coste{grid-area:c}.gasto-tipo{grid-area:t}.gasto-total{grid-area:s;text-align:left}.gasto-del{grid-area:x;justify-self:end}
 }
+
+.gasto-suma{text-align:right;font-size:13px;color:var(--muted);margin:2px 34px 6px 0}
+.gasto-suma b{color:var(--gold);font-size:15px}

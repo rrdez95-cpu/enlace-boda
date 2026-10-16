@@ -65,6 +65,10 @@ export const MOMENTOS_RESUMEN: Momento[] = [
     desc: r => (r.cierreBarra ? `Hasta las ${r.cierreBarra}` : ''),
   },
   {
+    id: 'horaloca', hora: 'horaHoraLoca', claves: ['durHoraLoca'], cat: 'musica', emoji: '🎉',
+    nombre: () => 'Hora loca', duracion: r => r.durHoraLoca || '',
+  },
+  {
     id: 'fin', hora: 'horaFin', claves: [], cat: 'otro', emoji: '✨', manual: true,
     nombre: () => 'Fin de fiesta',
   },

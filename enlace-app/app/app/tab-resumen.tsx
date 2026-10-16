@@ -29,6 +29,7 @@ const SECCIONES = [
     { id: 'sec-barra', icon: '🍸', label: 'Barra libre' },
     { id: 'sec-musica', icon: '🎶', label: 'Música' },
     { id: 'sec-foto', icon: '📷', label: 'Foto y vídeo' },
+    { id: 'sec-horaloca', icon: '🎉', label: 'Hora loca' },
     { id: 'sec-detalles', icon: '🎁', label: 'Alianzas y detalles' },
   ]},
   { grupo: 'Logística', items: [
@@ -107,19 +108,14 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
     return <button type="button" className="crono-btn" onClick={() => anadirBusCrono(b.id, tramo)}>Añadir al Cronograma</button>
   }
 
-  /* ─── detalles y otros gastos ─── */
+  /* ─── listas de gastos (detalles y hora loca) ─── */
   const detalles = data.detalles || []
-  function cambiarDetalles(f: (l: GastoExtra[]) => GastoExtra[]) {
-    setData(d => ({ ...d, detalles: f(d.detalles || []) }))
-  }
-  const addDetalle = (nombre = '') => cambiarDetalles(l => [...l, {
-    id: 'g' + Date.now().toString(36) + l.length, nombre, coste: '',
-    tipoPrecio: /marcasitio|para ell|regalo invitad|detalle invitad/i.test(nombre) ? 'porInvitado' : 'total',
-  }])
-  const updDetalle = (id: string, patch: Partial<GastoExtra>) =>
-    cambiarDetalles(l => l.map(x => (x.id === id ? { ...x, ...patch } : x)))
-  const importeDetalle = (x: GastoExtra) =>
+  const horaLoca = data.horaLoca || []
+  const importeGasto = (x: GastoExtra) =>
     (parseFloat(x.coste) || 0) * (x.tipoPrecio === 'porInvitado' ? invitados : 1)
+  const sumaGastos = (l: GastoExtra[]) => l.reduce((s, x) => s + importeGasto(x), 0)
+  const setDetalles = (l: GastoExtra[]) => setData(d => ({ ...d, detalles: l }))
+  const setHoraLoca = (l: GastoExtra[]) => setData(d => ({ ...d, horaLoca: l }))
 
   // Las horas de cada apartado se pasan solas al Cronograma
   function setR(k: string, v: string) {
@@ -170,7 +166,8 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
     foto: parseFloat(R.costeFoto || '0') + parseFloat(R.costeVideo || '0'),
     transporte: (hayCoche(R) ? parseFloat(R.costeCoche || '0') : 0) + costeAutobuses(data),
     alojamiento: parseFloat(R.costeHotel || '0'),
-    detalles: parseFloat(R.costeAlianzas || '0') + detalles.reduce((s, x) => s + importeDetalle(x), 0),
+    horaLoca: parseFloat(R.costeAgenciaHoraLoca || '0') + sumaGastos(horaLoca),
+    detalles: parseFloat(R.costeAlianzas || '0') + sumaGastos(detalles),
     fincaExtras: extrasFinca.reduce((s, l) => s + l.importe, 0),
   }
   const totalGastado = Object.values(costes).reduce((a, b) => a + (b || 0), 0)
@@ -503,6 +500,29 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
               </div>
             </Section>
 
+            <Section id="sec-horaloca" icon="🎉" title="Hora loca" sub="Con agencia o preparada por vuestra cuenta" cost={costes.horaLoca}>
+              <div className="sec-body">
+                <div className="fr" style={{ marginBottom: 14 }}>
+                  <Field label="Hora de inicio" type="time" value={R.horaHoraLoca || ''} onChange={v => setR('horaHoraLoca', v)} />
+                  <Field label="Duración" value={R.durHoraLoca || ''} placeholder="45 minutos" onChange={v => setR('durHoraLoca', v)} />
+                </div>
+                <SubSec title="Con agencia">
+                  <div className="fr">
+                    <Field label="Empresa" value={R.agenciaHoraLoca || ''} placeholder="Nombre + contacto" onChange={v => setR('agenciaHoraLoca', v)} />
+                    <Field label="Coste (€)" type="number" value={R.costeAgenciaHoraLoca || ''} onChange={v => setR('costeAgenciaHoraLoca', v)} />
+                  </div>
+                  <TextArea label="Qué incluye" value={R.incluyeHoraLoca || ''} placeholder="Animadores, disfraces, cañones de confeti…" onChange={v => setR('incluyeHoraLoca', v)} />
+                </SubSec>
+                <SubSec title="Por vuestra cuenta">
+                  <ListaGastos items={horaLoca} onChange={setHoraLoca} invitados={invitados}
+                    ayuda="Si la preparáis vosotros, apunta aquí lo que compráis. Puedes usar las dos partes a la vez si la agencia no lo incluye todo."
+                    porInvitado={/bastones|gafas|pulseras/i}
+                    sugerencias={['Bastones luminosos', 'Disfraces', 'Atrezzo', 'Gafas y sombreros', 'Pulseras LED',
+                      'Pelucas', 'Confeti y serpentinas', 'Pistolas de burbujas', 'Cañones de confeti']} />
+                </SubSec>
+              </div>
+            </Section>
+
             <Section id="sec-detalles" icon="🎁" title="Alianzas y detalles" sub="Anillos, detalles para invitados y otros gastos" cost={costes.detalles}>
               <div className="sec-body">
                 <SubSec title="Alianzas">
@@ -514,34 +534,11 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                 </SubSec>
 
                 <SubSec title="Detalles y otros gastos">
-                  {detalles.length === 0 && (
-                    <p className="res-hint" style={{ marginTop: 0 }}>Añade cada cosa con su coste. Si es por invitado (marcasitios, detalle para cada uno…), elige «€ por invitado» y se multiplica sola.</p>
-                  )}
-                  {detalles.map(x => (
-                    <div className="gasto-row" key={x.id}>
-                      <input className="fi2 gasto-nombre" value={x.nombre} placeholder="Concepto"
-                        onChange={e => updDetalle(x.id, { nombre: e.target.value })} />
-                      <input className="fi2 gasto-coste" type="number" min={0} value={x.coste} placeholder="0"
-                        onChange={e => updDetalle(x.id, { coste: e.target.value })} />
-                      <select className="fs2 gasto-tipo" value={x.tipoPrecio}
-                        onChange={e => updDetalle(x.id, { tipoPrecio: e.target.value as GastoExtra['tipoPrecio'] })}>
-                        <option value="total">€ total</option>
-                        <option value="porInvitado">€ por invitado</option>
-                      </select>
-                      <span className="gasto-total">{Math.round(importeDetalle(x)).toLocaleString('es-ES')} €</span>
-                      <button type="button" className="gasto-del" aria-label="Quitar" onClick={() => cambiarDetalles(l => l.filter(y => y.id !== x.id))}>×</button>
-                    </div>
-                  ))}
-                  <div className="gasto-sugerencias">
-                    {['Marcasitios', 'Regalo para ellos', 'Regalo para ellas', 'Detalle para los niños', 'Ramos para las madres',
-                      'Regalo para los padrinos', 'Cartel de bienvenida', 'Libro de firmas', 'Arras']
-                      .filter(n => !detalles.some(x => x.nombre.toLowerCase() === n.toLowerCase()))
-                      .map(n => <button type="button" key={n} className="gasto-chip" onClick={() => addDetalle(n)}>+ {n}</button>)}
-                    <button type="button" className="gasto-chip otro" onClick={() => addDetalle('')}>+ Otro</button>
-                  </div>
-                  {detalles.some(x => x.tipoPrecio === 'porInvitado') && !invitados && (
-                    <p className="res-hint">Pon el nº de invitados en Fecha y datos para calcular los gastos por invitado.</p>
-                  )}
+                  <ListaGastos items={detalles} onChange={setDetalles} invitados={invitados}
+                    ayuda="Añade cada cosa con su coste. Si es por invitado (marcasitios, detalle para cada uno…), elige «€ por invitado» y se multiplica sola."
+                    porInvitado={/marcasitio|para ell|detalle para los/i}
+                    sugerencias={['Marcasitios', 'Regalo para ellos', 'Regalo para ellas', 'Detalle para los niños', 'Ramos para las madres',
+                      'Regalo para los padrinos', 'Cartel de bienvenida', 'Libro de firmas', 'Arras']} />
                 </SubSec>
               </div>
             </Section>
@@ -1012,5 +1009,52 @@ function ProveedorModal({ onClose, onSave }: {
         </div>
       </div>
     </div>
+  )
+}
+
+function ListaGastos({ items, onChange, invitados, sugerencias, ayuda, porInvitado }: {
+  items: GastoExtra[]
+  onChange: (l: GastoExtra[]) => void
+  invitados: number
+  sugerencias: string[]
+  ayuda: string
+  porInvitado: RegExp
+}) {
+  const importe = (x: GastoExtra) => (parseFloat(x.coste) || 0) * (x.tipoPrecio === 'porInvitado' ? invitados : 1)
+  const upd = (id: string, patch: Partial<GastoExtra>) => onChange(items.map(x => (x.id === id ? { ...x, ...patch } : x)))
+  const add = (nombre = '') => onChange([...items, {
+    id: 'g' + Date.now().toString(36) + items.length, nombre, coste: '',
+    tipoPrecio: porInvitado.test(nombre) ? 'porInvitado' : 'total',
+  }])
+  const total = items.reduce((s, x) => s + importe(x), 0)
+  return (
+    <>
+      {items.length === 0 && <p className="res-hint" style={{ marginTop: 0 }}>{ayuda}</p>}
+      {items.map(x => (
+        <div className="gasto-row" key={x.id}>
+          <input className="fi2 gasto-nombre" value={x.nombre} placeholder="Concepto"
+            onChange={e => upd(x.id, { nombre: e.target.value })} />
+          <input className="fi2 gasto-coste" type="number" min={0} value={x.coste} placeholder="0"
+            onChange={e => upd(x.id, { coste: e.target.value })} />
+          <select className="fs2 gasto-tipo" value={x.tipoPrecio}
+            onChange={e => upd(x.id, { tipoPrecio: e.target.value as GastoExtra['tipoPrecio'] })}>
+            <option value="total">€ total</option>
+            <option value="porInvitado">€ por invitado</option>
+          </select>
+          <span className="gasto-total">{Math.round(importe(x)).toLocaleString('es-ES')} €</span>
+          <button type="button" className="gasto-del" aria-label="Quitar" onClick={() => onChange(items.filter(y => y.id !== x.id))}>×</button>
+        </div>
+      ))}
+      {items.length > 1 && <div className="gasto-suma">Total: <b>{Math.round(total).toLocaleString('es-ES')} €</b></div>}
+      <div className="gasto-sugerencias">
+        {sugerencias
+          .filter(n => !items.some(x => x.nombre.toLowerCase() === n.toLowerCase()))
+          .map(n => <button type="button" key={n} className="gasto-chip" onClick={() => add(n)}>+ {n}</button>)}
+        <button type="button" className="gasto-chip otro" onClick={() => add('')}>+ Otro</button>
+      </div>
+      {items.some(x => x.tipoPrecio === 'porInvitado') && !invitados && (
+        <p className="res-hint">Pon el nº de invitados en Fecha y datos para calcular los gastos por invitado.</p>
+      )}
+    </>
   )
 }
