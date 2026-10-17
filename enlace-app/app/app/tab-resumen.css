@@ -53,3 +53,30 @@
 
 .gasto-suma{text-align:right;font-size:13px;color:var(--muted);margin:2px 34px 6px 0}
 .gasto-suma b{color:var(--gold);font-size:15px}
+
+/* ─── Desglose del presupuesto ─── */
+.dg{background:var(--white);border:1px solid var(--gold);border-radius:8px;padding:14px 18px;margin-bottom:18px}
+.dg-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:6px}
+.dg-head b{font-size:22px;color:var(--gold)}
+.dg-empty{font-size:13px;line-height:1.5;color:var(--muted);margin:4px 0 0}
+.dg-grupo{border-top:1px solid var(--border);padding:10px 0 8px}
+.dg-sum{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;font-size:14px;color:var(--charcoal)}
+.dg-sum::-webkit-details-marker{display:none}
+.dg-sum::after{content:'▾';font-size:11px;color:var(--muted);margin-left:2px;transition:transform .15s}
+.dg-grupo:not([open]) .dg-sum::after{transform:rotate(-90deg)}
+.dg-ico{width:20px;text-align:center}
+.dg-tit{flex:1;font-weight:600;min-width:0}
+.dg-pct{font-size:12px;color:var(--muted)}
+.dg-tot{font-size:15px;white-space:nowrap;min-width:72px;text-align:right}
+.dg-bar{height:4px;border-radius:2px;background:var(--border);margin:7px 0 4px 28px;overflow:hidden}
+.dg-bar span{display:block;height:100%;background:var(--gold);border-radius:2px}
+.dg-lineas{list-style:none;margin:4px 0 0 28px;padding:0}
+.dg-lineas li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:13.5px;color:var(--charcoal2)}
+.dg-lineas li+li{border-top:1px dashed var(--border)}
+.dg-concepto{min-width:0}
+.dg-concepto small{display:block;font-size:11.5px;line-height:1.4;color:var(--muted);margin-top:1px}
+.dg-imp{font-weight:600;white-space:nowrap}
+.dg-ir{background:none;border:0;padding:4px 0 0 28px;font-size:12px;color:var(--gold);cursor:pointer}
+.dg-ir:hover{text-decoration:underline}
+.dg-sin{display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-top:1px solid var(--border);padding-top:10px;margin-top:4px;font-size:12px;color:var(--muted)}
+@media (max-width:560px){.dg{padding:12px 14px}.dg-lineas,.dg-bar{margin-left:0}.dg-ir{padding-left:0}.dg-pct{display:none}}

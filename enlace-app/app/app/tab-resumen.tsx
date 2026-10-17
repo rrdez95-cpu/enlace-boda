@@ -171,6 +171,66 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
     fincaExtras: extrasFinca.reduce((s, l) => s + l.importe, 0),
   }
   const totalGastado = Object.values(costes).reduce((a, b) => a + (b || 0), 0)
+
+  // Desglose del presupuesto: qué es cada cantidad y de dónde sale
+  const n = (k: string) => parseFloat(R[k] || '0') || 0
+  const con = (...partes: (string | undefined | false)[]) => partes.filter(Boolean).join(' · ')
+  const linea = (concepto: string, importe: number, detalle: string): LineaDesglose => ({ concepto, importe, detalle })
+  const lineaGasto = (x: GastoExtra): LineaDesglose => {
+    const c = parseFloat(x.coste) || 0
+    return linea(x.nombre || 'Sin nombre', importeGasto(x),
+      x.tipoPrecio === 'porInvitado'
+        ? invitados ? `${eur(c)} por invitado × ${invitados} invitados` : `${eur(c)} por invitado (falta el nº de invitados)`
+        : 'Precio total')
+  }
+  const desglose: GrupoDesglose[] = [
+    { sec: 'sec-ceremonia', icon: '⛪', titulo: 'Ceremonia', lineas: [
+      linea('Ceremonia', n('costeCeremonia'), con(R.tipoCeremonia, R.lugarCeremonia) || 'Coste de la ceremonia'),
+      linea('Oficiante', n('costeOficiante'), R.oficiante || 'Persona que oficia la ceremonia'),
+    ] },
+    { sec: 'sec-coctel', icon: '🥂', titulo: 'Cóctel', lineas: [
+      linea('Cóctel de bienvenida', n('costeCoctel'), con(R.ubiCoctel, R.durCoctel && `${R.durCoctel}`, R.grupoCoctel && `Música: ${R.grupoCoctel}`) || 'Precio total del cóctel'),
+    ] },
+    { sec: 'sec-banquete', icon: '🍽️', titulo: 'Banquete', lineas: [
+      linea('Menú', costes.banquete,
+        n('precioPax') && invitados
+          ? con(`${eur(n('precioPax'))} por persona × ${invitados} invitados`, R.catering)
+          : n('precioPax') ? 'Falta el nº de invitados en Fecha y datos' : 'Precio por persona × nº de invitados'),
+    ] },
+    { sec: 'sec-barra', icon: '🍸', titulo: 'Barra libre', lineas: [
+      linea('Barra libre', n('costeBarra'), con(R.horasBarra && `${R.horasBarra} h contratadas`, R.horaBarra && R.cierreBarra && `de ${R.horaBarra} a ${R.cierreBarra}`) || 'Precio total de la barra'),
+    ] },
+    { sec: 'sec-musica', icon: '🎶', titulo: 'Música', lineas: [
+      linea('DJ', n('costeDJ'), con(R.dj, R.horasDJ && `${R.horasDJ} h`) || 'Precio del DJ'),
+      linea('Banda / grupo', n('costeBanda'), con(R.banda, R.horasBanda && `${R.horasBanda} h`) || 'Precio del grupo'),
+    ] },
+    { sec: 'sec-foto', icon: '📷', titulo: 'Foto y vídeo', lineas: [
+      linea('Fotografía', n('costeFoto'), con(R.fotografo, R.horasFoto && `${R.horasFoto} h`, R.entregaFoto) || 'Precio del fotógrafo/a'),
+      linea('Vídeo', n('costeVideo'), con(R.videografo, R.horasVideo && `${R.horasVideo} h`, R.entregaVideo) || 'Precio del videógrafo/a'),
+    ] },
+    { sec: 'sec-horaloca', icon: '🎉', titulo: 'Hora loca', lineas: [
+      linea('Agencia', n('costeAgenciaHoraLoca'), con(R.agenciaHoraLoca, R.incluyeHoraLoca) || 'Hora loca contratada'),
+      ...horaLoca.map(lineaGasto),
+    ] },
+    { sec: 'sec-detalles', icon: '🎁', titulo: 'Alianzas y detalles', lineas: [
+      linea('Alianzas', n('costeAlianzas'), con(R.joyeria, R.grabado && `Grabado: ${R.grabado}`) || 'Anillos de boda'),
+      ...detalles.map(lineaGasto),
+    ] },
+    { sec: 'sec-transporte', icon: '🚌', titulo: 'Transporte', lineas: [
+      ...(hayCoche(R) ? [linea('Coche nupcial', n('costeCoche'), con(R.cocheNupcial, R.trayecto) || 'Coche de los novios')] : []),
+      ...(hayBus(R) ? autobuses.map((b, i) => linea(nombreBus(b, i),
+        parseFloat(b.coste) || 0,
+        con(b.empresa, b.plazas && `${b.plazas} plazas`, b.horaIda && `ida ${b.horaIda}`, b.horaVuelta && `vuelta ${b.horaVuelta}`) || 'Autobús de invitados')) : []),
+    ] },
+    { sec: 'sec-alojamiento', icon: '🏨', titulo: 'Alojamiento', lineas: [
+      linea('Noche de bodas', n('costeHotel'), con(R.hotelNovios, R.tipoHab) || 'Hotel de los novios'),
+    ] },
+    ...(fincaElegida ? [{ sec: '', icon: '🌿', titulo: `Extras de ${fincaElegida.nombre}`,
+      lineas: extrasFinca.map(l => linea(l.concepto, l.importe, l.detalle || 'Según lo apuntado en Fincas')) }] : []),
+  ].map(g => ({ ...g, lineas: g.lineas.filter(l => l.importe > 0) }))
+  const gruposConCoste = desglose.filter(g => g.lineas.length).map(g => ({ ...g, total: g.lineas.reduce((a, l) => a + l.importe, 0) }))
+    .sort((a, b) => b.total - a.total)
+  const gruposSinCoste = desglose.filter(g => !g.lineas.length)
   const presupuesto = parseFloat(R.presupuesto || '0')
   // Regalos apuntados en Mesas: solo para saber cuánto ha costado la boda al final
   const regalos = data.guests.reduce((s, g) => s + (parseFloat(g.importe) || 0), 0)
@@ -683,29 +743,47 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                   <BovItem val={regalos} label="Regalos" />
                 </div>
 
-                {fincaElegida && (
-                  <div className="fe-box">
-                    <div className="fe-box-h">
-                      <span>Extras de {fincaElegida.nombre}</span>
-                      <b>{costes.fincaExtras.toLocaleString('es-ES')} €</b>
-                    </div>
-                    {extrasFinca.length === 0 ? (
-                      <p className="fe-box-empty">Esta finca no tiene extras con coste.</p>
-                    ) : (
-                      <ul className="fe-box-list">
-                        {extrasFinca.map((l, i) => (
+                <div className="dg">
+                  <div className="dg-head">
+                    <span>Desglose del gasto</span>
+                    <b>{eur(totalGastado)}</b>
+                  </div>
+                  {gruposConCoste.length === 0 ? (
+                    <p className="dg-empty">Todavía no hay costes apuntados. Pon los precios en cada apartado y aquí verás qué es cada cantidad y por qué.</p>
+                  ) : gruposConCoste.map(g => (
+                    <details className="dg-grupo" key={g.titulo} open>
+                      <summary className="dg-sum">
+                        <span className="dg-ico">{g.icon}</span>
+                        <span className="dg-tit">{g.titulo}</span>
+                        <span className="dg-pct">{totalGastado ? Math.round(g.total / totalGastado * 100) : 0}%</span>
+                        <b className="dg-tot">{eur(g.total)}</b>
+                      </summary>
+                      <div className="dg-bar"><span style={{ width: `${totalGastado ? g.total / totalGastado * 100 : 0}%` }} /></div>
+                      <ul className="dg-lineas">
+                        {g.lineas.map((l, i) => (
                           <li key={i}>
-                            <span>{l.concepto}{l.detalle && <small>{l.detalle}</small>}</span>
-                            <span>{Math.round(l.importe).toLocaleString('es-ES')} €</span>
+                            <span className="dg-concepto">{l.concepto}<small>{l.detalle}</small></span>
+                            <span className="dg-imp">{eur(l.importe)}</span>
                           </li>
                         ))}
                       </ul>
-                    )}
+                      {g.sec && <button type="button" className="dg-ir" onClick={() => scrollTo(g.sec)}>Cambiar en {g.titulo} →</button>}
+                    </details>
+                  ))}
+                  {gruposSinCoste.length > 0 && (
+                    <div className="dg-sin">
+                      <span>Sin coste apuntado:</span>
+                      {gruposSinCoste.filter(g => g.sec).map(g => (
+                        <button type="button" key={g.titulo} className="gasto-chip" onClick={() => scrollTo(g.sec)}>{g.icon} {g.titulo}</button>
+                      ))}
+                    </div>
+                  )}
+                  {fincaElegida && (
                     <p className="fe-box-note">
-                      El menú, la ceremonia y el sonido de la finca están en sus apartados. Estos extras se actualizan solos si los cambias en Fincas.
+                      Los extras de {fincaElegida.nombre} se actualizan solos si los cambias en Fincas. El menú, la ceremonia y el sonido de la finca están en sus apartados.
                     </p>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div className="balance-box">
                   <div className="balance-label">Coste real de la boda</div>
@@ -1057,4 +1135,11 @@ function ListaGastos({ items, onChange, invitados, sugerencias, ayuda, porInvita
       )}
     </>
   )
+}
+
+type LineaDesglose = { concepto: string; importe: number; detalle: string }
+type GrupoDesglose = { sec: string; icon: string; titulo: string; lineas: LineaDesglose[] }
+
+function eur(v: number): string {
+  return `${Math.round(v).toLocaleString('es-ES')} €`
 }
