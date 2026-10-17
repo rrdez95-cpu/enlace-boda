@@ -1,7 +1,7 @@
 'use client'
 
 import './invitado.css'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import { useBoda } from '@/lib/use-boda'
@@ -17,7 +17,6 @@ import AuthModal, { type MotivoRegistro } from '../_components/auth-modal'
 
 const FREE_GUESTS = 30
 const FREE_MOMENTS = 5
-const CAMBIOS_PARA_AVISAR = 15
 
 type Tab = 'inicio' | 'fincas' | 'mesas' | 'plano' | 'crono' | 'resumen' | 'invitaciones'
 
@@ -68,18 +67,15 @@ export default function EnlaceApp({
     try { sessionStorage.setItem('enlace:aviso-cerrado', '1') } catch { /* sin acceso */ }
   }
 
-  // Tras un rato usándola sin cuenta, se le propone guardar (una vez por sesión)
-  const cambios = useRef(0)
+  // Si llega desde un enlace antiguo de /login, se abre el acceso sobre la app (nunca antes de verla)
   useEffect(() => {
-    if (!invitado || loading) return
-    cambios.current++
-    if (cambios.current !== CAMBIOS_PARA_AVISAR) return
-    try {
-      if (sessionStorage.getItem('enlace:propuesta-vista') === '1') return
-      sessionStorage.setItem('enlace:propuesta-vista', '1')
-    } catch { /* sin acceso */ }
-    setRegistro(r => r || 'guardar')
-  }, [data, invitado, loading])
+    if (!invitado) return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('entrar') !== '1') return
+    window.history.replaceState({}, '', window.location.pathname)
+    const t = setTimeout(() => setRegistro(r => r || 'login'), 600)
+    return () => clearTimeout(t)
+  }, [invitado])
 
   // Vuelta desde Stripe
   useEffect(() => {
@@ -119,7 +115,7 @@ export default function EnlaceApp({
 
   async function logout() {
     await supabase.auth.signOut()
-    router.push('/login')
+    router.push('/app')
     router.refresh()
   }
 
