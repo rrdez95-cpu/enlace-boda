@@ -40,7 +40,7 @@ const SCRIPT = new Set(['Pinyon Script', 'Great Vibes', 'Parisienne', 'Allura', 
 
 export const RADIOS = ['recto', 'suave', 'redondo'] as const
 export const PORTADAS = ['centrada', 'foto-fondo', 'dividida', 'arco'] as const
-export const ORNAMENTOS = ['simbolos', 'linea', 'olivo', 'flores', 'deco', 'acuarela', 'ondas', 'lavanda', 'pampas', 'magnolia'] as const
+export const ORNAMENTOS = ['simbolos', 'linea', 'olivo', 'flores', 'deco', 'acuarela', 'ondas', 'lavanda', 'pampas', 'magnolia', 'huellas', 'espacio'] as const
 export const TEXTURAS = ['papel', 'estrellas', 'puntos', 'rayas', 'lisa'] as const
 export const FILTROS = ['natural', 'calida', 'fria', 'bn', 'oscura'] as const
 

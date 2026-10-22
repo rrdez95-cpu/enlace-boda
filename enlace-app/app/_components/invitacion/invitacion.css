@@ -297,7 +297,7 @@ select.iv-input option{color:#222;background:#fff}
 /* ═════ ADORNOS ELEGIDOS (plantillas nuevas y la creada con IA) ═════ */
 .iv[data-orn="linea"] .iv-o-linea,.iv[data-orn="pampas"] .iv-o-pampas,.iv[data-orn="magnolia"] .iv-o-magnolia,
 .iv[data-orn="lavanda"] .iv-o-lavanda,.iv[data-orn="ondas"] .iv-o-ondas,.iv[data-orn="olivo"] .iv-o-olive,
-.iv[data-orn="flores"] .iv-o-flor,.iv[data-orn="deco"] .iv-o-deco,.iv[data-orn="acuarela"] .iv-o-acua{display:block}
+.iv[data-orn="flores"] .iv-o-flor,.iv[data-orn="huellas"] .iv-o-huellas,.iv[data-orn="espacio"] .iv-o-espacio,.iv[data-orn="deco"] .iv-o-deco,.iv[data-orn="acuarela"] .iv-o-acua{display:block}
 .iv[data-orn="simbolos"] .iv-o-sim{display:flex;align-items:center;gap:14px;font-size:20px;letter-spacing:.3em;color:var(--accent);line-height:38px}
 .iv-o-sim::before,.iv-o-sim::after{content:'';width:56px;height:1px;background:var(--line)}
 

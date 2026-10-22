@@ -47,6 +47,8 @@ function Orn({ simbolos }: { simbolos?: string }) {
       <svg className="iv-o-magnolia"><use href="#iv-orn-magnolia" /></svg>
       <svg className="iv-o-lavanda"><use href="#iv-orn-lavanda" /></svg>
       <svg className="iv-o-ondas"><use href="#iv-orn-ola" /></svg>
+      <svg className="iv-o-huellas"><use href="#iv-orn-huellas" /></svg>
+      <svg className="iv-o-espacio"><use href="#iv-orn-espacio" /></svg>
       {simbolos && <span className="iv-o-sim">{Array.from(simbolos.replace(/\s/g, '')).join(' ')}</span>}
     </div>
   )

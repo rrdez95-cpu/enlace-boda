@@ -14,7 +14,7 @@ export type TemaInfo = {
 }
 
 export const TEMAS: TemaInfo[] = [
-  { id: 'ia', label: 'Crea la vuestra', desc: 'Escribid cómo la imagináis y la diseñamos al momento', color: '#B8965A', fondo: '#F5EFE6', tinta: '#5B4A2E', fuente: "'Great Vibes',cursive" },
+  { id: 'ia', label: 'Crea la vuestra', desc: 'Escribid cómo la imagináis (temas, aficiones, estación, colores) y la creamos al momento', color: '#B8965A', fondo: '#F5EFE6', tinta: '#5B4A2E', fuente: "'Great Vibes',cursive" },
   { id: 'acuarela', label: 'Acuarela', color: '#8FA9BA', desc: 'Las fotos se funden con el papel como si estuvieran pintadas', fondo: '#FAFAF7', tinta: '#5E7D92', fuente: "'Pinyon Script',cursive" },
   { id: 'carta', label: 'Carta', color: '#7B2230', desc: 'Se abre como un sobre con lacre y vuestras iniciales', fondo: '#F1E7D3', tinta: '#7B2230', fuente: "'Homemade Apple',cursive" },
   { id: 'mediterraneo', label: 'Mediterráneo', color: '#2D6C8C', desc: 'Arcos encalados, azul mar y ramas de olivo', fondo: '#F7F6F2', tinta: '#1E394B', fuente: "'Marcellus',serif" },

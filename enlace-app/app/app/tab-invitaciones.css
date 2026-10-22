@@ -126,3 +126,5 @@
 .ivt-momentos li.off .ivt-m-hora,.ivt-momentos li.off .ivt-m-tit{opacity:.45}
 .ivt-prev-tip{font-size:12px;color:var(--muted)}
 @media (max-width:900px){.ivt-prev-tip{display:none}}
+.ivt-ia-btns{display:flex;gap:8px}
+.ivt-ia-btns .ivt-btn.primary{flex:1;width:auto}

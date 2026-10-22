@@ -122,7 +122,7 @@ export type TemaIA = {
   fNames: string; fTitle: string; fBody: string
   radius: 'recto' | 'suave' | 'redondo'
   portada: 'centrada' | 'foto-fondo' | 'dividida' | 'arco'
-  ornamento: 'simbolos' | 'linea' | 'olivo' | 'flores' | 'deco' | 'acuarela' | 'ondas' | 'lavanda' | 'pampas' | 'magnolia'
+  ornamento: 'simbolos' | 'linea' | 'olivo' | 'flores' | 'deco' | 'acuarela' | 'ondas' | 'lavanda' | 'pampas' | 'magnolia' | 'huellas' | 'espacio'
   simbolos: string
   textura: 'papel' | 'estrellas' | 'puntos' | 'rayas' | 'lisa'
   fotoFiltro: 'natural' | 'calida' | 'fria' | 'bn' | 'oscura'

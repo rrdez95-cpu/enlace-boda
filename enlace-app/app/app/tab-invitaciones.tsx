@@ -2,7 +2,8 @@
 
 import './tab-invitaciones.css'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { BodaData, Guest, InvitacionConfig, InvitacionLugar, RsvpResponse, SeccionInvitacion, TemaIA } from '@/lib/types'
+import type { BodaData, Guest, InvitacionConfig, InvitacionLugar, RsvpResponse, SeccionInvitacion } from '@/lib/types'
+import { crearPlantillaLocal } from '@/lib/plantilla-local'
 import { createClient } from '@/lib/supabase-client'
 import {
   TEMAS, SECCIONES, VARIANTES, FONT_MINIATURAS, buildInvitacion, momentosInvitacion, normalizeConfig, parseNames, slugCodigo,
@@ -86,12 +87,12 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
     },
   }
 
-  /* ─── plantilla creada con IA ─── */
+  /* ─── «Crea la vuestra»: se compone al momento con lo que escriben ─── */
   const [iaAbierta, setIaAbierta] = useState(cfg.tema === 'ia')
   const [iaPrompt, setIaPrompt] = useState(cfg.temaIA?.prompt || '')
-  const [iaCreando, setIaCreando] = useState(false)
   const [iaError, setIaError] = useState('')
-  const [iaRestantes, setIaRestantes] = useState<number | null>(null)
+  const [iaVersion, setIaVersion] = useState(0)
+  const [iaEntendido, setIaEntendido] = useState<string[] | null>(null)
 
   function elegirTema(id: InvitacionConfig['tema']) {
     if (id === 'ia') {
@@ -103,29 +104,17 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
     upd({ tema: id })
   }
 
-  async function crearConIA() {
-    if (isGuest || !userId) { onRegistro(); return }
+  function crearConIA(otra = false) {
     const prompt = iaPrompt.trim()
     if (prompt.length < 3) { setIaError('Cuéntanos un poco cómo la imagináis.'); return }
     setIaError('')
-    setIaCreando(true)
-    try {
-      const res = await fetch('/api/plantilla-ia', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      })
-      const json = await res.json().catch(() => ({})) as { tema?: TemaIA; error?: string; restantes?: number }
-      if (typeof json.restantes === 'number') setIaRestantes(json.restantes)
-      if (!res.ok || !json.tema) { setIaError(json.error || 'No se ha podido crear. Inténtalo otra vez.'); return }
-      upd({ tema: 'ia', temaIA: json.tema })
-      setPanel('ver')
-      showToast(`Plantilla «${json.tema.nombre}» lista`)
-    } catch {
-      setIaError('Revisa tu conexión e inténtalo otra vez.')
-    } finally {
-      setIaCreando(false)
-    }
+    const misma = otra && prompt === cfg.temaIA?.prompt
+    const version = misma ? iaVersion + 1 : 0
+    const { tema, entendido } = crearPlantillaLocal(prompt, version)
+    setIaVersion(version)
+    setIaEntendido(entendido)
+    upd({ tema: 'ia', temaIA: tema })
+    showToast(`Plantilla «${tema.nombre}» lista`)
   }
   function usarTextosIA() {
     const t = cfg.temaIA
@@ -308,22 +297,35 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
                   onChange={e => setIaPrompt(e.target.value)} />
               </label>
               <div className="ivt-ia-ideas">
-                {['Mágica, con castillo y velas', 'Toscana con limones', 'Años 20 art déco', 'Otoño en el bosque', 'Atardecer en Cádiz', 'Navidad nevada'].map(x => (
+                {['Primavera con nuestros perros', 'Mágica, con castillo y velas', 'Galaxia y ciencia ficción', 'Toscana con limones', 'Años 20', 'Otoño en el bosque', 'Atardecer en Cádiz', 'Rock y vinilos'].map(x => (
                   <button key={x} type="button" className="ivt-chip" onClick={() => setIaPrompt(x)}>{x}</button>
                 ))}
               </div>
-              <button type="button" className="ivt-btn primary" onClick={crearConIA} disabled={iaCreando}>
-                {iaCreando ? 'Diseñando vuestra plantilla…' : isGuest ? 'Crear cuenta para diseñarla' : temaIA ? 'Diseñar otra' : 'Diseñar plantilla'}
-              </button>
-              {iaCreando && <p className="ivt-note">Tarda unos segundos. Elegimos colores, letras, portada y adornos a partir de lo que habéis escrito.</p>}
+              <div className="ivt-ia-btns">
+                <button type="button" className="ivt-btn primary" onClick={() => crearConIA(false)}>
+                  {temaIA && iaPrompt.trim() === temaIA.prompt ? 'Volver a crearla' : 'Crear plantilla'}
+                </button>
+                {temaIA && iaPrompt.trim() === temaIA.prompt && (
+                  <button type="button" className="ivt-btn ghost" onClick={() => crearConIA(true)}>Otra versión</button>
+                )}
+              </div>
+              <p className="ivt-note">
+                Escribid temas, aficiones, la estación o colores: «perros», «ciencia ficción», «primavera», «verde salvia»… Se crea al momento.
+              </p>
+              {iaEntendido && (
+                <p className="ivt-note">
+                  {iaEntendido.length
+                    ? <>Hemos usado: <b>{iaEntendido.join(', ')}</b>.</>
+                    : 'No hemos reconocido ningún tema, así que os proponemos una clásica. Probad con otras palabras.'}
+                </p>
+              )}
               {iaError && <p className="ivt-err" role="alert">{iaError}</p>}
-              {iaRestantes !== null && !iaError && <p className="ivt-note">Te quedan {iaRestantes} hoy.</p>}
               {temaIA && cfg.tema !== 'ia' && (
                 <button type="button" className="ivt-link" onClick={() => upd({ tema: 'ia' })}>Volver a «{temaIA.nombre}»</button>
               )}
               {temaIA && (temaIA.saludo || temaIA.mensaje) && (
                 <div className="ivt-ia-txt">
-                  <p className="ivt-note">También os propone unos textos con el mismo tono:</p>
+                  <p className="ivt-note">Textos con el mismo tono, por si os gustan:</p>
                   {temaIA.saludo && <p className="ivt-ia-q"><b>{temaIA.saludo}</b></p>}
                   {temaIA.mensaje && <p className="ivt-ia-q">{temaIA.mensaje}</p>}
                   <button type="button" className="ivt-link" onClick={usarTextosIA}>Usar estos textos</button>
