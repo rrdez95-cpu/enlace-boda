@@ -9,7 +9,11 @@ import {
   TEMAS, SECCIONES, VARIANTES, FONT_MINIATURAS, buildInvitacion, momentosInvitacion, normalizeConfig, parseNames, slugCodigo,
   type ParteConVariantes,
 } from '@/lib/invitacion'
-import InvitacionView, { type EdicionInvitacion } from '../_components/invitacion/invitacion-view'
+import InvitacionView, { type EdicionInvitacion, type ClaveOpcion } from '../_components/invitacion/invitacion-view'
+import {
+  PALETAS, LETRAS, PORTADAS_INV, ADORNOS, MARCOS, EFECTOS, TEXTURAS_INV, FRANJAS, APERTURAS, FONT_MUESTRAS,
+} from '@/lib/invitacion-estilo'
+import type { PersonalInvitacion } from '@/lib/types'
 import { reducirFoto, blobADataUrl, subirFoto, borrarFoto } from '@/lib/fotos'
 
 type Props = {
@@ -75,12 +79,27 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
   }
   const momentos = useMemo(() => momentosInvitacion(data, cfg), [data, cfg])
 
+  /* ─── personalizar la plantilla ─── */
+  function cambiarPersonal<K extends keyof PersonalInvitacion>(k: K, valor: PersonalInvitacion[K]) {
+    const personal: PersonalInvitacion = { ...cfg.personal, [k]: valor }
+    if (k === 'paleta') delete personal.colores
+    if (k === 'colores') delete personal.paleta
+    upd({ personal })
+  }
+  function restablecer() {
+    upd({ personal: {} })
+    showToast('Plantilla como al principio')
+  }
+
   const edicion: EdicionInvitacion = {
     quitarSeccion: x => {
       verSeccion(x, false)
       showToast(`«${nombreParte(x)}» quitado. Puedes volver a ponerlo en «Partes de la invitación»`)
     },
-    cambiarVariante,
+    cambiar: (clave: ClaveOpcion, id: string) => {
+      if (clave === 'portada' || clave === 'adorno') cambiarPersonal(clave, id)
+      else cambiarVariante(clave, id)
+    },
     quitarMomento: id => {
       verMomento(id, false)
       showToast('Momento quitado de la invitación. Sigue en tu Cronograma')
@@ -97,11 +116,12 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
   function elegirTema(id: InvitacionConfig['tema']) {
     if (id === 'ia') {
       setIaAbierta(true)
-      if (cfg.temaIA) upd({ tema: 'ia' })
+      if (cfg.temaIA) upd({ tema: 'ia', personal: {} })
       return
     }
     setIaAbierta(false)
-    upd({ tema: id })
+    // Al cambiar de plantilla se empieza desde su diseño original
+    upd({ tema: id, personal: {} })
   }
 
   function crearConIA(otra = false) {
@@ -113,7 +133,7 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
     const { tema, entendido } = crearPlantillaLocal(prompt, version)
     setIaVersion(version)
     setIaEntendido(entendido)
-    upd({ tema: 'ia', temaIA: tema })
+    upd({ tema: 'ia', temaIA: tema, personal: {} })
     showToast(`Plantilla «${tema.nombre}» lista`)
   }
   function usarTextosIA() {
@@ -125,6 +145,7 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
 
   /* ─── vista previa ─── */
   const vista = useMemo(() => buildInvitacion(data, cfg), [data, cfg])
+  const est = vista.estilo
 
   useEffect(() => { vistaRef.current?.scrollTo({ top: 0 }) }, [cfg.tema])
 
@@ -335,6 +356,64 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
           )}
         </Grupo>
 
+        <Grupo titulo="Personaliza la plantilla"
+          accion={Object.keys(cfg.personal).length > 0 ? <button className="ivt-link" onClick={restablecer}>Volver al original</button> : undefined}>
+          <p className="ivt-note">Cambia cualquier pieza sin perder el resto. También puedes usar las flechas ‹ › de la vista previa.</p>
+
+          <Opcion titulo="Portada" lista={PORTADAS_INV} actual={est.portada} onChange={v => cambiarPersonal('portada', v)} />
+
+          <div className="ivt-opc">
+            <div className="ivt-sub">Colores</div>
+            <div className="ivt-paletas">
+              {PALETAS.map(p => (
+                <button key={p.id} type="button" title={p.label} aria-label={p.label}
+                  className={`ivt-paleta ${!cfg.personal.colores && (cfg.personal.paleta ? cfg.personal.paleta === p.id : est.colores === p.c) ? 'on' : ''}`}
+                  aria-pressed={cfg.personal.paleta === p.id}
+                  onClick={() => cambiarPersonal('paleta', p.id)}>
+                  <span style={{ background: p.c.paper }} /><span style={{ background: p.c.accent }} /><span style={{ background: p.c.ink }} />
+                </button>
+              ))}
+            </div>
+            <div className="ivt-colores">
+              {([['paper', 'Fondo'], ['ink', 'Texto'], ['accent', 'Detalles']] as const).map(([k, label]) => (
+                <label key={k} className="ivt-color">
+                  <input type="color" value={(cfg.personal.colores?.[k] || est.colores[k]).slice(0, 7)}
+                    onChange={ev => cambiarPersonal('colores', {
+                      paper: cfg.personal.colores?.paper || est.colores.paper,
+                      ink: cfg.personal.colores?.ink || est.colores.ink,
+                      accent: cfg.personal.colores?.accent || est.colores.accent,
+                      [k]: ev.target.value,
+                    })} />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="ivt-opc">
+            <div className="ivt-sub">Letras</div>
+            <link rel="stylesheet" href={FONT_MUESTRAS} />
+            <div className="ivt-letras">
+              {LETRAS.map(l => (
+                <button key={l.id} type="button" aria-pressed={est.letras.id === l.id}
+                  className={`ivt-letra ${est.letras.id === l.id ? 'on' : ''}`} onClick={() => cambiarPersonal('letras', l.id)}>
+                  <span style={{ fontFamily: `'${l.names}'`, fontStyle: l.namesItalic ? 'italic' : undefined, textTransform: l.namesMayus ? 'uppercase' : undefined }}>
+                    {(n1 || 'Lorena').split(' ')[0]} &amp; {(n2 || 'Luisfer').split(' ')[0]}
+                  </span>
+                  <small>{l.label}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Opcion titulo="Adornos alrededor" lista={ADORNOS} actual={est.adorno} onChange={v => cambiarPersonal('adorno', v)} />
+          <Opcion titulo="Forma de las fotos" lista={MARCOS} actual={est.marco} onChange={v => cambiarPersonal('marco', v)} />
+          <Opcion titulo="Efecto en la portada" lista={EFECTOS} actual={est.efecto} onChange={v => cambiarPersonal('efecto', v)} />
+          <Opcion titulo="Fondo" lista={TEXTURAS_INV} actual={est.textura} onChange={v => cambiarPersonal('textura', v)} />
+          <Opcion titulo="Franjas" lista={FRANJAS} actual={est.franjas} onChange={v => cambiarPersonal('franjas', v)} />
+          <Opcion titulo="Al abrirla" lista={APERTURAS} actual={est.apertura} onChange={v => cambiarPersonal('apertura', v)} />
+        </Grupo>
+
         <Grupo titulo="Portada">
           <p className="ivt-note">
             {n1 ? <>Nombres: <b>{n2 ? `${n1} y ${n2}` : n1}</b>. </> : <>Faltan vuestros nombres. </>}
@@ -382,6 +461,12 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
               </ul>
             </>
           )}
+          {nBuses > 0 && (
+            <>
+              <div className="ivt-sub">Autobuses</div>
+              <Variantes parte="autobuses" actual={cfg.variantes.autobuses} onChange={cambiarVariante} />
+            </>
+          )}
           <p className="ivt-note">
             {nBuses > 0
               ? `Los autobuses tienen su propia parte y tus invitados podrán pedir plaza al confirmar.`
@@ -401,6 +486,7 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
           </div>
           <div className="ivt-sub">Cuenta atrás</div>
           <Variantes parte="cuenta" actual={cfg.variantes.cuenta} onChange={cambiarVariante} />
+          <Variantes parte="caja" actual={cfg.variantes.caja} onChange={cambiarVariante} />
           <div className="ivt-sub">Dónde y cuándo</div>
           <Variantes parte="lugares" actual={cfg.variantes.lugares} onChange={cambiarVariante} />
         </Grupo>
@@ -484,6 +570,21 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
 }
 
 /* ═══ PIEZAS DEL EDITOR ═══ */
+
+function Opcion({ titulo, lista, actual, onChange }: {
+  titulo: string; lista: readonly { id: string; label: string }[]; actual: string; onChange: (id: string) => void
+}) {
+  return (
+    <div className="ivt-opc">
+      <div className="ivt-sub">{titulo}</div>
+      <div className="ivt-seg ivt-var" role="group" aria-label={titulo}>
+        {lista.map(v => (
+          <button key={v.id} type="button" aria-pressed={actual === v.id} onClick={() => onChange(v.id)}>{v.label}</button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function Variantes({ parte, actual, onChange }: {
   parte: ParteConVariantes; actual?: string; onChange: (p: ParteConVariantes, id: string) => void

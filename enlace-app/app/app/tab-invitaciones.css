@@ -128,3 +128,19 @@
 @media (max-width:900px){.ivt-prev-tip{display:none}}
 .ivt-ia-btns{display:flex;gap:8px}
 .ivt-ia-btns .ivt-btn.primary{flex:1;width:auto}
+
+/* personalizar */
+.ivt-opc{display:flex;flex-direction:column;gap:6px}
+.ivt-paletas{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:6px}
+.ivt-paleta{display:flex;height:30px;padding:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;background:none}
+.ivt-paleta span{flex:1}
+.ivt-paleta span:first-child{flex:1.4}
+.ivt-paleta.on{box-shadow:0 0 0 2px var(--gold);border-color:var(--gold)}
+.ivt-colores{display:flex;gap:12px;flex-wrap:wrap}
+.ivt-color{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--charcoal2);cursor:pointer}
+.ivt-color input{width:30px;height:24px;padding:0;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer}
+.ivt-letras{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ivt-letra{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;text-align:left;overflow:hidden}
+.ivt-letra span{font-size:18px;line-height:1.3;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ivt-letra small{font-size:11px;color:var(--muted)}
+.ivt-letra.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}

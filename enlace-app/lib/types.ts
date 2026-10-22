@@ -100,16 +100,33 @@ export type Finca = {
 export type InvitacionTema =
   | 'ia'
   | 'acuarela' | 'carta' | 'mediterraneo' | 'noche' | 'jardin'
-  | 'minimalista' | 'boho' | 'magnolia' | 'lavanda' | 'playa'
+  | 'minimalista' | 'boho' | 'magnolia' | 'lavanda' | 'playa' | 'black'
 
 /** Partes de la invitación que se pueden quitar */
 export type SeccionInvitacion = 'cuenta' | 'carta' | 'lugares' | 'programa' | 'autobuses' | 'regalo' | 'contacto'
 
 /** Cómo se pinta cada parte que tiene varios diseños */
 export type VariantesInvitacion = {
-  programa?: 'linea' | 'tarjetas' | 'iconos' | 'horario' | 'mini'
+  programa?: 'linea' | 'tarjetas' | 'iconos' | 'animado' | 'horario' | 'mini'
   cuenta?: 'numeros' | 'circulos' | 'calendario' | 'frase'
+  /** Recuadro de la cuenta atrás */
+  caja?: 'ninguna' | 'tarjeta' | 'banda' | 'marco'
   lugares?: 'fotos' | 'tarjetas' | 'lista'
+  autobuses?: 'tarjetas' | 'ruta'
+}
+
+/** Cambios sobre la plantilla elegida (si falta algo, se usa lo de la plantilla) */
+export type PersonalInvitacion = {
+  paleta?: string
+  colores?: { paper: string; ink: string; accent: string }
+  letras?: string
+  portada?: string
+  adorno?: string
+  marco?: string
+  textura?: string
+  efecto?: string
+  franjas?: string
+  apertura?: string
 }
 
 /** Plantilla creada con IA a partir de lo que escriben los novios */
@@ -166,6 +183,7 @@ export type InvitacionConfig = {
   programaVisibles: Record<string, boolean>
   /** Nombre que ven los invitados para cada momento */
   programaTitulos: Record<string, string>
+  personal: PersonalInvitacion
   temaIA?: TemaIA
 }
 

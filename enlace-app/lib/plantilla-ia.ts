@@ -15,7 +15,7 @@ export const FUENTES_DISPLAY = [
 ] as const
 
 // Tipografías de texto, con las variantes que existen de verdad en Google Fonts
-const ESPEC_TEXTO: Record<string, string> = {
+export const ESPEC_TEXTO: Record<string, string> = {
   'Cormorant Garamond': ':ital,wght@0,400;0,500;1,400',
   'EB Garamond': ':ital,wght@0,400;0,500;1,400',
   'Lora': ':ital,wght@0,400;0,500;1,400',
@@ -34,8 +34,8 @@ const ESPEC_TEXTO: Record<string, string> = {
 }
 export const FUENTES_TEXTO = Object.keys(ESPEC_TEXTO)
 
-const SERIF_TEXTO = new Set(['Cormorant Garamond', 'EB Garamond', 'Lora', 'Libre Baskerville', 'IM Fell English', 'Crimson Text', 'Spectral', 'Alegreya'])
-const SCRIPT = new Set(['Pinyon Script', 'Great Vibes', 'Parisienne', 'Allura', 'Alex Brush', 'Tangerine', 'Sacramento',
+export const SERIF_TEXTO = new Set(['Cormorant Garamond', 'EB Garamond', 'Lora', 'Libre Baskerville', 'IM Fell English', 'Crimson Text', 'Spectral', 'Alegreya'])
+export const SCRIPT = new Set(['Pinyon Script', 'Great Vibes', 'Parisienne', 'Allura', 'Alex Brush', 'Tangerine', 'Sacramento',
   'Dancing Script', 'Satisfy', 'Kaushan Script', 'Pacifico', 'Lobster', 'Petit Formal Script', 'Homemade Apple', 'Caveat'])
 
 export const RADIOS = ['recto', 'suave', 'redondo'] as const
@@ -51,7 +51,7 @@ function rgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16)
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
 }
-function luminancia(hex: string): number {
+export function luminancia(hex: string): number {
   const c = rgb(hex).map(v => {
     const x = v / 255
     return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)
@@ -62,13 +62,13 @@ export function contraste(a: string, b: string): number {
   const [x, y] = [luminancia(a), luminancia(b)].sort((m, n) => n - m)
   return (x + 0.05) / (y + 0.05)
 }
-function mezclar(a: string, b: string, t: number): string {
+export function mezclar(a: string, b: string, t: number): string {
   const [r1, g1, b1] = rgb(a), [r2, g2, b2] = rgb(b)
   const h = (v: number) => Math.round(v).toString(16).padStart(2, '0')
   return '#' + h(r1 + (r2 - r1) * t) + h(g1 + (g2 - g1) * t) + h(b1 + (b2 - b1) * t)
 }
 /** Acerca el color al blanco o al negro hasta que se lea bien sobre el fondo */
-function legible(color: string, fondo: string, minimo: number): string {
+export function legible(color: string, fondo: string, minimo: number): string {
   if (contraste(color, fondo) >= minimo) return color
   const destino = luminancia(fondo) > 0.4 ? '#000000' : '#ffffff'
   for (let t = 0.1; t <= 1; t += 0.1) {

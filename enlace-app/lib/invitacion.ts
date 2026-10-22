@@ -2,7 +2,7 @@ import type {
   BodaData, InvitacionConfig, InvitacionContacto, InvitacionLugar, InvitacionTema,
   SeccionInvitacion, TemaIA, VariantesInvitacion,
 } from './types'
-import { fontUrlIA } from './plantilla-ia'
+import { resolverEstilo, limpiarPersonal, fontUrlEstilo, type Estilo } from './invitacion-estilo'
 
 /* ═══ ESTILOS ═══
    'ia' es la plantilla que se crea escribiendo lo que queréis; el resto están hechas a mano */
@@ -25,36 +25,18 @@ export const TEMAS: TemaInfo[] = [
   { id: 'magnolia', label: 'Magnolias', color: '#21392D', ring: '#C2A26B', desc: 'Verde botánico, magnolias y detalles dorados', fondo: '#21392D', tinta: '#E9DFC8', fuente: "'Petit Formal Script',cursive" },
   { id: 'lavanda', label: 'Lavanda', color: '#8C7BB0', desc: 'Campos de la Provenza en lila y salvia', fondo: '#F7F4FA', tinta: '#6E5D96', fuente: "'Parisienne',cursive" },
   { id: 'playa', label: 'Playa', color: '#2A8C8A', ring: '#E9876B', desc: 'Arena, olas, palmeras y atardecer coral', fondo: '#FBF7EE', tinta: '#1F5560', fuente: "'Sacramento',cursive" },
+  { id: 'black', label: 'Foto', color: '#111111', ring: '#D8C3A0', desc: 'Vuestra foto a pantalla completa, siempre de fondo', fondo: '#111111', tinta: '#F2EFEA', fuente: "'Playfair Display',serif" },
 ]
 
-const F = 'https://fonts.googleapis.com/css2?'
-const FONT_URL: Record<Exclude<InvitacionTema, 'ia'>, string> = {
-  acuarela: F + 'family=Pinyon+Script&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap',
-  carta: F + 'family=Homemade+Apple&family=IM+Fell+English:ital@0;1&family=Pinyon+Script&display=swap',
-  mediterraneo: F + 'family=Marcellus&family=Lora:ital,wght@0,400;0,500;1,400&display=swap',
-  noche: F + 'family=Poiret+One&family=Josefin+Sans:wght@300;400&family=Cormorant+Garamond:ital@1&display=swap',
-  jardin: F + 'family=Great+Vibes&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap',
-  minimalista: F + 'family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Jost:wght@300;400;500&display=swap',
-  boho: F + 'family=Alex+Brush&family=Tenor+Sans&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap',
-  magnolia: F + 'family=Petit+Formal+Script&family=Cinzel:wght@400;500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap',
-  lavanda: F + 'family=Parisienne&family=Libre+Baskerville:ital@0;1&display=swap',
-  playa: F + 'family=Sacramento&family=DM+Serif+Display:ital@0;1&family=Quicksand:wght@400;500&display=swap',
-}
-/** Todas las tipografías de las miniaturas del selector de estilo */
-export const FONT_MINIATURAS = F + 'family=Pinyon+Script&family=Homemade+Apple&family=Marcellus&family=Poiret+One&family=Great+Vibes&family=Bodoni+Moda&family=Alex+Brush&family=Petit+Formal+Script&family=Parisienne&family=Sacramento&display=swap'
+/** Tipografías de las miniaturas del selector de plantilla */
+export const FONT_MINIATURAS = 'https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Homemade+Apple&family=Marcellus&family=Poiret+One&family=Great+Vibes&family=Bodoni+Moda&family=Alex+Brush&family=Petit+Formal+Script&family=Parisienne&family=Sacramento&family=Playfair+Display:ital@0;1&display=swap'
 
-const FONDO_TEMA: Record<Exclude<InvitacionTema, 'ia'>, string> = {
-  acuarela: '#FAFAF7', carta: '#4A3A2E', mediterraneo: '#F7F6F2', noche: '#0F2925', jardin: '#FBF4F2',
-  minimalista: '#FFFFFF', boho: '#F4ECE2', magnolia: '#F5F0E5', lavanda: '#F7F4FA', playa: '#FBF7EE',
+export function fontUrlInvitacion(d: Pick<InvitacionData, 'estilo'>): string {
+  return fontUrlEstilo(d.estilo.letras)
 }
-
-export function fontUrlInvitacion(d: Pick<InvitacionData, 'tema' | 'temaIA'>): string {
-  if (d.tema === 'ia') return d.temaIA ? fontUrlIA(d.temaIA) : FONT_URL.jardin
-  return FONT_URL[d.tema]
-}
-export function fondoInvitacion(d: Pick<InvitacionData, 'tema' | 'temaIA'>): string {
-  if (d.tema === 'ia') return d.temaIA?.paper || '#FBF8F3'
-  return FONDO_TEMA[d.tema]
+export function fondoInvitacion(d: Pick<InvitacionData, 'estilo'>): string {
+  const c = d.estilo.colores
+  return d.estilo.portada === 'postal' ? c.desk || c.paper : c.paper
 }
 
 /* ═══ PARTES Y DISEÑOS ═══ */
@@ -73,6 +55,7 @@ export const VARIANTES = {
     { id: 'linea', label: 'Línea del tiempo' },
     { id: 'tarjetas', label: 'Tarjetas' },
     { id: 'iconos', label: 'Iconos' },
+    { id: 'animado', label: 'Animado' },
     { id: 'horario', label: 'Horario' },
     { id: 'mini', label: 'Sencillo' },
   ],
@@ -82,16 +65,26 @@ export const VARIANTES = {
     { id: 'calendario', label: 'Calendario' },
     { id: 'frase', label: 'Una frase' },
   ],
+  caja: [
+    { id: 'ninguna', label: 'Sin recuadro' },
+    { id: 'tarjeta', label: 'Tarjeta' },
+    { id: 'banda', label: 'Franja de color' },
+    { id: 'marco', label: 'Marco doble' },
+  ],
   lugares: [
     { id: 'fotos', label: 'Con fotos' },
     { id: 'tarjetas', label: 'Tarjetas' },
     { id: 'lista', label: 'Lista' },
   ],
+  autobuses: [
+    { id: 'ruta', label: 'Ruta animada' },
+    { id: 'tarjetas', label: 'Tarjetas' },
+  ],
 } as const
 
 export type ParteConVariantes = keyof typeof VARIANTES
 
-const VARIANTE_DEFECTO: Required<VariantesInvitacion> = { programa: 'linea', cuenta: 'numeros', lugares: 'fotos' }
+const VARIANTE_DEFECTO: Required<VariantesInvitacion> = { programa: 'linea', cuenta: 'numeros', caja: 'ninguna', lugares: 'fotos', autobuses: 'ruta' }
 
 /* ═══ PROGRAMA ═══
    Del Cronograma solo se enseña lo que interesa a los invitados.
@@ -217,6 +210,7 @@ export function normalizeConfig(
     variantes: variantes(r.variantes),
     programaVisibles: objeto<boolean>(r.programaVisibles),
     programaTitulos: objeto<string>(r.programaTitulos),
+    personal: limpiarPersonal(r.personal),
     temaIA: r.temaIA,
   }
 }
@@ -228,7 +222,7 @@ export type ProgramaItem = { id: string; hora: string; titulo: string; icono: Ic
 
 export type InvitacionData = {
   tema: InvitacionTema
-  temaIA?: TemaIA
+  estilo: Estilo
   kicker: string
   ocultas: SeccionInvitacion[]
   variantes: Required<VariantesInvitacion>
@@ -307,7 +301,7 @@ export function buildInvitacion(datos: BodaData, cfgIn?: InvitacionConfig): Invi
   const tema = cfg.tema === 'ia' && !cfg.temaIA ? 'acuarela' : cfg.tema
   return {
     tema,
-    temaIA: tema === 'ia' ? cfg.temaIA : undefined,
+    estilo: resolverEstilo(tema, cfg.personal, cfg.temaIA),
     kicker: (tema === 'ia' && cfg.temaIA?.kicker) || 'Nos casamos',
     ocultas: cfg.ocultas,
     variantes: { ...VARIANTE_DEFECTO, ...cfg.variantes } as Required<VariantesInvitacion>,
