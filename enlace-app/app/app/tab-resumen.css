@@ -80,3 +80,17 @@
 .dg-ir:hover{text-decoration:underline}
 .dg-sin{display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-top:1px solid var(--border);padding-top:10px;margin-top:4px;font-size:12px;color:var(--muted)}
 @media (max-width:560px){.dg{padding:12px 14px}.dg-lineas,.dg-bar{margin-left:0}.dg-ir{padding-left:0}.dg-pct{display:none}}
+
+/* ─── Checklist: etiquetas según lo que falta para la boda ─── */
+.ck-aviso{margin:0 0 12px}
+.ck-link{background:none;border:0;padding:0;font:inherit;color:var(--gold);text-decoration:underline;cursor:pointer}
+.ck-plazo{color:var(--muted)}
+.ck-urgente .ck-plazo{color:#b4423a;font-weight:600}
+.ck-tag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;padding:2px 8px;border-radius:10px;line-height:1.5;white-space:nowrap}
+.ck-tag-urgente{background:#fbe5e2;color:#a2342c}
+.ck-tag-pronto{background:#fdf0d8;color:#8a5a12}
+.ck-tag-importante{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+@media (prefers-color-scheme:dark){
+  .ck-tag-urgente{background:#4a2421;color:#f4b8b1}
+  .ck-tag-pronto{background:#45361b;color:#f0d29a}
+}

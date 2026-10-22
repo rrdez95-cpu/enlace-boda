@@ -4,7 +4,7 @@ import './tab-resumen.css'
 
 import { useState, useEffect } from 'react'
 import { AutobusResumen, BodaData, GastoExtra, Proveedor } from '@/lib/types'
-import { CHECKLIST_VERSION, TOTAL_TAREAS, actualizarChecklist } from './checklist-data'
+import { CHECKLIST_VERSION, TOTAL_TAREAS, actualizarChecklist, estadoTarea, fechaBodaDe, textoPlazo, NOMBRE_ETIQUETA } from './checklist-data'
 import {
   MOMENTOS_RESUMEN, HORAS_AUTOMATICAS, LIMITE_MOMENTOS_GRATIS,
   sincronizarMomentos, momentosSinPasar, anadirMomento, momentoEnCronograma, horaMomento, hayCoche, hayBus,
@@ -235,10 +235,15 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
   // Regalos apuntados en Mesas: solo para saber cuánto ha costado la boda al final
   const regalos = data.guests.reduce((s, g) => s + (parseFloat(g.importe) || 0), 0)
 
+  // Las etiquetas dependen de lo que falta hasta la boda
+  const fechaBoda = fechaBodaDe(R.fecha)
+  const hoy = new Date()
+  const estado = (c: (typeof data.checklist)[number]) => estadoTarea(c, fechaBoda, hoy)
+
   let ckList = data.checklist
   if (ckFilter === 'pendiente') ckList = ckList.filter(c => !c.done)
   if (ckFilter === 'hecho') ckList = ckList.filter(c => c.done)
-  if (ckFilter === 'urgente') ckList = ckList.filter(c => c.p === 'urgente' && !c.done)
+  if (ckFilter === 'urgente') ckList = ckList.filter(c => estado(c).etiqueta === 'urgente')
 
   const ckGroups: Record<string, typeof ckList> = {}
   const ckOrder: string[] = []
@@ -248,7 +253,7 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
   })
   const ckDone = data.checklist.filter(c => c.done).length
   const ckPct = data.checklist.length ? Math.round(ckDone / data.checklist.length * 100) : 0
-  const ckUrgentes = data.checklist.filter(c => c.p === 'urgente' && !c.done).length
+  const ckUrgentes = data.checklist.filter(c => estado(c).etiqueta === 'urgente').length
 
   function toggleCheck(id: number) {
     setData(d => ({
@@ -839,6 +844,12 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                     </div>
                   ))}
                 </div>
+                {!fechaBoda && (
+                  <p className="res-hint ck-aviso">
+                    Pon la fecha de la boda en <button type="button" className="ck-link" onClick={() => scrollTo('sec-fecha', true)}>Fecha y datos</button> y
+                    las tareas se marcarán como urgentes o pronto según el tiempo que quede.
+                  </p>
+                )}
                 {ckOrder.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: 28, color: 'var(--muted)', fontStyle: 'italic' }}>
                     No hay tareas con este filtro
@@ -852,22 +863,27 @@ export default function TabResumen({ data, setData, showToast, isPro, onPaywall 
                         <span>{grupo.toUpperCase()}</span>
                         <span style={{ fontWeight: 400, color: 'var(--muted2)' }}>{gd}/{items.length}</span>
                       </div>
-                      {items.map(c => (
-                        <div key={c.id} className={`check-item ${c.done ? 'done' : c.p}`}
-                          onClick={() => toggleCheck(c.id)}>
-                          <div className="check-box">{c.done ? '✓' : ''}</div>
-                          <div className="check-info">
-                            <div className="check-name">{c.n}</div>
-                            <div className="check-meta">
-                              <span className="check-when">{c.c}</span>
-                              <span className={`check-tag tag-${c.p}`}>
-                                {c.p === 'urgente' ? 'Urgente' : c.p === 'pronto' ? 'Pronto' : 'Normal'}
-                              </span>
+                      {items.map(c => {
+                        const e = estado(c)
+                        const plazo = textoPlazo(e.plazo, e.faltan)
+                        return (
+                          <div key={c.id}
+                            className={`check-item ${c.done ? 'done' : e.etiqueta === 'urgente' || e.etiqueta === 'pronto' ? e.etiqueta : 'normal'} ck-${e.etiqueta || 'nada'}`}
+                            onClick={() => toggleCheck(c.id)}>
+                            <div className="check-box">{c.done ? '✓' : ''}</div>
+                            <div className="check-info">
+                              <div className="check-name">{c.n}</div>
+                              <div className="check-meta">
+                                <span className="check-when">{c.c}{plazo && <span className="ck-plazo"> · {plazo}</span>}</span>
+                                {e.etiqueta && (
+                                  <span className={`ck-tag ck-tag-${e.etiqueta}`}>{NOMBRE_ETIQUETA[e.etiqueta]}</span>
+                                )}
+                              </div>
+                              {c.nota && <div className="check-notas">{c.nota}</div>}
                             </div>
-                            {c.nota && <div className="check-notas">{c.nota}</div>}
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )
                 })}

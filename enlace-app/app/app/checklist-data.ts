@@ -103,3 +103,82 @@ export function actualizarChecklist(anterior: ChecklistItem[]): ChecklistItem[] 
 }
 
 export const TOTAL_TAREAS = DEFAULT_CHECKLIST.length
+
+/* ═══ Etiquetas según el calendario ═══
+   Cada tarea tiene un plazo relativo a la boda ("8 meses antes", "2 semanas antes"…).
+   Con la fecha de la boda se calcula cuánto falta para ese plazo:
+   - Urgente: el plazo ya ha pasado o faltan 2 semanas o menos.
+   - Pronto: faltan 6 semanas o menos.
+   - Importante: tareas clave (contratos que se agotan, papeles con plazo) aunque aún haya margen.
+   El campo `p` guardado solo dice si la tarea es clave ('urgente' = clave). */
+
+export type EtiquetaTarea = 'urgente' | 'pronto' | 'importante' | null
+
+const DIA = 86400000
+const DIAS_URGENTE = 14
+const DIAS_PRONTO = 42
+
+/** Días respecto a la boda (negativo = antes). null si no tiene un plazo fijo. */
+export function diasRelativos(cuando: string): number | null {
+  const s = cuando.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  if (s.trim() === 'el dia') return 0
+  const m = s.match(/(\d+)(?:\s*-\s*(\d+))?\s*(mes|meses|semana|semanas|dia|dias)\s+(antes|despues)/)
+  if (!m) return null
+  const num = parseInt(m[2] || m[1])
+  const unidad = m[3].startsWith('mes') ? 30.44 : m[3].startsWith('semana') ? 7 : 1
+  const dias = Math.round(num * unidad)
+  return m[4] === 'antes' ? -dias : dias
+}
+
+function inicioDia(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+}
+
+export function fechaBodaDe(texto?: string): Date | null {
+  if (!texto) return null
+  const m = texto.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return null
+  return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]))
+}
+
+export function estadoTarea(c: ChecklistItem, boda: Date | null, hoy: Date = new Date()) {
+  const clave = c.p === 'urgente'
+  const rel = diasRelativos(c.c)
+  if (c.done) return { etiqueta: null as EtiquetaTarea, plazo: null as Date | null, faltan: null as number | null }
+  if (!boda || rel === null) {
+    return { etiqueta: (clave ? 'importante' : null) as EtiquetaTarea, plazo: null as Date | null, faltan: null as number | null }
+  }
+  const plazo = new Date(inicioDia(boda) + rel * DIA)
+  const faltan = Math.round((plazo.getTime() - inicioDia(hoy)) / DIA)
+  const bodaPasada = inicioDia(hoy) > inicioDia(boda)
+  let etiqueta: EtiquetaTarea = clave ? 'importante' : null
+  // Lo de antes de la boda deja de avisar cuando la boda ya ha pasado
+  if (!(bodaPasada && rel <= 0)) {
+    if (faltan <= DIAS_URGENTE) etiqueta = 'urgente'
+    else if (faltan <= DIAS_PRONTO) etiqueta = 'pronto'
+  }
+  return { etiqueta, plazo, faltan }
+}
+
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+/** Texto corto del plazo: "hasta el 12 mar 2027", "vence hoy", "se pasó hace 3 semanas". */
+export function textoPlazo(plazo: Date | null, faltan: number | null): string {
+  if (!plazo || faltan === null) return ''
+  const fecha = `${plazo.getDate()} ${MESES[plazo.getMonth()]} ${plazo.getFullYear()}`
+  if (faltan === 0) return 'vence hoy'
+  if (faltan === 1) return 'vence mañana'
+  if (faltan < 0) {
+    const d = -faltan
+    const hace = d < 14 ? `${d} día${d > 1 ? 's' : ''}` : d < 60 ? `${Math.round(d / 7)} semanas` : `${Math.round(d / 30.44)} meses`
+    return `plazo pasado hace ${hace}`
+  }
+  if (faltan <= DIAS_PRONTO) return `quedan ${faltan} días · ${fecha}`
+  return `hasta el ${fecha}`
+}
+
+export const NOMBRE_ETIQUETA: Record<Exclude<EtiquetaTarea, null>, string> = {
+  urgente: 'Urgente',
+  pronto: 'Pronto',
+  importante: 'Importante',
+}
