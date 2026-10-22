@@ -67,18 +67,28 @@ export function useBoda(userId: string | null) {
 
       let datos: BodaData = { ...emptyBoda, ...(boda.datos || {}) }
 
-      // Si empezó a organizar la boda sin cuenta, se pasa a su cuenta
+      // Si empezó a organizar la boda sin cuenta, se pasa a su cuenta.
+      // Nunca se sustituye una boda que ya tiene datos: en ese caso manda la de la cuenta
+      // y lo hecho sin cuenta se queda guardado aparte en este navegador.
       const local = leerInvitado()
       if (local && !bodaVacia(local)) {
-        const usar = bodaVacia(datos) || window.confirm(
-          'Tienes una boda empezada sin cuenta en este navegador. ¿Quieres guardarla en tu cuenta? Sustituirá lo que tienes guardado ahora.'
-        )
-        if (usar) {
+        if (bodaVacia(datos)) {
           datos = await subirFotosPendientes(supabase, userId, local)
           await supabase.from('bodas')
             .update({ datos, updated_at: new Date().toISOString() }).eq('id', boda.id)
+        } else {
+          try {
+            window.localStorage.setItem(`${CLAVE_INVITADO}:copia`, JSON.stringify({ fecha: new Date().toISOString(), datos: local }))
+          } catch { /* sin espacio o sin acceso */ }
         }
         try { window.localStorage.removeItem(CLAVE_INVITADO) } catch { /* sin acceso */ }
+      }
+
+      // Copia de seguridad en este navegador de cómo estaba la boda al entrar
+      if (!bodaVacia(datos)) {
+        try {
+          window.localStorage.setItem(`enlace:copia:${userId}`, JSON.stringify({ fecha: new Date().toISOString(), datos }))
+        } catch { /* sin espacio o sin acceso */ }
       }
       if (cancelado) return
 
