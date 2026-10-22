@@ -1,17 +1,40 @@
 'use client'
 
 import './invitacion.css'
-import { useEffect, useRef, useState } from 'react'
-import { FONT_URL, type InvitacionData, type LugarVista } from '@/lib/invitacion'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import {
+  VARIANTES, SECCIONES, fontUrlInvitacion,
+  type InvitacionData, type LugarVista, type ParteConVariantes, type ProgramaItem,
+} from '@/lib/invitacion'
+import { varsTemaIA } from '@/lib/plantilla-ia'
+import type { SeccionInvitacion } from '@/lib/types'
 import { SPRITE } from './sprite'
+import { SPRITE_EXTRA } from './sprite-extra'
+
+/** Solo en la vista previa del editor: quitar partes y cambiar diseños desde la propia invitación */
+export type EdicionInvitacion = {
+  quitarSeccion: (s: SeccionInvitacion) => void
+  cambiarVariante: (parte: ParteConVariantes, id: string) => void
+  quitarMomento: (id: string) => void
+}
 
 type Props = {
   data: InvitacionData
   mode: 'live' | 'preview'
   codigo?: string
+  edit?: EdicionInvitacion
 }
 
-function Orn() {
+// Adorno entre secciones de las plantillas nuevas y de la creada con IA
+const ORNAMENTO: Partial<Record<InvitacionData['tema'], string>> = {
+  minimalista: 'linea', boho: 'pampas', magnolia: 'magnolia', lavanda: 'lavanda', playa: 'ondas',
+}
+
+function Ic({ n, className }: { n: string; className?: string }) {
+  return <svg className={`iv-ic ${className || ''}`} aria-hidden="true"><use href={`#iv-ic-${n}`} /></svg>
+}
+
+function Orn({ simbolos }: { simbolos?: string }) {
   return (
     <div className="iv-orn" aria-hidden="true">
       <svg className="iv-o-acua"><use href="#iv-orn-acua" /></svg>
@@ -19,27 +42,162 @@ function Orn() {
       <svg className="iv-o-olive"><use href="#iv-orn-olive" /></svg>
       <svg className="iv-o-deco"><use href="#iv-orn-deco" /></svg>
       <svg className="iv-o-flor"><use href="#iv-orn-flor" /></svg>
+      <svg className="iv-o-linea"><use href="#iv-orn-linea" /></svg>
+      <svg className="iv-o-pampas"><use href="#iv-orn-pampas" /></svg>
+      <svg className="iv-o-magnolia"><use href="#iv-orn-magnolia" /></svg>
+      <svg className="iv-o-lavanda"><use href="#iv-orn-lavanda" /></svg>
+      <svg className="iv-o-ondas"><use href="#iv-orn-ola" /></svg>
+      {simbolos && <span className="iv-o-sim">{Array.from(simbolos.replace(/\s/g, '')).join(' ')}</span>}
     </div>
   )
 }
 
-function Lugar({ titulo, l }: { titulo: string; l: LugarVista }) {
+/* ─── controles de edición sobre cada parte ─── */
+function Ctl({ edit, seccion, parte, actual }: {
+  edit?: EdicionInvitacion; seccion: SeccionInvitacion; parte?: ParteConVariantes; actual?: string
+}) {
+  if (!edit) return null
+  const lista = parte ? (VARIANTES[parte] as readonly { id: string; label: string }[]) : null
+  const i = lista ? Math.max(0, lista.findIndex(v => v.id === actual)) : 0
+  const mover = (paso: number) => {
+    if (!lista || !parte) return
+    edit.cambiarVariante(parte, lista[(i + paso + lista.length) % lista.length].id)
+  }
+  const nombre = SECCIONES.find(x => x.id === seccion)?.label || ''
   return (
-    <article className="iv-place">
-      <figure className="iv-phw"><div className="iv-ph"><img src={l.foto} alt="" /></div></figure>
+    <div className="iv-ctl" role="group" aria-label={`Editar ${nombre}`}>
+      {lista && (
+        <>
+          <button type="button" className="iv-ctl-arr" onClick={() => mover(-1)} aria-label="Diseño anterior">‹</button>
+          <span className="iv-ctl-lab"><b>{lista[i].label}</b> {i + 1}/{lista.length}</span>
+          <button type="button" className="iv-ctl-arr" onClick={() => mover(1)} aria-label="Diseño siguiente">›</button>
+          <span className="iv-ctl-sep" />
+        </>
+      )}
+      <button type="button" className="iv-ctl-x" onClick={() => edit.quitarSeccion(seccion)}
+        aria-label={`Quitar ${nombre}`} title={`Quitar «${nombre}» de la invitación`}>×</button>
+    </div>
+  )
+}
+
+/* ─── dónde y cuándo ─── */
+function Lugar({ titulo, l, v, icono }: { titulo: string; l: LugarVista; v: string; icono: string }) {
+  const como = l.mapaUrl && (
+    <a className="iv-btn-line" href={l.mapaUrl} target="_blank" rel="noopener noreferrer">Cómo llegar</a>
+  )
+  if (v === 'lista') {
+    return (
+      <article className="iv-lrow">
+        <div className="iv-lrow-time">{l.hora ? <>{l.hora}<small>h</small></> : <Ic n={icono} />}</div>
+        <div className="iv-lrow-txt">
+          <h3>{titulo}</h3>
+          <p className="iv-place-name">{l.lugar}</p>
+          {l.direccion && <p className="iv-place-addr">{l.direccion}</p>}
+          {como}
+        </div>
+      </article>
+    )
+  }
+  return (
+    <article className={v === 'tarjetas' ? 'iv-place iv-lcard' : 'iv-place'}>
+      {v === 'tarjetas'
+        ? <Ic n={icono} className="iv-lcard-ic" />
+        : <figure className="iv-phw"><div className="iv-ph"><img src={l.foto} alt="" /></div></figure>}
       <h3>{titulo}</h3>
       {l.hora && <p className="iv-place-time">{l.hora} h</p>}
       <p className="iv-place-name">{l.lugar}</p>
       {l.direccion && <p className="iv-place-addr">{l.direccion}</p>}
-      {l.mapaUrl && (
-        <a className="iv-btn-line" href={l.mapaUrl} target="_blank" rel="noopener noreferrer">Cómo llegar</a>
-      )}
+      {como}
     </article>
   )
 }
 
-export default function InvitacionView({ data: d, mode, codigo }: Props) {
+/* ─── cómo será el día ─── */
+function Programa({ items, v, edit }: { items: ProgramaItem[]; v: string; edit?: EdicionInvitacion }) {
+  const x = (p: ProgramaItem) => edit && (
+    <button type="button" className="iv-mx" onClick={() => edit.quitarMomento(p.id)}
+      aria-label={`Quitar «${p.titulo}» de la invitación`} title="Quitar de la invitación">×</button>
+  )
+  if (v === 'tarjetas') {
+    return (
+      <ul className="iv-pg-cards">
+        {items.map(p => (
+          <li key={p.id}>{x(p)}<Ic n={p.icono} /><time>{p.hora}</time><strong>{p.titulo}</strong></li>
+        ))}
+      </ul>
+    )
+  }
+  if (v === 'iconos') {
+    return (
+      <ol className="iv-pg-iconos">
+        {items.map(p => (
+          <li key={p.id}>{x(p)}<span className="iv-pg-circ"><Ic n={p.icono} /></span><time>{p.hora}</time><strong>{p.titulo}</strong></li>
+        ))}
+      </ol>
+    )
+  }
+  if (v === 'horario') {
+    return (
+      <ol className="iv-pg-horario">
+        {items.map(p => (
+          <li key={p.id}><time>{p.hora || '·'}</time><span className="iv-pg-dots" /><strong>{p.titulo}</strong>{x(p)}</li>
+        ))}
+      </ol>
+    )
+  }
+  if (v === 'mini') {
+    return (
+      <p className="iv-pg-mini">
+        {items.map(p => (
+          <span key={p.id}>{p.hora && <time>{p.hora}</time>} {p.titulo}{x(p)}</span>
+        ))}
+      </p>
+    )
+  }
+  return (
+    <ol className="iv-tl">
+      {items.map(p => (
+        <li key={p.id}>
+          <time className="iv-t-time">{p.hora}</time>
+          <span className="iv-t-dot" />
+          <span className="iv-t-what"><strong>{p.titulo}</strong>{x(p)}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/* ─── calendario del mes de la boda ─── */
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+function Calendario({ fecha }: { fecha: string }) {
+  const [y, m, dia] = fecha.split('-').map(Number)
+  const primero = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7 // lunes = 0
+  const total = new Date(Date.UTC(y, m, 0)).getUTCDate()
+  const huecos = Array.from({ length: primero + total }, (_, i) => (i < primero ? 0 : i - primero + 1))
+  return (
+    <div className="iv-cal">
+      <p className="iv-cal-mes">{MESES[m - 1]} <span>{y}</span></p>
+      <div className="iv-cal-grid">
+        {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(x => <span key={x} className="iv-cal-wd">{x}</span>)}
+        {huecos.map((n, i) => (
+          <span key={i} className={n === dia ? 'iv-cal-d iv-cal-on' : 'iv-cal-d'}>
+            {n === dia && <Ic n="corazon" className="iv-cal-heart" />}
+            <b>{n || ''}</b>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function InvitacionView({ data: d, mode, codigo, edit }: Props) {
   const preview = mode === 'preview'
+  const ver = (x: SeccionInvitacion) => !d.ocultas.includes(x)
+  const v = d.variantes
+  const ia = d.tema === 'ia' && d.temaIA ? d.temaIA : null
+  const estiloIA = ia ? (varsTemaIA(ia) as CSSProperties) : undefined
+  const orn = ia ? ia.ornamento : ORNAMENTO[d.tema]
+  const fechaNum = d.fecha ? d.fecha.split('-').reverse().map((x, i) => (i === 2 ? x.slice(2) : x)).join(' · ') : ''
   const both = !!d.nombre2
   const nombres = both ? `${d.nombre1} & ${d.nombre2}` : d.nombre1
   const iniciales = (d.nombre1.charAt(0) + (both ? '&' + d.nombre2.charAt(0) : '')).toUpperCase()
@@ -151,11 +309,12 @@ export default function InvitacionView({ data: d, mode, codigo }: Props) {
 
   return (
     <div className={`iv-root ${preview ? 'iv-is-preview' : 'iv-is-live'}`}>
-      <link rel="stylesheet" href={FONT_URL[d.tema]} {...fontLink} />
+      <link rel="stylesheet" href={fontUrlInvitacion(d)} {...fontLink} />
       <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true"
-        dangerouslySetInnerHTML={{ __html: SPRITE }} />
+        dangerouslySetInnerHTML={{ __html: SPRITE + SPRITE_EXTRA }} />
 
-      <div className="iv" data-style={d.tema}>
+      <div className="iv" data-style={d.tema} data-orn={orn} data-hero={ia?.portada}
+        data-edit={edit ? '' : undefined} style={estiloIA}>
 
         {/* ═══ SOBRE ═══ */}
         <div className={`iv-env ${sobre === 'abierto' ? 'iv-open' : ''} ${sobre === 'fuera' ? 'iv-gone' : ''}`}>
@@ -184,13 +343,23 @@ export default function InvitacionView({ data: d, mode, codigo }: Props) {
               {[1, 2, 3, 4].map(i => <svg key={i} className={`iv-dc${i}`}><use href="#iv-deco-corner" /></svg>)}
             </div>
             <svg className="iv-sun" aria-hidden="true"><use href="#iv-sunburst" /></svg>
+            <svg className="iv-dx iv-dx-sol" aria-hidden="true"><use href="#iv-sol" /></svg>
+            <svg className="iv-dx iv-dx-pampas iv-dxa" aria-hidden="true"><use href="#iv-pampas" /></svg>
+            <svg className="iv-dx iv-dx-pampas iv-dxb" aria-hidden="true"><use href="#iv-pampas" /></svg>
+            <svg className="iv-dx iv-dx-mag iv-dxa" aria-hidden="true"><use href="#iv-magnolia" /></svg>
+            <svg className="iv-dx iv-dx-mag iv-dxb" aria-hidden="true"><use href="#iv-magnolia" /></svg>
+            <svg className="iv-dx iv-dx-mag iv-dxc" aria-hidden="true"><use href="#iv-magnolia" /></svg>
+            <svg className="iv-dx iv-dx-palma iv-dxa" aria-hidden="true"><use href="#iv-palma" /></svg>
+            <svg className="iv-dx iv-dx-palma iv-dxb" aria-hidden="true"><use href="#iv-palma" /></svg>
             <div className="iv-hero-text">
               <svg className="iv-wreath" aria-hidden="true"><use href="#iv-wreath" /></svg>
-              <p className="iv-kicker">Nos casamos</p>
+              <svg className="iv-dx iv-dx-lav" aria-hidden="true"><use href="#iv-lavanda-ramo" /></svg>
+              <p className="iv-kicker">{d.kicker}</p>
               <h1 className="iv-names">
                 <span className="iv-n">{d.nombre1}</span>
                 {both && <><span className="iv-amp">&amp;</span><span className="iv-n">{d.nombre2}</span></>}
               </h1>
+              {fechaNum && <p className="iv-date-num" aria-hidden="true">{fechaNum}</p>}
               {d.fechaLarga && <p className="iv-date"><time dateTime={d.fecha}>{d.fechaLarga}</time></p>}
               {d.sitioPortada && <p className="iv-place">{d.sitioPortada}</p>}
             </div>
@@ -215,27 +384,41 @@ export default function InvitacionView({ data: d, mode, codigo }: Props) {
               <span className="iv-tape iv-t1" /><span className="iv-tape iv-t2" />
               <div className="iv-ph"><img src={d.fotoPortada} alt="" /></div>
             </figure>
+            <svg className="iv-dx iv-dx-olas" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true"><use href="#iv-olas" /></svg>
           </header>
 
           {/* ═══ CUENTA ATRÁS ═══ */}
-          {d.inicioISO && (
-            <section className="iv-cd" aria-label="Cuenta atrás">
-              <p className="iv-cd-intro">Faltan</p>
-              <div className="iv-cd-grid">
-                <div className="iv-cd-item"><span className="iv-cd-num">{cd ? cd.d : '–'}</span><span className="iv-cd-lab">días</span></div>
-                <div className="iv-cd-item"><span className="iv-cd-num">{cd ? cd.h : '–'}</span><span className="iv-cd-lab">horas</span></div>
-                <div className="iv-cd-item"><span className="iv-cd-num">{cd ? cd.m : '–'}</span><span className="iv-cd-lab">minutos</span></div>
-                <div className="iv-cd-item"><span className="iv-cd-num">{cd ? cd.s : '–'}</span><span className="iv-cd-lab">segundos</span></div>
-              </div>
-              <p className="iv-cd-line">Faltan {cd ? cd.d : '–'} días para el gran día</p>
+          {d.inicioISO && ver('cuenta') && (
+            <section className={`iv-cd iv-cd-${v.cuenta}`} aria-label="Cuenta atrás">
+              <Ctl edit={edit} seccion="cuenta" parte="cuenta" actual={v.cuenta} />
+              {v.cuenta === 'calendario' ? (
+                <>
+                  <Calendario fecha={d.fecha} />
+                  <p className="iv-cd-sub">Faltan <b>{cd ? cd.d : '–'}</b> días</p>
+                </>
+              ) : v.cuenta === 'frase' ? (
+                <p className="iv-cd-big">Faltan <b>{cd ? cd.d : '–'}</b> días<small>para el gran día</small></p>
+              ) : (
+                <>
+                  <p className="iv-cd-intro">Faltan</p>
+                  <div className="iv-cd-grid">
+                    <div className="iv-cd-item"><span className="iv-cd-num">{cd ? cd.d : '–'}</span><span className="iv-cd-lab">días</span></div>
+                    <div className="iv-cd-item"><span className="iv-cd-num">{cd ? cd.h : '–'}</span><span className="iv-cd-lab">horas</span></div>
+                    <div className="iv-cd-item"><span className="iv-cd-num">{cd ? cd.m : '–'}</span><span className="iv-cd-lab">minutos</span></div>
+                    <div className="iv-cd-item"><span className="iv-cd-num">{cd ? cd.s : '–'}</span><span className="iv-cd-lab">segundos</span></div>
+                  </div>
+                  <p className="iv-cd-line">Faltan {cd ? cd.d : '–'} días para el gran día</p>
+                </>
+              )}
             </section>
           )}
 
           {/* ═══ CARTA DE LOS NOVIOS ═══ */}
-          {(d.saludo || parrafos.length > 0) && (
+          {(d.saludo || parrafos.length > 0) && ver('carta') && (
             <>
-              <Orn />
+              <Orn simbolos={ia?.simbolos} />
               <section className="iv-sec iv-story">
+                <Ctl edit={edit} seccion="carta" />
                 {d.saludo && <p className="iv-salute">{d.saludo}</p>}
                 <div className="iv-body">{parrafos.map((p, i) => <p key={i}>{p}</p>)}</div>
                 <p className="iv-sign">{both ? `${d.nombre1} y ${d.nombre2}` : d.nombre1}</p>
@@ -244,40 +427,37 @@ export default function InvitacionView({ data: d, mode, codigo }: Props) {
           )}
 
           {/* ═══ DÓNDE Y CUÁNDO ═══ */}
-          {hayDetalles && (
+          {hayDetalles && ver('lugares') && (
             <>
-              <Orn />
+              <Orn simbolos={ia?.simbolos} />
               <section className="iv-sec">
+                <Ctl edit={edit} seccion="lugares" parte="lugares" actual={v.lugares} />
                 <h2 className="iv-title">Dónde y cuándo</h2>
-                <div className="iv-places">
-                  {d.ceremonia.lugar && <Lugar titulo="La ceremonia" l={d.ceremonia} />}
-                  {d.celebracion.lugar && <Lugar titulo="La celebración" l={d.celebracion} />}
+                <div className={`iv-places iv-places-${v.lugares}`}>
+                  {d.ceremonia.lugar && <Lugar titulo="La ceremonia" l={d.ceremonia} v={v.lugares} icono="anillos" />}
+                  {d.celebracion.lugar && <Lugar titulo="La celebración" l={d.celebracion} v={v.lugares} icono="copas" />}
                 </div>
               </section>
             </>
           )}
 
           {/* ═══ PROGRAMA ═══ */}
-          {d.programa.length > 0 && (
+          {ver('programa') && (d.programa.length > 0 || edit) && (
             <div className="iv-band">
               <section className="iv-sec">
+                <Ctl edit={edit} seccion="programa" parte="programa" actual={v.programa} />
                 <h2 className="iv-title">Cómo será el día</h2>
-                <ol className="iv-tl">
-                  {d.programa.map((p, i) => (
-                    <li key={i}>
-                      <time className="iv-t-time">{p.hora}</time>
-                      <span className="iv-t-dot" />
-                      <span className="iv-t-what"><strong>{p.titulo}</strong>{p.nota && <span>{p.nota}</span>}</span>
-                    </li>
-                  ))}
-                </ol>
+                {d.programa.length > 0
+                  ? <Programa items={d.programa} v={v.programa} edit={edit} />
+                  : <p className="iv-edit-note">Añade momentos en el Cronograma o vuelve a activarlos en el editor.</p>}
               </section>
             </div>
           )}
 
           {/* ═══ AUTOBUSES ═══ */}
-          {d.buses.length > 0 && (
+          {d.buses.length > 0 && ver('autobuses') && (
             <section className="iv-sec">
+              <Ctl edit={edit} seccion="autobuses" />
               <h2 className="iv-title">Autobuses</h2>
               <p>Hemos reservado autobuses para que nadie tenga que preocuparse por el coche. Indícalo al confirmar y te guardamos sitio.</p>
               <div className="iv-buses">
@@ -294,10 +474,11 @@ export default function InvitacionView({ data: d, mode, codigo }: Props) {
           )}
 
           {/* ═══ REGALO ═══ */}
-          {d.iban && (
+          {d.iban && ver('regalo') && (
             <>
-              <Orn />
+              <Orn simbolos={ia?.simbolos} />
               <section className="iv-sec">
+                <Ctl edit={edit} seccion="regalo" />
                 <h2 className="iv-title">Si queréis tener un detalle</h2>
                 {d.regalosTexto && <p>{d.regalosTexto}</p>}
                 <div className="iv-iban">
@@ -401,8 +582,9 @@ export default function InvitacionView({ data: d, mode, codigo }: Props) {
           </div>
 
           {/* ═══ CONTACTO ═══ */}
-          {d.contactos.length > 0 && (
+          {d.contactos.length > 0 && ver('contacto') && (
             <section className="iv-sec">
+              <Ctl edit={edit} seccion="contacto" />
               <h2 className="iv-title">¿Alguna duda?</h2>
               <p>Escríbenos o llámanos cuando quieras.</p>
               <div className="iv-contacts">
@@ -417,7 +599,7 @@ export default function InvitacionView({ data: d, mode, codigo }: Props) {
           )}
 
           <footer className="iv-foot">
-            <Orn />
+            <Orn simbolos={ia?.simbolos} />
             <p className="iv-foot-names">{nombres}</p>
             {d.fechaCorta && <p className="iv-foot-date">{d.fechaCorta}</p>}
             <p className="iv-foot-made">

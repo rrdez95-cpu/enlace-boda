@@ -97,7 +97,40 @@ export type Finca = {
 }
 
 /* ═══ INVITACIONES ═══ */
-export type InvitacionTema = 'acuarela' | 'carta' | 'mediterraneo' | 'noche' | 'jardin'
+export type InvitacionTema =
+  | 'ia'
+  | 'acuarela' | 'carta' | 'mediterraneo' | 'noche' | 'jardin'
+  | 'minimalista' | 'boho' | 'magnolia' | 'lavanda' | 'playa'
+
+/** Partes de la invitación que se pueden quitar */
+export type SeccionInvitacion = 'cuenta' | 'carta' | 'lugares' | 'programa' | 'autobuses' | 'regalo' | 'contacto'
+
+/** Cómo se pinta cada parte que tiene varios diseños */
+export type VariantesInvitacion = {
+  programa?: 'linea' | 'tarjetas' | 'iconos' | 'horario' | 'mini'
+  cuenta?: 'numeros' | 'circulos' | 'calendario' | 'frase'
+  lugares?: 'fotos' | 'tarjetas' | 'lista'
+}
+
+/** Plantilla creada con IA a partir de lo que escriben los novios */
+export type TemaIA = {
+  nombre: string
+  prompt: string
+  paper: string; paper2: string; ink: string; ink2: string
+  accent: string; accent2: string; accent3: string
+  title: string; btnBg: string; btnFg: string
+  fNames: string; fTitle: string; fBody: string
+  radius: 'recto' | 'suave' | 'redondo'
+  portada: 'centrada' | 'foto-fondo' | 'dividida' | 'arco'
+  ornamento: 'simbolos' | 'linea' | 'olivo' | 'flores' | 'deco' | 'acuarela' | 'ondas' | 'lavanda' | 'pampas' | 'magnolia'
+  simbolos: string
+  textura: 'papel' | 'estrellas' | 'puntos' | 'rayas' | 'lisa'
+  fotoFiltro: 'natural' | 'calida' | 'fria' | 'bn' | 'oscura'
+  kicker: string
+  saludo?: string
+  mensaje?: string
+  creada: string
+}
 
 export type InvitacionLugar = {
   lugar: string
@@ -126,6 +159,14 @@ export type InvitacionConfig = {
   iban: string
   contactos: InvitacionContacto[]
   fechaLimiteRsvp?: string
+  /** Partes quitadas de la invitación */
+  ocultas: SeccionInvitacion[]
+  variantes: VariantesInvitacion
+  /** Momentos del Cronograma que se enseñan (si no está, se decide solo: lo básico sí) */
+  programaVisibles: Record<string, boolean>
+  /** Nombre que ven los invitados para cada momento */
+  programaTitulos: Record<string, string>
+  temaIA?: TemaIA
 }
 
 export type RsvpResponse = {

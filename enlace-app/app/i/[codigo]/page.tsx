@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import InvitacionView from '../../_components/invitacion/invitacion-view'
-import { buildInvitacion, FONDO_TEMA } from '@/lib/invitacion'
+import { buildInvitacion, fondoInvitacion } from '@/lib/invitacion'
 import type { BodaData } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -61,7 +61,7 @@ export default async function InvitacionPage({ params }: Params) {
 
   return (
     <>
-      <style>{`html,body{height:auto!important;min-height:100%;overflow:auto!important;display:block!important;background:${FONDO_TEMA[inv.tema]}!important}`}</style>
+      <style>{`html,body{height:auto!important;min-height:100%;overflow:auto!important;display:block!important;background:${fondoInvitacion(inv)}!important}`}</style>
       <InvitacionView data={inv} mode="live" codigo={codigo} />
     </>
   )
