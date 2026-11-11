@@ -398,7 +398,7 @@ export default function TabInvitaciones({ data, setData, showToast, userId, boda
                 <button key={l.id} type="button" aria-pressed={est.letras.id === l.id}
                   className={`ivt-letra ${est.letras.id === l.id ? 'on' : ''}`} onClick={() => cambiarPersonal('letras', l.id)}>
                   <span style={{ fontFamily: `'${l.names}'`, fontStyle: l.namesItalic ? 'italic' : undefined, textTransform: l.namesMayus ? 'uppercase' : undefined }}>
-                    {(n1 || 'Lorena').split(' ')[0]} &amp; {(n2 || 'Luisfer').split(' ')[0]}
+                    {(n1 || 'Clara').split(' ')[0]} &amp; {(n2 || 'Mario').split(' ')[0]}
                   </span>
                   <small>{l.label}</small>
                 </button>

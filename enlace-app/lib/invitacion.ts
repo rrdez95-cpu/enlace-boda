@@ -137,7 +137,7 @@ export function momentosInvitacion(datos: Pick<BodaData, 'eventos'>, cfg: Invita
 }
 
 /* ═══ NOMBRES ═══
-   Acepta "Lorena & Luisfer", "Lorena y Luisfer", "Lorena e Iván" o "Lorena + Luisfer" */
+   Acepta "Clara & Mario", "Clara y Mario", "Clara e Iván" o "Clara + Mario" */
 export function parseNames(raw?: string): [string, string] {
   const s = (raw || '').replace(/\s+/g, ' ').trim()
   const parts = s.split(/\s+(?:y|e)\s+|\s*[&+]\s*/i).map(p => p.trim()).filter(Boolean)
